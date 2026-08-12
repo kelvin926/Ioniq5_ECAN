@@ -10,6 +10,7 @@
 #include <thread>
 
 #include "ioniq5_ecan/command_adapter.hpp"
+#include "ioniq5_ecan/hyundai_canfd_codec.hpp"
 #include "ioniq5_ecan/msg/actuation_command.hpp"
 #include "ioniq5_ecan/msg/vehicle_state.hpp"
 #include "ioniq5_ecan/panda_usb.hpp"
