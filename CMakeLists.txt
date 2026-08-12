@@ -71,8 +71,7 @@ endif()
 
 add_executable(ioniq5_ecan_node src/main.cpp src/node.cpp)
 target_include_directories(ioniq5_ecan_node PRIVATE include)
-target_link_libraries(ioniq5_ecan_node PRIVATE ioniq5_ecan_core ioniq5_ecan_panda)
-target_link_libraries(ioniq5_ecan_node PRIVATE Threads::Threads)
+target_link_libraries(ioniq5_ecan_node ioniq5_ecan_core ioniq5_ecan_panda Threads::Threads)
 ament_target_dependencies(ioniq5_ecan_node rclcpp diagnostic_msgs std_srvs)
 rosidl_target_interfaces(ioniq5_ecan_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
