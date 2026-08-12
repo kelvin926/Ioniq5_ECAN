@@ -1,0 +1,10 @@
+/build/
+/install/
+/log/
+/.cache/
+/.vscode/
+.idea/
+*.swp
+compile_commands.json
+__pycache__/
+*.pyc

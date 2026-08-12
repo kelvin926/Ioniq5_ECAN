@@ -1,0 +1,7 @@
+BasedOnStyle: Google
+ColumnLimit: 100
+IndentWidth: 2
+ContinuationIndentWidth: 2
+PointerAlignment: Left
+ReferenceAlignment: Left
+SortIncludes: CaseSensitive

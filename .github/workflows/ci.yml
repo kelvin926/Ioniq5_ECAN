@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure platform-independent core
+        run: cmake -S . -B build/core -DIONIQ5_ECAN_CORE_ONLY=ON -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/core --parallel
+      - name: Test
+        run: ctest --test-dir build/core --output-on-failure
+
+  ros2-foxy:
+    runs-on: ubuntu-latest
+    container: ros:foxy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential libusb-1.0-0-dev pkg-config \
+            python3-colcon-common-extensions \
+            ros-foxy-ament-cmake-gtest \
+            ros-foxy-diagnostic-msgs \
+            ros-foxy-std-srvs
+      - name: Build ROS 2 package
+        shell: bash
+        run: |
+          source /opt/ros/foxy/setup.bash
+          colcon build --base-paths . --packages-select ioniq5_ecan \
+            --cmake-args -DCMAKE_BUILD_TYPE=Release \
+            --event-handlers console_direct+
+      - name: Run ROS 2 tests
+        shell: bash
+        run: |
+          source /opt/ros/foxy/setup.bash
+          source install/setup.bash
+          colcon test --packages-select ioniq5_ecan \
+            --event-handlers console_direct+
+          colcon test-result --verbose

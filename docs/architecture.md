@@ -1,0 +1,31 @@
+# Architecture
+
+```text
+Alpamayo-side controller
+  └─ /ioniq5/actuation_command (best effort, depth 1)
+       └─ command adapter
+            ├─ rate/curvature → target steering angle → bounded torque
+            └─ acceleration scaling and bounds
+                 └─ safety supervisor
+                      └─ 100 Hz control thread
+                           ├─ LFA 100 Hz
+                           ├─ LFAHDA_CLUSTER 20 Hz
+                           ├─ SCC_CONTROL 50 Hz (optional)
+                           └─ ADRV_0x160 50 Hz (optional)
+                                └─ Red Panda libusb
+                                     └─ Hyundai K harness / ECAN
+```
+
+ROS callback은 최신 command 하나만 mutex로 교환합니다. CAN RX와 제어 루프는 별도
+스레드이고, 제어 루프는 ROS executor와 독립된 steady clock 100 Hz 주기를 사용합니다.
+동적 할당은 CAN 프레임 묶음과 USB packet에 남아 있으므로 hard real-time 보장은 하지
+않지만, Python/IPC 경계를 제어 hot path에서 제거했습니다.
+
+입력 메시지는 임시 계약입니다. 최종 계약 변경 시 다음 경계만 수정합니다.
+
+1. `msg/ActuationCommand.msg`
+2. `Ioniq5EcanNode::command_callback`
+3. 필요하면 `CommandAdapter`
+
+Hyundai codec, Panda USB protocol, parser, safety supervisor는 물리 입력 계약과 분리되어
+있습니다.

@@ -1,0 +1,81 @@
+ioniq5_ecan_node:
+  ros__parameters:
+    hardware:
+      # Leave empty only when exactly one Panda is connected.
+      panda_serial: ""
+      # Hyundai CAN-FD nominal/data rates used by the pinned openpilot configuration.
+      nominal_bitrate_kbps: 500
+      data_bitrate_kbps: 2000
+      usb_read_timeout_ms: 20
+      usb_write_timeout_ms: 10
+      # Hyundai K + Ioniq 5 HDA1: ECAN=0, camera=2.
+      ecan_bus: 0
+      camera_bus: 2
+      # false: CRUISE_BUTTONS 0x1CF, true: CRUISE_BUTTONS_ALT 0x1AA.
+      # Confirm from a passive fingerprint before actuation.
+      alternate_buttons: false
+
+    topics:
+      command: "/ioniq5/actuation_command"
+      vehicle_state: "/ioniq5/vehicle_state"
+
+    input:
+      # Placeholder contract until the Alpamayo team freezes its message definition.
+      # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
+      lateral_mode: "steering_rate_deg_s"
+      lateral_scale: 1.0
+      lateral_offset: 0.0
+      acceleration_scale: 1.0
+      acceleration_offset: 0.0
+
+    vehicle:
+      wheelbase_m: 2.97
+      steering_ratio: 14.26
+
+    lateral:
+      # Bench defaults only. Tune on stands and a closed test site before driving.
+      kp_angle: 2.0
+      ki_angle: 0.0
+      kd_rate: 0.2
+      feedforward_rate: 0.0
+      integral_limit: 50.0
+      max_target_angle_deg: 80.0
+      max_target_rate_deg_s: 120.0
+      # Panda hard limits are 270, +2/frame, -3/frame. These defaults are lower.
+      max_torque: 100
+      torque_rate_up: 1
+      torque_rate_down: 2
+      driver_torque_start: 100.0
+      driver_torque_zero: 250.0
+
+    longitudinal:
+      # Panda hard bounds are [-3.5, 2.0] m/s^2. These defaults are lower.
+      accel_min_mps2: -1.0
+      accel_max_mps2: 1.0
+      jerk_limit_mps3: 2.0
+      set_speed_kph: 30.0
+
+    safety:
+      # Both remain false in source control. Enabling still requires the arm service,
+      # command deadman, fresh vehicle state, and a physical SET/RES release.
+      allow_actuation: false
+      # Experimental: disables stock SCC/AEB message ownership while armed and requires
+      # the pinned Panda DEBUG firmware. Validate lateral-only before enabling this.
+      allow_longitudinal: false
+      require_set_resume_button: true
+      disengage_on_brake: true
+      disengage_on_cancel: true
+      longitudinal_override_on_gas: true
+      max_active_speed_mps: 8.33
+      max_abs_steering_angle_deg: 85.0
+      command_timeout_ms: 100
+      panda_timeout_ms: 250
+      vehicle_state_timeout_ms: 100
+
+    runtime:
+      control_rate_hz: 100
+      health_rate_hz: 10
+      # 0/-1 work without extra privileges. See docs/latency.md for RT setup.
+      realtime_priority: 0
+      control_cpu: -1
+      receive_cpu: -1

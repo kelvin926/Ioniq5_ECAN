@@ -1,0 +1,3 @@
+# comma.ai Panda USB devices. Install as /etc/udev/rules.d/99-red-panda.rules.
+SUBSYSTEM=="usb", ATTR{idVendor}=="bbaa", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="3801", MODE="0660", GROUP="plugdev", TAG+="uaccess"
