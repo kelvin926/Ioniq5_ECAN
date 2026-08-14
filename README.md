@@ -3,10 +3,10 @@
 Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022년식
 아이오닉 5 HDA1의 조향 및 가속도 명령을 전달하는 C++17 연구용 드라이버입니다.
 
-> 이 코드는 실제 차량에서 검증되지 않았습니다. 기본 설정은 CAN 송신이 불가능한
-> `NO_OUTPUT`이며, `allow_actuation: false`입니다. 리프트/다이나모와 폐쇄 시험장 검증
-> 전에는 공공도로에서 사용하지 마십시오. 종방향 제어 중에는 순정 SCC/AEB 메시지
-> 소유권이 차단되므로 특히 위험합니다.
+> 이 코드는 실제 차량에서 검증되지 않았습니다. 저장소의 기본 YAML은 요청한 폐쇄
+> 연구장 프로파일로 `allow_actuation`과 종방향 제어가 활성화되어 있습니다. 노드는
+> 시작할 때 `NO_OUTPUT`이지만 첫 최신 명령으로 자동 arm하며, 물리 SET/RES release 후
+> 출력할 수 있습니다. 종방향 제어 중에는 순정 SCC/AEB 메시지 소유권이 차단됩니다.
 
 ## 구현 범위
 
@@ -16,9 +16,9 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 - CRC16, rolling counter, Panda USB CAN packet protocol
 - 차량 속도/조향/운전자 토크/페달/브레이크/크루즈 버튼 상태 파싱
 - `PASSIVE → ARMED → ACTIVE → FAULT` 안전 상태기계
-- carrotpilot 방식의 ROS 2 YAML 파라미터 조정
+- carrotpilot의 Ioniq 5 횡가속도/마찰 기반 토크 제어와 ROS 2 YAML 파라미터 조정
 - Panda 프로토콜 버전, Red Panda 기종, 하네스, heartbeat, RX/TX 오류 확인
-- Panda hard limit보다 강한 소프트웨어 제한과 명령 watchdog
+- Panda hard limit, 명령 watchdog, 브레이크/CANCEL 및 통신 fault 해제
 
 입력 단위가 아직 확정되지 않았으므로 CAN 계층 앞에 어댑터를 두었습니다.
 `input.lateral_mode`는 `steering_rate_deg_s`, `steering_rate_rad_s`,
@@ -64,7 +64,9 @@ Foxy는 공식 EOL이므로 연구 컴퓨터는 격리하고 OS 보안 업데이
 
 ## 실행
 
-먼저 기본 YAML 그대로 수동 CAN 관찰만 확인합니다.
+수동 CAN 관찰만 하려면 YAML의 `safety.allow_actuation`과
+`safety.allow_longitudinal`을 먼저 `false`로 바꿉니다. 기본 YAML은 연구장 actuation
+프로파일입니다.
 
 ```bash
 ros2 launch ioniq5_ecan ioniq5_ecan.launch.py \
@@ -73,30 +75,32 @@ ros2 topic echo /ioniq5/vehicle_state
 ros2 topic echo /diagnostics
 ```
 
-명령 예시는 다음과 같습니다. `stamp`는 지연 측정용이고 hard watchdog은 안전하게
-수신 시각을 사용합니다.
+기본 `input.use_enable_field: false`에서는 다음처럼 두 값만 보내면 됩니다. `sequence=0`과
+`enable=false`의 기본값은 무시되고 watchdog은 수신 시각을 사용합니다.
 
 ```bash
 ros2 topic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/msg/ActuationCommand \
-  "{stamp: {sec: 0, nanosec: 0}, sequence: 1, enable: true, lateral: 0.0, acceleration: 0.0}"
+  "{lateral: 0.0, acceleration: 0.0}"
 ```
 
-실제 actuation을 허용하려면 먼저 검증 복사본 YAML에서
-`safety.allow_actuation: true`로 변경하고 노드를 재시작합니다. 그 뒤에도 다음 조건이
-모두 필요합니다.
+기본 자동 arm 모드에서 출력 조건은 다음과 같습니다.
 
-1. `/ioniq5_ecan/set_armed` 서비스로 arm 요청
-2. 유효하고 최신인 필수 차량 CAN 상태
-3. 최신 command와 `enable: true`
-4. 물리적인 SET 또는 RES 버튼을 눌렀다 놓기
-5. Panda `controls_allowed: true`
-6. 브레이크/CANCEL/timeout/fault 없음
+1. 고정 DEBUG Panda firmware 및 Red Panda/Hyundai K 연결
+2. 유효하고 최신인 필수 차량 CAN 상태와 command
+3. 물리적인 SET 또는 RES 버튼을 눌렀다 놓아 Panda `controls_allowed: true`
+4. 브레이크/CANCEL/timeout/fault 없음
 
 ```bash
+# auto_arm_on_command=false일 때 수동 arm
 ros2 service call /ioniq5_ecan/set_armed std_srvs/srv/SetBool "{data: true}"
 # 즉시 해제
 ros2 service call /ioniq5_ecan/set_armed std_srvs/srv/SetBool "{data: false}"
 ```
+
+수동 `false` 요청은 자동 arm을 함께 억제하며, 다시 `true`를 요청할 때까지 유지됩니다.
+`input.use_enable_field: true`로 바꾸면 `enable`이 다시 매 메시지 deadman으로 동작합니다.
+속도/조향각 호스트 상한은 `0`이면 비활성이고, 토크·토크 변화율·가속도 범위는 Panda
+firmware 경계를 넘길 수 없습니다.
 
 안전 상태 전이와 시험 순서는 [`docs/safety.md`](docs/safety.md)와
 [`docs/validation.md`](docs/validation.md)를 따르십시오. 종방향 제어는

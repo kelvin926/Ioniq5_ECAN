@@ -62,6 +62,16 @@ int main() {
           "first torque slew failed");
   require(adapter.update(command, vehicle, 0.01, true, false).steering_torque == 2,
           "second torque slew failed");
+  require(sequence_is_newer(1U, 0xFFFFFFFFU), "sequence wraparound was rejected");
+
+  CommandAdapterConfig rate_config;
+  rate_config.max_target_rate_deg_s = 10.0;
+  rate_config.steer_actuator_delay_s = 0.0;
+  CommandAdapter rate_adapter(rate_config);
+  command.lateral = 1000.0;
+  (void)rate_adapter.update(command, vehicle, 0.05, true, false);
+  require(std::abs(rate_adapter.target_angle_deg() - 0.5) < 1e-12,
+          "target rate was not limited before integration");
 
   SafetyConfig safety_config;
   safety_config.allow_actuation = true;

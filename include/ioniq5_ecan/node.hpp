@@ -46,6 +46,8 @@ class Ioniq5EcanNode : public rclcpp::Node {
   uint8_t ecan_bus_{0};
   uint8_t camera_bus_{2};
   bool alternate_buttons_{false};
+  bool use_enable_field_{false};
+  bool auto_arm_on_command_{true};
   int control_rate_hz_{100};
   int health_rate_hz_{10};
   int realtime_priority_{0};
@@ -65,6 +67,7 @@ class Ioniq5EcanNode : public rclcpp::Node {
   std::atomic<bool> running_{true};
   std::atomic<bool> requested_arm_{false};
   std::atomic<bool> applied_arm_{false};
+  std::atomic<bool> auto_arm_inhibited_{false};
   std::atomic<uint64_t> arm_request_generation_{0};
   std::atomic<bool> vehicle_safety_mode_{false};
   std::thread receive_thread_;

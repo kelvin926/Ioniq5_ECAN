@@ -95,4 +95,20 @@ TEST(SafetySupervisor, RequiresAnEnableButtonEventAfterArming) {
             ControlState::Active);
 }
 
+TEST(SafetySupervisor, ZeroDisablesOptionalHostSpeedAndAngleLimits) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  data.vehicle.speed_mps = 60.0;
+  data.vehicle.steering_angle_deg = 180.0;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  config.require_set_resume_button = false;
+  config.max_active_speed_mps = 0.0;
+  config.max_abs_steering_angle_deg = 0.0;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Active);
+}
+
 }  // namespace

@@ -27,50 +27,70 @@ ioniq5_ecan_node:
       lateral_offset: 0.0
       acceleration_scale: 1.0
       acceleration_offset: 0.0
+      # false makes lateral + acceleration the only required command fields.
+      # Set true later if the upstream controller owns an explicit deadman bit.
+      use_enable_field: false
 
     vehicle:
       wheelbase_m: 2.97
       steering_ratio: 14.26
 
     lateral:
-      # Bench defaults only. Tune on stands and a closed test site before driving.
-      kp_angle: 2.0
-      ki_angle: 0.0
-      kd_rate: 0.2
-      feedforward_rate: 0.0
-      integral_limit: 50.0
-      max_target_angle_deg: 80.0
-      max_target_rate_deg_s: 120.0
-      # Panda hard limits are 270, +2/frame, -3/frame. These defaults are lower.
-      max_torque: 100
-      torque_rate_up: 1
-      torque_rate_down: 2
-      driver_torque_start: 100.0
-      driver_torque_zero: 250.0
+      # Carrotpilot Ioniq 5 torque-controller defaults. The steering-rate input is
+      # integrated to a target angle and converted to desired lateral acceleration.
+      steer_actuator_delay_s: 0.1
+      torque_kp: 1.0
+      torque_ki: 0.1
+      torque_kd: 0.0
+      torque_kf: 1.0
+      lat_accel_factor: 3.172929
+      friction: 0.096019
+      friction_threshold: 0.3
+      steering_angle_deadzone_deg: 0.0
+      integral_output_limit: 1.0
+      integrator_freeze_speed_mps: 5.0
+      low_speed_factor_bp_mps: [0.0, 10.0, 20.0, 30.0]
+      low_speed_factor_v: [15.0, 13.0, 10.0, 5.0]
+      # Wide host-side target bounds; change these without rebuilding.
+      max_target_angle_deg: 175.0
+      max_target_rate_deg_s: 500.0
+      # Ioniq 5 CAN-FD/Panda limits used by Carrotpilot.
+      max_torque: 270
+      torque_rate_up: 2
+      torque_rate_down: 3
+      driver_torque_allowance: 250.0
+      driver_torque_multiplier: 2.0
+      driver_torque_factor: 1.0
+      # Carrot-style EPS fault avoidance above 85 degrees: 89 request frames,
+      # then two frames with only STEER_REQ cleared. Set angle to 0 to disable.
+      steer_request_cutoff_angle_deg: 85.0
+      steer_request_valid_frames: 89
+      steer_request_cut_frames: 2
 
     longitudinal:
-      # Panda hard bounds are [-3.5, 2.0] m/s^2. These defaults are lower.
-      accel_min_mps2: -1.0
-      accel_max_mps2: 1.0
-      jerk_limit_mps3: 2.0
+      # Full Panda Hyundai longitudinal range. Carrot's wider -4.0/+2.5 values
+      # cannot pass the pinned Panda firmware's -3.5/+2.0 checks.
+      accel_min_mps2: -3.5
+      accel_max_mps2: 2.0
+      jerk_limit_mps3: 5.0
       set_speed_kph: 30.0
 
     safety:
-      # Both remain false in source control. Enabling still requires the arm service,
-      # command deadman, fresh vehicle state, and a physical SET/RES release.
-      allow_actuation: false
-      # Experimental: disables stock SCC/AEB message ownership while armed and requires
-      # the pinned Panda DEBUG firmware. Validate lateral-only before enabling this.
-      allow_longitudinal: false
-      require_set_resume_button: true
+      # Research-site profile: the first fresh two-value command arms automatically.
+      # Panda firmware still requires one physical SET/RES release before controls_allowed.
+      allow_actuation: true
+      allow_longitudinal: true
+      auto_arm_on_command: true
+      require_set_resume_button: false
       disengage_on_brake: true
       disengage_on_cancel: true
       longitudinal_override_on_gas: true
-      max_active_speed_mps: 8.33
-      max_abs_steering_angle_deg: 85.0
-      command_timeout_ms: 100
-      panda_timeout_ms: 250
-      vehicle_state_timeout_ms: 100
+      # Zero disables these optional host-side limits. Panda firmware limits remain.
+      max_active_speed_mps: 0.0
+      max_abs_steering_angle_deg: 0.0
+      command_timeout_ms: 250
+      panda_timeout_ms: 500
+      vehicle_state_timeout_ms: 250
 
     runtime:
       control_rate_hz: 100

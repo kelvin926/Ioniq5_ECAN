@@ -15,8 +15,9 @@ struct SafetyConfig {
   bool disengage_on_brake{true};
   bool disengage_on_cancel{true};
   bool longitudinal_override_on_gas{true};
-  double max_active_speed_mps{8.33};
-  double max_abs_steering_angle_deg{85.0};
+  // Zero disables the optional host-side limit. Panda firmware limits remain active.
+  double max_active_speed_mps{0.0};
+  double max_abs_steering_angle_deg{0.0};
   uint8_t required_safety_mode{28};
   uint16_t required_safety_param{9};
   std::chrono::milliseconds command_timeout{100};

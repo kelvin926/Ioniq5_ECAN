@@ -67,10 +67,9 @@ Ioniq5EcanNode::Ioniq5EcanNode() : Node("ioniq5_ecan_node") {
   receive_thread_ = std::thread(&Ioniq5EcanNode::receive_loop, this);
   control_thread_ = std::thread(&Ioniq5EcanNode::control_loop, this);
   RCLCPP_WARN(
-    get_logger(),
-    "Started in NO_OUTPUT. allow_actuation=%s allow_longitudinal=%s; explicit arm is required.",
+    get_logger(), "Started in NO_OUTPUT. allow_actuation=%s allow_longitudinal=%s auto_arm=%s.",
     safety_config_.allow_actuation ? "true" : "false",
-    safety_config_.allow_longitudinal ? "true" : "false");
+    safety_config_.allow_longitudinal ? "true" : "false", auto_arm_on_command_ ? "true" : "false");
 }
 
 Ioniq5EcanNode::~Ioniq5EcanNode() {
@@ -105,32 +104,69 @@ void Ioniq5EcanNode::load_configuration() {
   adapter_config_.lateral_offset = declare_parameter<double>("input.lateral_offset", 0.0);
   adapter_config_.acceleration_scale = declare_parameter<double>("input.acceleration_scale", 1.0);
   adapter_config_.acceleration_offset = declare_parameter<double>("input.acceleration_offset", 0.0);
+  use_enable_field_ = declare_parameter<bool>("input.use_enable_field", false);
 
   adapter_config_.wheelbase_m = declare_parameter<double>("vehicle.wheelbase_m", 2.97);
   adapter_config_.steering_ratio = declare_parameter<double>("vehicle.steering_ratio", 14.26);
-  adapter_config_.kp_angle = declare_parameter<double>("lateral.kp_angle", 2.0);
-  adapter_config_.ki_angle = declare_parameter<double>("lateral.ki_angle", 0.0);
-  adapter_config_.kd_rate = declare_parameter<double>("lateral.kd_rate", 0.2);
-  adapter_config_.feedforward_rate = declare_parameter<double>("lateral.feedforward_rate", 0.0);
-  adapter_config_.integral_limit = declare_parameter<double>("lateral.integral_limit", 50.0);
+  adapter_config_.steer_actuator_delay_s =
+    declare_parameter<double>("lateral.steer_actuator_delay_s", 0.1);
+  adapter_config_.torque_kp = declare_parameter<double>("lateral.torque_kp", 1.0);
+  adapter_config_.torque_ki = declare_parameter<double>("lateral.torque_ki", 0.1);
+  adapter_config_.torque_kd = declare_parameter<double>("lateral.torque_kd", 0.0);
+  adapter_config_.torque_kf = declare_parameter<double>("lateral.torque_kf", 1.0);
+  adapter_config_.lat_accel_factor =
+    declare_parameter<double>("lateral.lat_accel_factor", 3.172929);
+  adapter_config_.friction = declare_parameter<double>("lateral.friction", 0.096019);
+  adapter_config_.friction_threshold = declare_parameter<double>("lateral.friction_threshold", 0.3);
+  adapter_config_.steering_angle_deadzone_deg =
+    declare_parameter<double>("lateral.steering_angle_deadzone_deg", 0.0);
+  adapter_config_.integral_output_limit =
+    declare_parameter<double>("lateral.integral_output_limit", 1.0);
+  adapter_config_.integrator_freeze_speed_mps =
+    declare_parameter<double>("lateral.integrator_freeze_speed_mps", 5.0);
+  const auto low_speed_bp = declare_parameter<std::vector<double>>(
+    "lateral.low_speed_factor_bp_mps", {0.0, 10.0, 20.0, 30.0});
+  const auto low_speed_v =
+    declare_parameter<std::vector<double>>("lateral.low_speed_factor_v", {15.0, 13.0, 10.0, 5.0});
+  if (low_speed_bp.size() != adapter_config_.low_speed_factor_bp_mps.size() ||
+      low_speed_v.size() != adapter_config_.low_speed_factor_v.size()) {
+    throw std::invalid_argument("Carrot low-speed factor tables must contain exactly four values");
+  }
+  std::copy(low_speed_bp.begin(), low_speed_bp.end(),
+            adapter_config_.low_speed_factor_bp_mps.begin());
+  std::copy(low_speed_v.begin(), low_speed_v.end(), adapter_config_.low_speed_factor_v.begin());
   adapter_config_.max_target_angle_deg =
-    declare_parameter<double>("lateral.max_target_angle_deg", 80.0);
+    declare_parameter<double>("lateral.max_target_angle_deg", 175.0);
   adapter_config_.max_target_rate_deg_s =
-    declare_parameter<double>("lateral.max_target_rate_deg_s", 120.0);
-  adapter_config_.max_torque = declare_parameter<int>("lateral.max_torque", 100);
-  adapter_config_.torque_rate_up = declare_parameter<int>("lateral.torque_rate_up", 1);
-  adapter_config_.torque_rate_down = declare_parameter<int>("lateral.torque_rate_down", 2);
-  adapter_config_.driver_torque_start =
-    declare_parameter<double>("lateral.driver_torque_start", 100.0);
-  adapter_config_.driver_torque_zero =
-    declare_parameter<double>("lateral.driver_torque_zero", 250.0);
-  adapter_config_.accel_min_mps2 = declare_parameter<double>("longitudinal.accel_min_mps2", -1.0);
-  adapter_config_.accel_max_mps2 = declare_parameter<double>("longitudinal.accel_max_mps2", 1.0);
-  adapter_config_.jerk_limit_mps3 = declare_parameter<double>("longitudinal.jerk_limit_mps3", 2.0);
+    declare_parameter<double>("lateral.max_target_rate_deg_s", 500.0);
+  adapter_config_.max_torque = declare_parameter<int>("lateral.max_torque", 270);
+  adapter_config_.torque_rate_up = declare_parameter<int>("lateral.torque_rate_up", 2);
+  adapter_config_.torque_rate_down = declare_parameter<int>("lateral.torque_rate_down", 3);
+  adapter_config_.driver_torque_allowance =
+    declare_parameter<double>("lateral.driver_torque_allowance", 250.0);
+  adapter_config_.driver_torque_multiplier =
+    declare_parameter<double>("lateral.driver_torque_multiplier", 2.0);
+  adapter_config_.driver_torque_factor =
+    declare_parameter<double>("lateral.driver_torque_factor", 1.0);
+  adapter_config_.steer_request_cutoff_angle_deg =
+    declare_parameter<double>("lateral.steer_request_cutoff_angle_deg", 85.0);
+  const int steer_request_valid_frames =
+    declare_parameter<int>("lateral.steer_request_valid_frames", 89);
+  const int steer_request_cut_frames =
+    declare_parameter<int>("lateral.steer_request_cut_frames", 2);
+  if (steer_request_valid_frames < 0 || steer_request_cut_frames < 0) {
+    throw std::invalid_argument("steering request frame counts cannot be negative");
+  }
+  adapter_config_.steer_request_valid_frames = static_cast<uint32_t>(steer_request_valid_frames);
+  adapter_config_.steer_request_cut_frames = static_cast<uint32_t>(steer_request_cut_frames);
+  adapter_config_.accel_min_mps2 = declare_parameter<double>("longitudinal.accel_min_mps2", -3.5);
+  adapter_config_.accel_max_mps2 = declare_parameter<double>("longitudinal.accel_max_mps2", 2.0);
+  adapter_config_.jerk_limit_mps3 = declare_parameter<double>("longitudinal.jerk_limit_mps3", 5.0);
   set_speed_kph_ = declare_parameter<double>("longitudinal.set_speed_kph", 30.0);
 
   safety_config_.allow_actuation = declare_parameter<bool>("safety.allow_actuation", false);
   safety_config_.allow_longitudinal = declare_parameter<bool>("safety.allow_longitudinal", false);
+  auto_arm_on_command_ = declare_parameter<bool>("safety.auto_arm_on_command", true);
   safety_config_.require_set_resume_button =
     declare_parameter<bool>("safety.require_set_resume_button", true);
   safety_config_.disengage_on_brake = declare_parameter<bool>("safety.disengage_on_brake", true);
@@ -138,9 +174,9 @@ void Ioniq5EcanNode::load_configuration() {
   safety_config_.longitudinal_override_on_gas =
     declare_parameter<bool>("safety.longitudinal_override_on_gas", true);
   safety_config_.max_active_speed_mps =
-    declare_parameter<double>("safety.max_active_speed_mps", 8.33);
+    declare_parameter<double>("safety.max_active_speed_mps", 0.0);
   safety_config_.max_abs_steering_angle_deg =
-    declare_parameter<double>("safety.max_abs_steering_angle_deg", 85.0);
+    declare_parameter<double>("safety.max_abs_steering_angle_deg", 0.0);
   safety_config_.required_safety_mode = static_cast<uint8_t>(PandaUsb::kSafetyHyundaiCanFd);
   safety_config_.required_safety_param = safety_config_.allow_longitudinal
                                            ? PandaUsb::kIoniq5Hda1LongParam
@@ -189,18 +225,17 @@ void Ioniq5EcanNode::load_configuration() {
   if (!std::isfinite(set_speed_kph_) || set_speed_kph_ < 0.0 || set_speed_kph_ > 255.0) {
     throw std::invalid_argument("set_speed_kph must be finite and within [0,255]");
   }
-  if (adapter_config_.max_target_angle_deg > 80.0) {
-    throw std::invalid_argument("software steering angle limit cannot exceed 80 degrees");
-  }
-  if (safety_config_.max_abs_steering_angle_deg < 80.0 ||
-      safety_config_.max_abs_steering_angle_deg > 85.0) {
-    throw std::invalid_argument("steering safety limit must be within [80,85] degrees");
-  }
 }
 
 void Ioniq5EcanNode::command_callback(const msg::ActuationCommand::SharedPtr message) {
   std::lock_guard<std::mutex> lock(command_mutex_);
-  if (message->sequence != 0U && last_sequence_ != 0U && message->sequence <= last_sequence_) {
+  const auto received_at = SteadyClock::now();
+  const bool previous_command_fresh =
+    latest_command_.received_at.time_since_epoch().count() != 0 &&
+    received_at >= latest_command_.received_at &&
+    received_at - latest_command_.received_at <= safety_config_.command_timeout;
+  if (message->sequence != 0U && last_sequence_ != 0U && previous_command_fresh &&
+      !sequence_is_newer(message->sequence, last_sequence_)) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "discarding non-monotonic command sequence");
     return;
@@ -208,7 +243,7 @@ void Ioniq5EcanNode::command_callback(const msg::ActuationCommand::SharedPtr mes
   if (!std::isfinite(message->lateral) || !std::isfinite(message->acceleration)) {
     latest_command_.valid = false;
     latest_command_.enable = false;
-    latest_command_.received_at = SteadyClock::now();
+    latest_command_.received_at = received_at;
     RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000,
                           "rejecting non-finite actuation command");
     return;
@@ -216,10 +251,10 @@ void Ioniq5EcanNode::command_callback(const msg::ActuationCommand::SharedPtr mes
   if (message->sequence != 0U) last_sequence_ = message->sequence;
   latest_command_.lateral = message->lateral;
   latest_command_.acceleration_mps2 = message->acceleration;
-  latest_command_.enable = message->enable;
+  latest_command_.enable = !use_enable_field_ || message->enable;
   latest_command_.valid = true;
   latest_command_.sequence = message->sequence;
-  latest_command_.received_at = SteadyClock::now();
+  latest_command_.received_at = received_at;
 }
 
 void Ioniq5EcanNode::arm_callback(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
@@ -229,11 +264,12 @@ void Ioniq5EcanNode::arm_callback(const std::shared_ptr<std_srvs::srv::SetBool::
     response->message = "safety.allow_actuation is false in YAML";
     return;
   }
+  auto_arm_inhibited_ = !request->data;
   requested_arm_ = request->data;
   arm_request_generation_.fetch_add(1U);
   response->success = true;
   response->message =
-    request->data ? "arm requested; SET/RES and deadman are still required" : "disarm requested";
+    request->data ? "arm requested; Panda controls_allowed is still required" : "disarm requested";
 }
 
 void Ioniq5EcanNode::receive_loop() {
@@ -310,6 +346,19 @@ void Ioniq5EcanNode::control_loop() {
     }
     const VehicleState vehicle = parser_->snapshot(now, vehicle_state_timeout_);
 
+    const bool command_fresh = command.received_at.time_since_epoch().count() != 0 &&
+                               now >= command.received_at &&
+                               now - command.received_at <= safety_config_.command_timeout;
+    const bool auto_arm_ready =
+      auto_arm_on_command_ && !auto_arm_inhibited_.load() && safety_config_.allow_actuation &&
+      command_fresh && command.valid && command.enable && vehicle.valid && !vehicle.brake_pressed &&
+      !vehicle.eps_fault && (!safety_config_.allow_longitudinal || !vehicle.acc_fault) &&
+      panda_health.connected;
+    if (auto_arm_ready && !requested_arm_.load()) {
+      requested_arm_ = true;
+      arm_request_generation_.fetch_add(1U);
+    }
+
     const bool requested = requested_arm_.load();
     const uint64_t request_generation = arm_request_generation_.load();
     if (request_generation != applied_arm_generation && (!requested || panda_->connected())) {
@@ -356,7 +405,7 @@ void Ioniq5EcanNode::control_loop() {
                                                   decision.longitudinal_allowed);
     if (vehicle_safety_mode_.load() && panda_->connected()) {
       frames.clear();
-      const bool steer_request = output.lateral_active;
+      const bool steer_request = output.steering_request;
       frames.push_back(codec_.make_lfa(
         output.steering_torque, decision.state == ControlState::Active, steer_request, ecan_bus_));
       if (frame_index % 5U == 0U) {
@@ -365,12 +414,17 @@ void Ioniq5EcanNode::control_loop() {
       }
       if (safety_config_.allow_longitudinal && frame_index % 2U == 0U) {
         const double target = output.longitudinal_active ? output.acceleration_mps2 : 0.0;
-        const double max_delta = adapter_config_.jerk_limit_mps3 * 0.02;
-        accel_last = std::clamp(target, accel_last - max_delta, accel_last + max_delta);
         const bool acc_enabled = decision.state == ControlState::Active;
-        frames.push_back(codec_.make_scc_control(target, accel_last, acc_enabled, output.stopping,
-                                                 vehicle.gas_pressed, set_speed_kph_,
-                                                 adapter_config_.jerk_limit_mps3, ecan_bus_));
+        if (acc_enabled) {
+          const double max_delta = adapter_config_.jerk_limit_mps3 * 0.02;
+          accel_last = std::clamp(target, accel_last - max_delta, accel_last + max_delta);
+        } else {
+          // Panda requires both acceleration request fields to be zero when controls are off.
+          accel_last = 0.0;
+        }
+        frames.push_back(codec_.make_scc_control(
+          acc_enabled ? target : 0.0, accel_last, acc_enabled, output.stopping, vehicle.gas_pressed,
+          set_speed_kph_, adapter_config_.jerk_limit_mps3, ecan_bus_));
         frames.push_back(codec_.make_fca_warning(ecan_bus_));
       }
       try {
@@ -427,7 +481,12 @@ void Ioniq5EcanNode::verify_longitudinal_firmware() {
   const PandaHealth before = panda_->health();
   panda_->send(
     codec_.make_scc_control(0.0, 0.0, false, false, false, set_speed_kph_, 1.0, ecan_bus_));
-  const PandaHealth after = panda_->health();
+  PandaHealth after = before;
+  for (int attempt = 0; attempt < 5; ++attempt) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    after = panda_->health();
+    if (after.safety_tx_blocked != before.safety_tx_blocked) break;
+  }
   codec_.reset_counters();
   if (after.safety_tx_blocked != before.safety_tx_blocked) {
     enter_no_output_mode();

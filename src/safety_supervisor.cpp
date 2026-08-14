@@ -8,8 +8,8 @@ namespace ioniq5_ecan {
 
 SafetySupervisor::SafetySupervisor(SafetyConfig config) : config_(config) {
   if (!std::isfinite(config_.max_active_speed_mps) ||
-      !std::isfinite(config_.max_abs_steering_angle_deg) || config_.max_active_speed_mps <= 0.0 ||
-      config_.max_abs_steering_angle_deg <= 0.0 || config_.command_timeout.count() <= 0 ||
+      !std::isfinite(config_.max_abs_steering_angle_deg) || config_.max_active_speed_mps < 0.0 ||
+      config_.max_abs_steering_angle_deg < 0.0 || config_.command_timeout.count() <= 0 ||
       config_.panda_timeout.count() <= 0) {
     throw std::invalid_argument("invalid safety supervisor configuration");
   }
@@ -105,12 +105,13 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehic
     arm_requested_ = false;
     return {state_, false, false, false, false, reason_};
   }
-  if (vehicle.speed_mps > config_.max_active_speed_mps) {
+  if (config_.max_active_speed_mps > 0.0 && vehicle.speed_mps > config_.max_active_speed_mps) {
     transition(ControlState::Fault, "configured active speed limit exceeded");
     arm_requested_ = false;
     return {state_, false, false, false, false, reason_};
   }
-  if (std::abs(vehicle.steering_angle_deg) >= config_.max_abs_steering_angle_deg) {
+  if (config_.max_abs_steering_angle_deg > 0.0 &&
+      std::abs(vehicle.steering_angle_deg) >= config_.max_abs_steering_angle_deg) {
     transition(ControlState::Fault, "steering angle safety limit exceeded");
     arm_requested_ = false;
     return {state_, false, false, false, false, reason_};

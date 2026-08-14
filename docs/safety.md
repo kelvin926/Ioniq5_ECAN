@@ -25,8 +25,13 @@ ARMED에서 비활성 프레임을 계속 보내는 이유는 relay가 순정 LF
 - acceleration `-3.5 .. 2.0 m/s²`
 - `SAFETY_ALLOUTPUT` 금지
 
-YAML은 이보다 강한 소프트웨어 제한만 허용합니다. 소스의 생성 함수도 Panda hard
-limit로 다시 clamp합니다.
+YAML은 Panda 경계 안에서 최대 토크/변화율/가속도와 선택적인 속도/조향각 상한을
+조정합니다. 속도/조향각 상한은 `0`으로 비활성화할 수 있지만 생성 함수와 Panda
+firmware의 hard limit는 항상 남습니다.
+
+85도 이상에서 EPS fault를 피하는 Carrot 방식도 적용했습니다. 기본값은 조향 request를
+89 frame 유지한 뒤 2 frame 동안 토크 값은 유지하고 `STEER_REQ`만 내립니다. cutoff
+angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니다.
 
 ## 해제 및 fault 조건
 
@@ -39,14 +44,17 @@ limit로 다시 clamp합니다.
 - Panda TX rejection 증가
 - safety mode/param drift
 - 하네스 미검출
-- 설정 속도/조향각 한계 초과
+- 활성화한 경우에만 설정 속도/조향각 상한 초과
 
 FAULT 후 재arm하려면 먼저 `set_armed=false`를 호출해 fault를 명시적으로 acknowledge한
-뒤 `true`와 물리 SET/RES 절차를 다시 수행합니다.
+뒤 `true`와 물리 SET/RES 절차를 다시 수행합니다. 기본 자동 arm은 시작과 정상적인
+브레이크 해제 후 arm 요청을 줄여 주지만, latched FAULT를 자동으로 지우지는 않습니다.
+서비스로 `set_armed=false`를 요청하면 자동 arm도 억제되고, 명시적인 `true` 요청으로
+다시 허용됩니다.
 
 ## 종방향 경고
 
 HDA1 camera-SCC longitudinal 모드는 camera의 `SCC_CONTROL` 및 관련 FCA 메시지를
 차단하고 이 노드가 대체합니다. 순정 AEB 기능이 유지된다고 가정할 수 없습니다.
-종방향 기본값이 false인 이유입니다. 안전 운전자, 외부 비상정지, 저속 제한, 충분한
-run-off 공간 없이 활성화하지 마십시오.
+기본 연구장 프로파일은 요청에 따라 종방향이 켜져 있으므로 고정 DEBUG firmware가
+필수입니다. 수동 관찰이나 lateral-only 시험에서는 YAML에서 명시적으로 끄십시오.

@@ -16,11 +16,11 @@ parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지�
 - 고정 firmware hash/Red Panda type 확인
 - `NO_OUTPUT`에서 모든 TX가 거부되는지 확인
 - CAN loopback fixture에서 100/50 Hz 주기와 counter/CRC 확인
-- USB 제거 시 250 ms 이내 DISCONNECTED 및 heartbeat false 확인
+- USB 제거 시 설정한 `panda_timeout_ms` 이내 DISCONNECTED 및 heartbeat false 확인
 
 ## 3. 차량 연결, 바퀴 지면 이탈
 
-- `allow_actuation: false`로 ECAN/CAM bus와 주소 fingerprint 기록
+- 별도 passive YAML에서 `allow_actuation: false`로 ECAN/CAM bus와 주소 fingerprint 기록
 - 0x12A가 camera bus에서 보이고 ECAN bus mapping이 0인지 확인
 - 0x1A0이 camera bus 2에서 보이는 HDA1 camera-SCC 구성인지 확인
 - 0x1CF/0x1AA 중 실제 버튼 메시지를 확인하고 `hardware.alternate_buttons` 설정

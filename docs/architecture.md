@@ -4,7 +4,7 @@
 Alpamayo-side controller
   └─ /ioniq5/actuation_command (best effort, depth 1)
        └─ command adapter
-            ├─ rate/curvature → target steering angle → bounded torque
+            ├─ rate/curvature → target angle → Carrot lateral-accel torque PID
             └─ acceleration scaling and bounds
                  └─ safety supervisor
                       └─ 100 Hz control thread
@@ -20,6 +20,11 @@ ROS callback은 최신 command 하나만 mutex로 교환합니다. CAN RX와 제
 스레드이고, 제어 루프는 ROS executor와 독립된 steady clock 100 Hz 주기를 사용합니다.
 동적 할당은 CAN 프레임 묶음과 USB packet에 남아 있으므로 hard real-time 보장은 하지
 않지만, Python/IPC 경계를 제어 hot path에서 제거했습니다.
+
+Carrot 제어 경로는 `latAccelFactor=3.172929`, `friction=0.096019`, PID
+`1.0/0.1/0.0/1.0`과 저속 보간표를 기본으로 사용합니다. 목표 조향각과 actuator delay를
+적용한 뒤 자전거 모델로 곡률을 계산하므로 입력이 steering rate여도 동일한 토크
+제어기를 사용합니다. 모든 값은 YAML에서 변경할 수 있습니다.
 
 입력 메시지는 임시 계약입니다. 최종 계약 변경 시 다음 경계만 수정합니다.
 

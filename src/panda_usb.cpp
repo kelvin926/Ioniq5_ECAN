@@ -102,6 +102,9 @@ PandaUsb::~PandaUsb() { disconnect(); }
 
 void PandaUsb::connect() {
   if (connected()) return;
+  // A failed transfer clears ready_ but deliberately leaves cleanup to the reconnect owner.
+  // Always close the stale handle/context before starting a new libusb session.
+  disconnect();
   if (libusb_init(&context_) != 0) {
     throw std::runtime_error("libusb initialization failed");
   }
@@ -169,10 +172,10 @@ void PandaUsb::connect() {
 
 void PandaUsb::disconnect() {
   ready_ = false;
-  handle_open_ = false;
   std::scoped_lock<std::mutex, std::mutex> io_lock(write_mutex_, control_mutex_);
+  const bool interface_claimed = handle_open_.exchange(false);
   if (handle_ != nullptr) {
-    libusb_release_interface(handle_, 0);
+    if (interface_claimed) libusb_release_interface(handle_, 0);
     libusb_close(handle_);
     handle_ = nullptr;
   }

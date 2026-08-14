@@ -96,8 +96,15 @@ struct ControlOutput {
   int steering_torque{0};
   double acceleration_mps2{0.0};
   bool lateral_active{false};
+  bool steering_request{false};
   bool longitudinal_active{false};
   bool stopping{false};
 };
+
+inline bool sequence_is_newer(uint32_t candidate, uint32_t previous) {
+  if (candidate == 0U || previous == 0U) return true;
+  const uint32_t delta = candidate - previous;
+  return delta != 0U && delta < 0x80000000U;
+}
 
 }  // namespace ioniq5_ecan
