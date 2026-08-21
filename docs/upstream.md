@@ -8,6 +8,8 @@
 | [commaai/panda](https://github.com/commaai/panda) | `dd8a5b3df77706337a11555377e7180c5adc8726` | USB packet/health ABI, control requests, firmware build flags |
 | [ajouatom/openpilot](https://github.com/ajouatom/openpilot/tree/carrot-wip) | `7fae709b39ec060a0bdd8cc141877eefecb72163` | 사용자 조정 가능 파라미터 방식 참고 |
 
+LDA/SET 분리 arm은 upstream 동작이 아니라 [`patches/opendbc-hyundai-canfd-split-arm.patch`](../patches/opendbc-hyundai-canfd-split-arm.patch)의 opt-in 확장입니다.
+
 차량 전제는 opendbc의 Ioniq 5 platform entry와 CAN-FD fingerprint logic을 따릅니다.
 
 - Ioniq 5 HDA1: Hyundai K harness

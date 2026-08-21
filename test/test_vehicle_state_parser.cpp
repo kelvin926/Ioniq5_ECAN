@@ -61,6 +61,58 @@ TEST(VehicleStateParser, BuildsValidCriticalStateFromEcan) {
   EXPECT_NEAR(state.driver_torque, 100.0, 1e-9);
   EXPECT_NEAR(state.eps_torque_nm, 10.0, 1e-9);
   EXPECT_NEAR(state.speed_mps, 10.0 / 3.6, 1e-9);
+  EXPECT_NEAR(state.wheel_speed_fl, 10.0 / 3.6, 1e-9);
+  EXPECT_NEAR(state.wheel_speed_fr, 10.0 / 3.6, 1e-9);
+  EXPECT_NEAR(state.wheel_speed_rl, 10.0 / 3.6, 1e-9);
+  EXPECT_NEAR(state.wheel_speed_rr, 10.0 / 3.6, 1e-9);
+}
+
+TEST(VehicleStateParser, ParsesImuDynamicsInRequestedUnits) {
+  using namespace ioniq5_ecan;
+  const TimePoint now = SteadyClock::now();
+  VehicleStateParser parser;
+  std::array<uint8_t, 32> imu{};
+  constexpr uint64_t yaw_raw = 32968U;
+  constexpr uint64_t lateral_raw = 33568U;
+  constexpr uint64_t longitudinal_raw = 31198U;
+  set_signal(imu, 64, 16, yaw_raw, ByteOrder::LittleEndian);
+  set_signal(imu, 80, 16, lateral_raw, ByteOrder::LittleEndian);
+  set_signal(imu, 96, 16, longitudinal_raw, ByteOrder::LittleEndian);
+  EXPECT_TRUE(parser.update(frame_with_crc(HyundaiCanFdCodec::kImuAddress, imu, now)));
+
+  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  EXPECT_NEAR(state.yaw_rate_deg_s, static_cast<double>(yaw_raw) * 0.005 - 163.84, 1e-9);
+  EXPECT_NEAR(state.lateral_accel_mps2,
+              (static_cast<double>(lateral_raw) * 0.000127465 - 4.17677312) * 9.80665, 1e-9);
+  EXPECT_NEAR(state.longitudinal_accel_mps2,
+              (static_cast<double>(longitudinal_raw) * 0.000127465 - 4.17677312) * 9.80665, 1e-9);
+
+  set_signal(imu, 24, 4, 1U, ByteOrder::LittleEndian);
+  set_signal(imu, 64, 16, 0U, ByteOrder::LittleEndian);
+  EXPECT_TRUE(parser.update(frame_with_crc(HyundaiCanFdCodec::kImuAddress, imu, now)));
+  EXPECT_NEAR(parser.snapshot(now, std::chrono::milliseconds(100)).yaw_rate_deg_s,
+              state.yaw_rate_deg_s, 1e-9);
+}
+
+TEST(VehicleStateParser, ParsesEscDynamicsFallback) {
+  using namespace ioniq5_ecan;
+  const TimePoint now = SteadyClock::now();
+  VehicleStateParser parser;
+  CanFrame esc;
+  esc.address = HyundaiCanFdCodec::kEscDynamicsAddress;
+  esc.bus = 0;
+  esc.fd = true;
+  esc.size = 32;
+  esc.received_at = now;
+  set_signal(esc.data, 64, 16, 32768U, ByteOrder::LittleEndian);
+  set_signal(esc.data, 80, 16, 32768U, ByteOrder::LittleEndian);
+  set_signal(esc.data, 96, 16, 32768U, ByteOrder::LittleEndian);
+  EXPECT_TRUE(parser.update(esc));
+
+  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  EXPECT_NEAR(state.yaw_rate_deg_s, 0.0, 1e-12);
+  EXPECT_NEAR(state.lateral_accel_mps2, 0.0, 1e-12);
+  EXPECT_NEAR(state.longitudinal_accel_mps2, 0.0, 1e-12);
 }
 
 TEST(VehicleStateParser, RejectsBadChecksum) {
@@ -74,18 +126,19 @@ TEST(VehicleStateParser, RejectsBadChecksum) {
   EXPECT_EQ(parser.checksum_failures(), 1U);
 }
 
-TEST(VehicleStateParser, OnlySetReleaseCreatesControlEvent) {
+TEST(VehicleStateParser, SeparatesLaneKeepPressFromSetRelease) {
   using namespace ioniq5_ecan;
   VehicleStateParser parser;
   const TimePoint now = SteadyClock::now();
 
-  auto send_button = [&](uint8_t value) {
+  auto send_button = [&](uint8_t value, bool lane_keep = false) {
     CanFrame frame;
     frame.address = HyundaiCanFdCodec::kCruiseButtonsAddress;
     frame.bus = 0;
     frame.size = 8;
     frame.received_at = now;
     set_signal(frame.data, 16, 3, value, ByteOrder::LittleEndian);
+    set_signal(frame.data, 23, 1, lane_keep ? 1U : 0U, ByteOrder::LittleEndian);
     EXPECT_TRUE(parser.update(frame));
   };
 
@@ -95,7 +148,30 @@ TEST(VehicleStateParser, OnlySetReleaseCreatesControlEvent) {
 
   send_button(2U);  // SET press
   send_button(0U);  // SET release
-  EXPECT_EQ(parser.snapshot(now, std::chrono::milliseconds(100)).set_button_events, 1U);
+  VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  EXPECT_EQ(state.set_button_events, 1U);
+  EXPECT_EQ(state.lane_keep_button_events, 0U);
+
+  send_button(0U, true);  // LDA press
+  send_button(0U, true);  // repeated frame must not create another event
+  state = parser.snapshot(now, std::chrono::milliseconds(100));
+  EXPECT_EQ(state.lane_keep_button_events, 1U);
+  EXPECT_TRUE(state.lane_keep_button_pressed);
+  send_button(0U, false);
+  EXPECT_FALSE(parser.snapshot(now, std::chrono::milliseconds(100)).lane_keep_button_pressed);
+}
+
+TEST(VehicleStateParser, ParsesLaneKeepFromAlternateButtons) {
+  using namespace ioniq5_ecan;
+  VehicleStateParser parser(0, 2, true);
+  const TimePoint now = SteadyClock::now();
+  std::array<uint8_t, 16> buttons{};
+  set_signal(buttons, 39, 1, 1U, ByteOrder::LittleEndian);
+  EXPECT_TRUE(
+    parser.update(frame_with_crc(HyundaiCanFdCodec::kCruiseButtonsAltAddress, buttons, now)));
+  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  EXPECT_EQ(state.lane_keep_button_events, 1U);
+  EXPECT_TRUE(state.lane_keep_button_pressed);
 }
 
 }  // namespace

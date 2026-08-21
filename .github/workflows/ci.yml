@@ -16,6 +16,26 @@ jobs:
       - name: Test
         run: ctest --test-dir build/core --output-on-failure
 
+  panda-safety-patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check out pinned opendbc and apply split-button patch
+        run: |
+          git clone --filter=blob:none https://github.com/commaai/opendbc.git /tmp/opendbc
+          git -C /tmp/opendbc checkout b72c1fd55ae7e84763e40912bbe06b8f533cb66b
+          git -C /tmp/opendbc apply --check "$GITHUB_WORKSPACE/patches/opendbc-hyundai-canfd-split-arm.patch"
+          git -C /tmp/opendbc apply "$GITHUB_WORKSPACE/patches/opendbc-hyundai-canfd-split-arm.patch"
+      - name: Build and test LDA split-arm safety hook
+        working-directory: /tmp/opendbc
+        run: |
+          python -m pip install --disable-pip-version-check -e '.[testing]'
+          python -m unittest \
+            opendbc.safety.tests.test_hyundai_canfd.TestHyundaiCanfdSplitButtonArm
+
   ros2-foxy:
     runs-on: ubuntu-latest
     container: ros:foxy-ros-base

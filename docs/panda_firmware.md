@@ -1,9 +1,14 @@
 # Pinned Panda firmware
 
 종방향 Hyundai safety flag는 Panda의 `ALLOW_DEBUG` 빌드에서만 적용됩니다. release
-firmware에서 param 13을 설정하면 LONG bit가 무시됩니다. 드라이버는 시작 시 zero-accel
+firmware에서 param `1037`을 설정하면 LONG bit가 무시됩니다. 드라이버는 시작 시 zero-accel
 비활성 SCC 프레임으로 이 능력을 검사하고, Panda가 차단하면 `NO_OUTPUT`으로 돌아가
 arm을 실패시킵니다.
+
+이 저장소는 고정 opendbc에 opt-in safety param bit `1024`를 추가합니다. 이 비트가 있을 때
+차선유지(LDA) 버튼의 상승 에지도 Panda의 전역 `controls_allowed`를 허용하며, host가 조향과
+종방향을 별도로 게이트합니다. 따라서 upstream stock image가 아니라 아래 스크립트가 만든
+`IONIQ5-dd8a5b3d-DEBUG` image가 필요합니다.
 
 ## 고정 버전
 
@@ -24,9 +29,10 @@ Ubuntu 20.04 기본 Python은 너무 오래되므로 `uv`가 관리하는 Python
 ./scripts/build_panda_debug_firmware.sh
 ```
 
-스크립트는 사용자 cache에 두 저장소를 정확한 SHA로 checkout하고 `RELEASE`와 ambient
-`DEBUG` 환경 변수를 제거한 뒤 `ALLOW_DEBUG` bootstub과 firmware를 빌드합니다. 두 출력
-경로와 SHA-256을 시험 로그에 보관하십시오.
+스크립트는 사용자 cache에 두 저장소를 정확한 SHA로 checkout하고 저장소의 opendbc
+split-button patch와 Panda builder-marker patch를 idempotent하게 적용합니다. 그 뒤
+`RELEASE`와 ambient `DEBUG` 환경 변수를 제거하고 `PANDA_BUILDER=IONIQ5`로 `ALLOW_DEBUG`
+bootstub과 firmware를 빌드합니다. 두 출력 및 두 patch의 SHA-256을 시험 로그에 보관하십시오.
 
 기존 RELEASE bootstub은 debug key로 서명된 앱을 거부할 수 있습니다. 플래시 후 Panda가
 `PID_DDEE` bootstub에 남으면 앱을 반복해서 쓰지 말고, 차량과 분리된 상태에서 공식 Panda
@@ -61,9 +67,10 @@ python3 scripts/flash_panda.py \
 ```
 
 helper는 앱에서 bootstub으로 전환한 뒤 새로 USB interface를 claim하므로 Windows WinUSB에서도
-bulk flash가 가능합니다. bootstub과 앱의 버전 문자열이 모두 고정
-`DEV-dd8a5b3d-DEBUG`인지 확인하고, 플래시 후 signature까지 다시 검증합니다. RELEASE 또는
-다른 commit의 bootstub이면 앱 영역을 지우기 전에 중단합니다.
+bulk flash가 가능합니다. 기존 고정 `DEV-dd8a5b3d-DEBUG` bootstub 또는 새
+`IONIQ5-dd8a5b3d-DEBUG` bootstub만 진입점으로 허용하고, 앱 image에는 반드시
+`IONIQ5-dd8a5b3d-DEBUG` marker가 있어야 합니다. 플래시 후 version과 signature를 다시
+검증하며 RELEASE 또는 다른 commit의 bootstub이면 앱 영역을 지우기 전에 중단합니다.
 
 플래시 후 노드를 `allow_actuation: false`로 시작해 protocol hash, hardware type,
 harness 상태와 CAN RX만 먼저 확인합니다.
@@ -74,6 +81,6 @@ harness 상태와 CAN RX만 먼저 확인합니다.
 python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL
 ```
 
-이 검사는 application PID와 정확한 `DEV-dd8a5b3d-DEBUG` 문자열, 두 packet hash, Red Panda hardware type, health ABI,
+이 검사는 application PID와 정확한 `IONIQ5-dd8a5b3d-DEBUG` 문자열, 두 packet hash, Red Panda hardware type, health ABI,
 fault/overflow 및 세 CAN controller의 bus-off 상태를 확인합니다. Panda에 control write나 CAN
 frame을 보내지 않습니다. 차량 하네스 연결 후에는 `--require-harness`를 추가합니다.

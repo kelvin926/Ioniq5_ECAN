@@ -1,0 +1,109 @@
+diff --git a/opendbc/safety/modes/hyundai_canfd.h b/opendbc/safety/modes/hyundai_canfd.h
+index bf08fb17..2d4d3df1 100644
+--- a/opendbc/safety/modes/hyundai_canfd.h
++++ b/opendbc/safety/modes/hyundai_canfd.h
+@@ -47,6 +47,8 @@
+ 
+ static bool hyundai_canfd_alt_buttons = false;
+ static bool hyundai_canfd_lka_steer_msg_alt = false;
++static bool hyundai_canfd_split_button_arm = false;
++static bool hyundai_canfd_lda_button_prev = false;
+ 
+ static unsigned int hyundai_canfd_get_lka_addr(void) {
+   return hyundai_canfd_lka_steer_msg_alt ? 0x110U : 0x50U;
+@@ -84,15 +86,25 @@ static void hyundai_canfd_rx_hook(const CANPacket_t *msg) {
+     const unsigned int button_addr = hyundai_canfd_alt_buttons ? 0x1aaU : 0x1cfU;
+     if (msg->addr == button_addr) {
+       bool main_button = false;
++      bool lda_button = false;
+       int cruise_button = 0;
+       if (msg->addr == 0x1cfU) {
+         cruise_button = msg->data[2] & 0x7U;
+         main_button = GET_BIT(msg, 19U);
++        lda_button = GET_BIT(msg, 23U);
+       } else {
+         cruise_button = (msg->data[4] >> 4) & 0x7U;
+         main_button = GET_BIT(msg, 34U);
++        lda_button = GET_BIT(msg, 39U);
+       }
+       hyundai_common_cruise_buttons_check(cruise_button, main_button);
++
++      // Repository-local opt-in: allow an LDA rising edge to establish Panda's global
++      // controls_allowed. Host software still gates lateral and longitudinal independently.
++      if (hyundai_canfd_split_button_arm && lda_button && !hyundai_canfd_lda_button_prev) {
++        controls_allowed = true;
++      }
++      hyundai_canfd_lda_button_prev = lda_button;
+     }
+ 
+     // gas press, different for EV, hybrid, and ICE models
+@@ -218,6 +230,7 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+ static safety_config hyundai_canfd_init(uint16_t param) {
+   const uint16_t HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT = 128;
+   const uint16_t HYUNDAI_PARAM_CANFD_ALT_BUTTONS = 32;
++  const uint16_t HYUNDAI_PARAM_CANFD_SPLIT_BUTTON_ARM = 1024;
+ 
+   static const CanMsg HYUNDAI_CANFD_LKA_STEER_MSG_TX_MSGS[] = {
+     HYUNDAI_CANFD_LKA_STEER_MSG_COMMON_TX_MSGS(0, 1)
+@@ -267,6 +280,8 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+   gen_crc_lookup_table_16(0x1021, hyundai_canfd_crc_lut);
+   hyundai_canfd_alt_buttons = GET_FLAG(param, HYUNDAI_PARAM_CANFD_ALT_BUTTONS);
+   hyundai_canfd_lka_steer_msg_alt = GET_FLAG(param, HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT);
++  hyundai_canfd_split_button_arm = GET_FLAG(param, HYUNDAI_PARAM_CANFD_SPLIT_BUTTON_ARM);
++  hyundai_canfd_lda_button_prev = false;
+ 
+   safety_config ret;
+   if (hyundai_longitudinal) {
+diff --git a/opendbc/safety/tests/test_hyundai_canfd.py b/opendbc/safety/tests/test_hyundai_canfd.py
+index 6cec7376..c3921ced 100755
+--- a/opendbc/safety/tests/test_hyundai_canfd.py
++++ b/opendbc/safety/tests/test_hyundai_canfd.py
+@@ -284,5 +284,48 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
+     pass
+ 
+ 
++class TestHyundaiCanfdSplitButtonArm(unittest.TestCase):
++
++  SPLIT_BUTTON_ARM = 1024
++
++  def setUp(self):
++    self.packer = CANPackerSafety("hyundai_canfd_generated")
++    self.safety = libsafety_py.libsafety
++
++  def _set_mode(self, alternate, split_arm):
++    param = HyundaiSafetyFlags.EV_GAS | HyundaiSafetyFlags.CAMERA_SCC
++    if alternate:
++      param |= HyundaiSafetyFlags.CANFD_ALT_BUTTONS
++    if split_arm:
++      param |= self.SPLIT_BUTTON_ARM
++    self.safety.set_safety_hooks(CarParams.SafetyModel.hyundaiCanfd, param)
++    self.safety.init_tests()
++
++  def _lda_button_msg(self, alternate, pressed):
++    name = "CRUISE_BUTTONS_ALT" if alternate else "CRUISE_BUTTONS"
++    values = {"LDA_BTN": pressed}
++    return self.packer.make_can_msg_safety(name, 0, values)
++
++  def test_lda_rising_edge_is_opt_in(self):
++    for alternate in (False, True):
++      with self.subTest(alternate=alternate):
++        self._set_mode(alternate, False)
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, False))
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
++        self.assertFalse(self.safety.get_controls_allowed())
++
++        self._set_mode(alternate, True)
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, False))
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
++        self.assertTrue(self.safety.get_controls_allowed())
++
++        self.safety.set_controls_allowed(False)
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
++        self.assertFalse(self.safety.get_controls_allowed())
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, False))
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
++        self.assertTrue(self.safety.get_controls_allowed())
++
++
+ if __name__ == "__main__":
+   unittest.main()

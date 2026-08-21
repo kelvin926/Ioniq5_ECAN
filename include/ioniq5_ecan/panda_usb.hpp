@@ -31,9 +31,13 @@ class PandaUsb {
   static constexpr uint16_t kHyundaiLongitudinal = 4;
   static constexpr uint16_t kHyundaiCameraScc = 8;
   static constexpr uint16_t kHyundaiAlternateButtons = 32;
-  static constexpr uint16_t kIoniq5Hda1PassiveParam = kHyundaiEv | kHyundaiCameraScc;
+  // Repository-local Panda safety extension: an LDA press may establish controls_allowed. The
+  // host still gates lateral and longitudinal separately.
+  static constexpr uint16_t kHyundaiSplitButtonArm = 1024;
+  static constexpr uint16_t kIoniq5Hda1PassiveParam =
+    kHyundaiEv | kHyundaiCameraScc | kHyundaiSplitButtonArm;
   static constexpr uint16_t kIoniq5Hda1LongParam =
-    kHyundaiEv | kHyundaiLongitudinal | kHyundaiCameraScc;
+    kHyundaiEv | kHyundaiLongitudinal | kHyundaiCameraScc | kHyundaiSplitButtonArm;
   static constexpr uint32_t kPinnedHealthPacketVersion = 0x290DAE03U;
   static constexpr uint32_t kPinnedCanPacketVersion = 0x75ABF276U;
   static constexpr uint8_t kRedPandaHardwareType = 0x07U;

@@ -76,34 +76,44 @@ int main() {
 
   SafetyConfig safety_config;
   safety_config.allow_actuation = true;
+  safety_config.allow_longitudinal = true;
+  safety_config.required_safety_param = 1037;
   SafetySupervisor safety(safety_config);
   const TimePoint now = SteadyClock::now();
   vehicle.valid = true;
-  vehicle.set_button_events = 1;
   PandaHealth panda;
   panda.connected = true;
   panda.controls_allowed = true;
   panda.harness_status = 1;
   panda.safety_mode = 28;
-  panda.safety_param = 9;
+  panda.safety_param = 1037;
   panda.updated_at = now;
   command.received_at = now;
   require(safety.request_arm(true), "arm request rejected");
-  require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
-          "safety supervisor did not activate");
+  require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
+          "safety supervisor activated before a channel arm button");
+  ++vehicle.lane_keep_button_events;
+  SafetyDecision split = safety.update(now, vehicle, panda, command);
+  require(split.lateral_allowed && !split.longitudinal_allowed,
+          "LDA did not arm only lateral control");
+  ++vehicle.set_button_events;
+  split = safety.update(now, vehicle, panda, command);
+  require(split.lateral_allowed && split.longitudinal_allowed,
+          "SET did not independently arm longitudinal control");
+  ++vehicle.lane_keep_button_events;
+  split = safety.update(now, vehicle, panda, command);
+  require(!split.lateral_allowed && split.longitudinal_allowed,
+          "LDA did not toggle only lateral control off");
   ++vehicle.set_button_events;
   require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
-          "second SET release did not toggle control off");
-  ++vehicle.set_button_events;
-  require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
-          "third SET release did not toggle control on");
+          "SET did not toggle only longitudinal control off");
   panda.controls_allowed = false;
+  ++vehicle.lane_keep_button_events;
   require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
-          "Panda disengagement did not pause control");
+          "channel became active while Panda controls were disabled");
   panda.controls_allowed = true;
-  ++vehicle.set_button_events;
   require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
-          "one SET release did not re-enable after Panda disengagement");
+          "armed lateral channel did not activate when Panda controls returned");
   panda.faults = 1U;
   const SafetyDecision fault = safety.update(now, vehicle, panda, command);
   require(
@@ -128,6 +138,50 @@ int main() {
   require(button_parser.update(button), "SET release was not parsed");
   require(button_parser.snapshot(now, std::chrono::milliseconds(100)).set_button_events == 1U,
           "SET release did not create control event");
+  set_signal(button.data, 23, 1, 1U, ByteOrder::LittleEndian);
+  require(button_parser.update(button), "LDA press was not parsed");
+  const VehicleState button_state = button_parser.snapshot(now, std::chrono::milliseconds(100));
+  require(button_state.lane_keep_button_events == 1U && button_state.lane_keep_button_pressed,
+          "LDA press did not create lateral arm event");
+
+  VehicleStateParser dynamics_parser;
+  CanFrame imu;
+  imu.address = HyundaiCanFdCodec::kImuAddress;
+  imu.bus = 0;
+  imu.fd = true;
+  imu.size = 32;
+  imu.received_at = now;
+  set_signal(imu.data, 64, 16, 32968U, ByteOrder::LittleEndian);
+  set_signal(imu.data, 80, 16, 32768U, ByteOrder::LittleEndian);
+  set_signal(imu.data, 96, 16, 32768U, ByteOrder::LittleEndian);
+  const uint16_t imu_crc = HyundaiCanFdCodec::checksum(imu.address, imu.data.data(), imu.size);
+  imu.data[0] = static_cast<uint8_t>(imu_crc & 0xFFU);
+  imu.data[1] = static_cast<uint8_t>(imu_crc >> 8U);
+  require(dynamics_parser.update(imu), "IMU frame was not parsed");
+  require(std::abs(dynamics_parser.snapshot(now, std::chrono::milliseconds(100)).yaw_rate_deg_s -
+                   1.0) < 1e-9,
+          "IMU yaw-rate conversion failed");
+
+  CanFrame wheels;
+  wheels.address = HyundaiCanFdCodec::kWheelSpeedsAddress;
+  wheels.bus = 0;
+  wheels.fd = true;
+  wheels.size = 24;
+  wheels.received_at = now;
+  for (const unsigned start : {64U, 80U, 96U, 112U}) {
+    set_signal(wheels.data, start, 14, 320U, ByteOrder::LittleEndian);
+  }
+  const uint16_t wheels_crc =
+    HyundaiCanFdCodec::checksum(wheels.address, wheels.data.data(), wheels.size);
+  wheels.data[0] = static_cast<uint8_t>(wheels_crc & 0xFFU);
+  wheels.data[1] = static_cast<uint8_t>(wheels_crc >> 8U);
+  require(dynamics_parser.update(wheels), "wheel-speed frame was not parsed");
+  const VehicleState dynamics = dynamics_parser.snapshot(now, std::chrono::milliseconds(100));
+  require(std::abs(dynamics.wheel_speed_fl - 10.0 / 3.6) < 1e-9 &&
+            std::abs(dynamics.wheel_speed_fr - 10.0 / 3.6) < 1e-9 &&
+            std::abs(dynamics.wheel_speed_rl - 10.0 / 3.6) < 1e-9 &&
+            std::abs(dynamics.wheel_speed_rr - 10.0 / 3.6) < 1e-9,
+          "individual wheel-speed conversion failed");
 
   std::cout << "core smoke tests passed\n";
   return 0;

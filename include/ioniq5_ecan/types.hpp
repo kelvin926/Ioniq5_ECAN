@@ -34,6 +34,13 @@ struct CommandSample {
 
 struct VehicleState {
   double speed_mps{0.0};
+  double yaw_rate_deg_s{0.0};
+  double lateral_accel_mps2{0.0};
+  double longitudinal_accel_mps2{0.0};
+  double wheel_speed_fl{0.0};
+  double wheel_speed_fr{0.0};
+  double wheel_speed_rl{0.0};
+  double wheel_speed_rr{0.0};
   double steering_angle_deg{0.0};
   double steering_rate_deg_s{0.0};
   double driver_torque{0.0};
@@ -47,6 +54,8 @@ struct VehicleState {
   bool standstill{true};
   uint8_t gear{0};
   uint8_t cruise_button{0};
+  bool lane_keep_button_pressed{false};
+  uint64_t lane_keep_button_events{0};
   uint64_t set_button_events{0};
   uint64_t cancel_button_events{0};
   bool valid{false};

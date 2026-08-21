@@ -1,0 +1,13 @@
+diff --git a/SConscript b/SConscript
+index 1de1796..2eed96a 100644
+--- a/SConscript
++++ b/SConscript
+@@ -5,7 +5,7 @@ import opendbc
+ import subprocess
+ 
+ PREFIX = "arm-none-eabi-"
+-BUILDER = "DEV"
++BUILDER = os.getenv("PANDA_BUILDER", "DEV")
+ 
+ common_flags = []
+ 

@@ -11,8 +11,8 @@ namespace ioniq5_ecan {
 struct SafetyConfig {
   bool allow_actuation{false};
   bool allow_longitudinal{false};
-  bool set_button_toggle{true};
-  bool require_set_resume_button{true};
+  bool lateral_button_toggle{true};
+  bool longitudinal_button_toggle{true};
   bool disengage_on_brake{true};
   bool disengage_on_cancel{true};
   bool longitudinal_override_on_gas{true};
@@ -20,7 +20,7 @@ struct SafetyConfig {
   double max_active_speed_mps{0.0};
   double max_abs_steering_angle_deg{0.0};
   uint8_t required_safety_mode{28};
-  uint16_t required_safety_param{9};
+  uint16_t required_safety_param{1033};
   std::chrono::milliseconds command_timeout{100};
   std::chrono::milliseconds panda_timeout{250};
 };
@@ -29,6 +29,8 @@ struct SafetyDecision {
   ControlState state{ControlState::Disconnected};
   bool lateral_allowed{false};
   bool longitudinal_allowed{false};
+  bool lateral_armed{false};
+  bool longitudinal_armed{false};
   bool use_vehicle_safety_mode{false};
   bool heartbeat_engaged{false};
   std::string reason{"not initialized"};
@@ -48,11 +50,14 @@ class SafetySupervisor {
  private:
   void transition(ControlState next, std::string reason);
   void disarm(std::string reason);
+  void fault(std::string reason);
 
   SafetyConfig config_;
   ControlState state_{ControlState::Disconnected};
   bool arm_requested_{false};
-  bool button_enabled_{false};
+  bool lateral_enabled_{false};
+  bool longitudinal_enabled_{false};
+  uint64_t last_lane_keep_button_events_{0};
   uint64_t last_set_button_events_{0};
   uint64_t last_cancel_button_events_{0};
   uint32_t last_tx_blocked_{0};

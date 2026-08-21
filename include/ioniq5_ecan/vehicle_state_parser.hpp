@@ -19,6 +19,7 @@ class VehicleStateParser {
 
  private:
   bool require_crc(const CanFrame& frame);
+  void parse_dynamics(const CanFrame& frame);
   void parse_steering(const CanFrame& frame);
   void parse_mdps(const CanFrame& frame);
   void parse_wheel_speeds(const CanFrame& frame);
@@ -33,6 +34,7 @@ class VehicleStateParser {
   mutable std::mutex mutex_;
   VehicleState state_;
   uint8_t previous_button_{0};
+  bool previous_lane_keep_button_{false};
   bool have_previous_angle_{false};
   double previous_angle_deg_{0.0};
   TimePoint previous_angle_time_{};

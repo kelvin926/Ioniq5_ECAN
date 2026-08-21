@@ -1,6 +1,14 @@
 builtin_interfaces/Time stamp
 bool valid
 float64 speed_mps
+float64 yaw_rate_deg_s
+float64 lateral_accel_mps2
+float64 longitudinal_accel_mps2
+# Individual wheel speeds are converted from the DBC's km/h to m/s.
+float64 wheel_speed_fl
+float64 wheel_speed_fr
+float64 wheel_speed_rl
+float64 wheel_speed_rr
 float64 steering_angle_deg
 float64 steering_rate_deg_s
 float64 driver_torque
@@ -14,9 +22,14 @@ bool cruise_engaged
 bool standstill
 uint8 gear
 uint8 cruise_button
+bool lane_keep_button_pressed
 uint8 control_state
 string control_state_name
 string control_reason
+bool lateral_armed
+bool longitudinal_armed
+bool lateral_control_active
+bool longitudinal_control_active
 bool panda_connected
 bool panda_controls_allowed
 uint32 panda_safety_tx_blocked

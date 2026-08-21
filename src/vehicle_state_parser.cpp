@@ -22,6 +22,9 @@ bool recent(TimePoint timestamp, TimePoint now, std::chrono::milliseconds timeou
          now - timestamp <= timeout;
 }
 
+constexpr double kKphToMps = 1.0 / 3.6;
+constexpr double kStandardGravityMps2 = 9.80665;
+
 }  // namespace
 
 VehicleStateParser::VehicleStateParser(uint8_t ecan_bus, uint8_t camera_bus, bool alternate_buttons)
@@ -48,6 +51,15 @@ bool VehicleStateParser::update(const CanFrame& frame) {
   }
 
   switch (frame.address) {
+    case HyundaiCanFdCodec::kImuAddress:
+      if (!on_ecan || frame.size != 32U || !require_crc(frame)) break;
+      parse_dynamics(frame);
+      return true;
+    case HyundaiCanFdCodec::kEscDynamicsAddress:
+      // ESC_02_10ms carries the same signals but has no checksum field in the pinned DBC.
+      if (!on_ecan || frame.size != 32U) break;
+      parse_dynamics(frame);
+      return true;
     case HyundaiCanFdCodec::kSteeringSensorsAddress:
       if (!on_ecan || frame.size != 16U || !require_crc(frame)) break;
       parse_steering(frame);
@@ -90,6 +102,23 @@ bool VehicleStateParser::update(const CanFrame& frame) {
   return false;
 }
 
+void VehicleStateParser::parse_dynamics(const CanFrame& frame) {
+  const auto data = payload_as<32>(frame);
+  const bool signals_valid = get_signal(data, 24, 4, ByteOrder::LittleEndian) == 0U &&
+                             get_signal(data, 28, 4, ByteOrder::LittleEndian) == 0U &&
+                             get_signal(data, 32, 4, ByteOrder::LittleEndian) == 0U;
+  if (!signals_valid) return;
+
+  const double yaw_raw = static_cast<double>(get_signal(data, 64, 16, ByteOrder::LittleEndian));
+  const double lateral_raw = static_cast<double>(get_signal(data, 80, 16, ByteOrder::LittleEndian));
+  const double longitudinal_raw =
+    static_cast<double>(get_signal(data, 96, 16, ByteOrder::LittleEndian));
+  state_.yaw_rate_deg_s = yaw_raw * 0.005 - 163.84;
+  state_.lateral_accel_mps2 = (lateral_raw * 0.000127465 - 4.17677312) * kStandardGravityMps2;
+  state_.longitudinal_accel_mps2 =
+    (longitudinal_raw * 0.000127465 - 4.17677312) * kStandardGravityMps2;
+}
+
 void VehicleStateParser::parse_steering(const CanFrame& frame) {
   const auto data = payload_as<16>(frame);
   const int64_t angle_raw = sign_extend(get_signal(data, 24, 16, ByteOrder::LittleEndian), 16);
@@ -128,13 +157,20 @@ void VehicleStateParser::parse_mdps(const CanFrame& frame) {
 
 void VehicleStateParser::parse_wheel_speeds(const CanFrame& frame) {
   const auto data = payload_as<24>(frame);
-  double total_kph = 0.0;
-  for (const unsigned start : {64U, 80U, 96U, 112U}) {
-    total_kph +=
-      static_cast<double>(get_signal(data, start, 14, ByteOrder::LittleEndian)) * 0.03125;
+  std::array<double, 4> wheel_speeds{};
+  constexpr std::array<unsigned, 4> starts{64U, 80U, 96U, 112U};
+  for (std::size_t index = 0; index < starts.size(); ++index) {
+    const double speed_kph =
+      static_cast<double>(get_signal(data, starts[index], 14, ByteOrder::LittleEndian)) * 0.03125;
+    wheel_speeds[index] = speed_kph * kKphToMps;
   }
-  state_.speed_mps = (total_kph / 4.0) / 3.6;
-  state_.standstill = state_.speed_mps < (0.375 / 3.6);
+  state_.wheel_speed_fl = wheel_speeds[0];
+  state_.wheel_speed_fr = wheel_speeds[1];
+  state_.wheel_speed_rl = wheel_speeds[2];
+  state_.wheel_speed_rr = wheel_speeds[3];
+  state_.speed_mps = (wheel_speeds[0] + wheel_speeds[1] + wheel_speeds[2] + wheel_speeds[3]) / 4.0;
+  state_.standstill = std::all_of(wheel_speeds.begin(), wheel_speeds.end(),
+                                  [](double speed) { return speed <= 0.375 * kKphToMps; });
   wheel_time_ = frame.received_at;
 }
 
@@ -154,16 +190,22 @@ void VehicleStateParser::parse_accelerator(const CanFrame& frame) {
 
 void VehicleStateParser::parse_buttons(const CanFrame& frame, bool alternate) {
   uint8_t current = 0;
+  bool lane_keep_button = false;
   if (alternate) {
     const auto data = payload_as<16>(frame);
     current = static_cast<uint8_t>(get_signal(data, 36, 3, ByteOrder::LittleEndian));
+    lane_keep_button = get_signal(data, 39, 1, ByteOrder::LittleEndian) != 0U;
   } else {
     const auto data = payload_as<8>(frame);
     current = static_cast<uint8_t>(get_signal(data, 16, 3, ByteOrder::LittleEndian));
+    lane_keep_button = get_signal(data, 23, 1, ByteOrder::LittleEndian) != 0U;
   }
 
-  // Hyundai button values: RES=1, SET=2, CANCEL=4. Only a SET release controls
-  // this project's host-side actuation toggle.
+  // The LDA/lane-keep button arms lateral control on its rising edge. SET release separately
+  // controls longitudinal, matching Panda's Hyundai longitudinal enable edge.
+  if (lane_keep_button && !previous_lane_keep_button_) {
+    ++state_.lane_keep_button_events;
+  }
   if (previous_button_ == 2U && current == 0U) {
     ++state_.set_button_events;
   }
@@ -171,7 +213,9 @@ void VehicleStateParser::parse_buttons(const CanFrame& frame, bool alternate) {
     ++state_.cancel_button_events;
   }
   previous_button_ = current;
+  previous_lane_keep_button_ = lane_keep_button;
   state_.cruise_button = current;
+  state_.lane_keep_button_pressed = lane_keep_button;
 }
 
 void VehicleStateParser::parse_scc(const CanFrame& frame) {

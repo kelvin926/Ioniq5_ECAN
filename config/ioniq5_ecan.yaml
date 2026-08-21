@@ -87,13 +87,12 @@ ioniq5_ecan_node:
 
     safety:
       # Research-site profile: the first fresh two-value command arms automatically.
-      # Panda may observe SET/RES, but this host enables output only on SET release.
+      # LDA toggles lateral; SET release toggles longitudinal.
       allow_actuation: true
       allow_longitudinal: true
       auto_arm_on_command: true
-      # The first fresh command enters standby; each SET release toggles output ON/OFF.
-      set_button_toggle: true
-      require_set_resume_button: false
+      lateral_button_toggle: true
+      longitudinal_button_toggle: true
       # Optional host reactions are disabled for the closed research-site profile.
       # Panda firmware behavior and the command/Panda watchdog remain in force.
       disengage_on_brake: false

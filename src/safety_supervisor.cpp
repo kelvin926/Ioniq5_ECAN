@@ -21,11 +21,13 @@ bool SafetySupervisor::request_arm(bool arm) {
     return false;
   }
   if (arm && !arm_requested_) {
-    button_enabled_ = false;
+    lateral_enabled_ = false;
+    longitudinal_enabled_ = false;
   }
   arm_requested_ = arm;
   if (!arm) {
-    button_enabled_ = false;
+    lateral_enabled_ = false;
+    longitudinal_enabled_ = false;
     if (state_ != ControlState::Disconnected) {
       transition(ControlState::Passive, "operator disarmed");
     }
@@ -35,42 +37,64 @@ bool SafetySupervisor::request_arm(bool arm) {
 
 SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehicle,
                                         const PandaHealth& panda, const CommandSample& command) {
+  const auto decision = [&](bool lateral_allowed, bool longitudinal_allowed,
+                            bool use_vehicle_safety_mode, bool heartbeat_engaged) {
+    return SafetyDecision{state_,
+                          lateral_allowed,
+                          longitudinal_allowed,
+                          lateral_enabled_,
+                          config_.allow_longitudinal && longitudinal_enabled_,
+                          use_vehicle_safety_mode,
+                          heartbeat_engaged,
+                          reason_};
+  };
+
   const bool panda_fresh = panda.connected && panda.updated_at.time_since_epoch().count() != 0 &&
                            now >= panda.updated_at &&
                            now - panda.updated_at <= config_.panda_timeout;
   if (!panda_fresh) {
     arm_requested_ = false;
-    button_enabled_ = false;
+    lateral_enabled_ = false;
+    longitudinal_enabled_ = false;
     transition(ControlState::Disconnected, "Panda disconnected or health timeout");
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
 
   if (!config_.allow_actuation) {
     arm_requested_ = false;
-    button_enabled_ = false;
+    lateral_enabled_ = false;
+    longitudinal_enabled_ = false;
     transition(ControlState::Passive, "actuation disabled by YAML");
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
 
-  if (vehicle.set_button_events != last_set_button_events_) {
+  const bool lane_keep_button_event =
+    vehicle.lane_keep_button_events != last_lane_keep_button_events_;
+  if (lane_keep_button_event) {
+    last_lane_keep_button_events_ = vehicle.lane_keep_button_events;
+  }
+  const bool set_button_event = vehicle.set_button_events != last_set_button_events_;
+  if (set_button_event) {
     last_set_button_events_ = vehicle.set_button_events;
-    // SET turns control off only when it was genuinely active. If Panda disabled controls after
-    // a brake intervention, one SET release re-enables instead of requiring an off/on double tap.
-    button_enabled_ =
-      config_.set_button_toggle
-        ? !(button_enabled_ && state_ == ControlState::Active && panda.controls_allowed)
-        : true;
+  }
+
+  if (arm_requested_ && lane_keep_button_event) {
+    lateral_enabled_ =
+      config_.lateral_button_toggle ? !(lateral_enabled_ && panda.controls_allowed) : true;
+  }
+  if (arm_requested_ && set_button_event) {
+    longitudinal_enabled_ = config_.longitudinal_button_toggle
+                              ? !(longitudinal_enabled_ && panda.controls_allowed)
+                              : true;
   }
   const bool cancel_event = vehicle.cancel_button_events != last_cancel_button_events_;
   last_cancel_button_events_ = vehicle.cancel_button_events;
 
   if (panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off ||
       panda.faults != 0U || panda.fault_status != 0U) {
-    arm_requested_ = false;
-    transition(ControlState::Fault, "Panda safety or CAN health fault");
+    fault("Panda safety or CAN health fault");
   } else if (state_ == ControlState::Active && panda.safety_tx_blocked > last_tx_blocked_) {
-    arm_requested_ = false;
-    transition(ControlState::Fault, "Panda rejected an active control frame");
+    fault("Panda rejected an active control frame");
   }
   last_tx_blocked_ = panda.safety_tx_blocked;
 
@@ -78,58 +102,52 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehic
     if (state_ != ControlState::Fault) {
       transition(ControlState::Passive, "waiting for arm request");
     }
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
 
   if (panda.harness_status == 0U) {
-    arm_requested_ = false;
-    transition(ControlState::Fault, "Panda harness is not detected");
-    return {state_, false, false, false, false, reason_};
+    fault("Panda harness is not detected");
+    return decision(false, false, false, false);
   }
 
   if (state_ == ControlState::Fault) {
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
 
   if (panda.safety_mode != config_.required_safety_mode ||
       panda.safety_param != config_.required_safety_param) {
     if (state_ == ControlState::Active) {
-      transition(ControlState::Fault, "Panda safety mode changed while active");
-      arm_requested_ = false;
+      fault("Panda safety mode changed while active");
     } else {
       transition(ControlState::Armed, "waiting for configured Panda safety mode");
     }
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
 
   if (!vehicle.valid) {
-    transition(ControlState::Fault, "critical vehicle state timeout or EPS fault");
-    arm_requested_ = false;
-    return {state_, false, false, false, false, reason_};
+    fault("critical vehicle state timeout or EPS fault");
+    return decision(false, false, false, false);
   }
-  if (vehicle.acc_fault && config_.allow_longitudinal) {
-    transition(ControlState::Fault, "ACC fault");
-    arm_requested_ = false;
-    return {state_, false, false, false, false, reason_};
+  if (vehicle.acc_fault && config_.allow_longitudinal && longitudinal_enabled_) {
+    fault("ACC fault");
+    return decision(false, false, false, false);
   }
   if (config_.max_active_speed_mps > 0.0 && vehicle.speed_mps > config_.max_active_speed_mps) {
-    transition(ControlState::Fault, "configured active speed limit exceeded");
-    arm_requested_ = false;
-    return {state_, false, false, false, false, reason_};
+    fault("configured active speed limit exceeded");
+    return decision(false, false, false, false);
   }
   if (config_.max_abs_steering_angle_deg > 0.0 &&
       std::abs(vehicle.steering_angle_deg) >= config_.max_abs_steering_angle_deg) {
-    transition(ControlState::Fault, "steering angle safety limit exceeded");
-    arm_requested_ = false;
-    return {state_, false, false, false, false, reason_};
+    fault("steering angle safety limit exceeded");
+    return decision(false, false, false, false);
   }
   if (config_.disengage_on_brake && vehicle.brake_pressed) {
     disarm("brake pressed");
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
   if (config_.disengage_on_cancel && cancel_event) {
     disarm("cancel button pressed");
-    return {state_, false, false, false, false, reason_};
+    return decision(false, false, false, false);
   }
 
   const bool command_fresh = command.received_at.time_since_epoch().count() != 0 &&
@@ -137,39 +155,44 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehic
                              now - command.received_at <= config_.command_timeout;
   if (!command_fresh) {
     if (state_ == ControlState::Active) {
-      transition(ControlState::Fault, "control command timeout");
-      arm_requested_ = false;
+      fault("control command timeout");
     } else {
       transition(ControlState::Armed, "waiting for fresh command");
     }
-    return {state_, false, false, true, false, reason_};
+    return decision(false, false, true, false);
   }
   if (!command.valid) {
-    transition(ControlState::Fault, "control command contains a non-finite value");
-    arm_requested_ = false;
-    return {state_, false, false, false, false, reason_};
+    fault("control command contains a non-finite value");
+    return decision(false, false, false, false);
   }
   if (!command.enable) {
     transition(ControlState::Armed, "command deadman is false");
-    return {state_, false, false, true, false, reason_};
+    return decision(false, false, true, false);
   }
-  if (config_.set_button_toggle && !button_enabled_) {
-    transition(ControlState::Armed, "SET control toggle is off");
-    return {state_, false, false, true, false, reason_};
-  }
-  if (!config_.set_button_toggle && config_.require_set_resume_button && !button_enabled_) {
-    transition(ControlState::Armed, "waiting for SET release");
-    return {state_, false, false, true, false, reason_};
+
+  const bool lateral_requested = lateral_enabled_;
+  const bool longitudinal_requested = config_.allow_longitudinal && longitudinal_enabled_;
+  if (!lateral_requested && !longitudinal_requested) {
+    transition(ControlState::Armed, "waiting for LDA lateral arm or SET longitudinal arm");
+    return decision(false, false, true, false);
   }
   if (!panda.controls_allowed) {
     transition(ControlState::Armed, "Panda controls_allowed is false");
-    return {state_, false, false, true, false, reason_};
+    return decision(false, false, true, false);
   }
 
-  transition(ControlState::Active, "active");
+  const bool lateral = lateral_requested;
   const bool longitudinal =
-    config_.allow_longitudinal && !(config_.longitudinal_override_on_gas && vehicle.gas_pressed);
-  return {state_, true, longitudinal, true, true, reason_};
+    longitudinal_requested && !(config_.longitudinal_override_on_gas && vehicle.gas_pressed);
+  if (!lateral && !longitudinal) {
+    transition(ControlState::Armed, "longitudinal arm paused by gas override");
+    return decision(false, false, true, false);
+  }
+
+  transition(ControlState::Active, lateral && longitudinal ? "active: lateral + longitudinal"
+                                   : lateral               ? "active: lateral"
+                                                           : "active: longitudinal");
+  return decision(lateral, longitudinal, true, true);
 }
 
 void SafetySupervisor::transition(ControlState next, std::string reason) {
@@ -179,8 +202,16 @@ void SafetySupervisor::transition(ControlState next, std::string reason) {
 
 void SafetySupervisor::disarm(std::string reason) {
   arm_requested_ = false;
-  button_enabled_ = false;
+  lateral_enabled_ = false;
+  longitudinal_enabled_ = false;
   transition(ControlState::Passive, std::move(reason));
+}
+
+void SafetySupervisor::fault(std::string reason) {
+  arm_requested_ = false;
+  lateral_enabled_ = false;
+  longitudinal_enabled_ = false;
+  transition(ControlState::Fault, std::move(reason));
 }
 
 ControlState SafetySupervisor::state() const { return state_; }

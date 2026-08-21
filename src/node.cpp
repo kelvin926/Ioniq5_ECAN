@@ -197,10 +197,11 @@ void Ioniq5EcanNode::load_configuration() {
 
   safety_config_.allow_actuation = declare_parameter<bool>("safety.allow_actuation", false);
   safety_config_.allow_longitudinal = declare_parameter<bool>("safety.allow_longitudinal", false);
-  safety_config_.set_button_toggle = declare_parameter<bool>("safety.set_button_toggle", true);
+  safety_config_.lateral_button_toggle =
+    declare_parameter<bool>("safety.lateral_button_toggle", true);
+  safety_config_.longitudinal_button_toggle =
+    declare_parameter<bool>("safety.longitudinal_button_toggle", true);
   auto_arm_on_command_ = declare_parameter<bool>("safety.auto_arm_on_command", true);
-  safety_config_.require_set_resume_button =
-    declare_parameter<bool>("safety.require_set_resume_button", true);
   safety_config_.disengage_on_brake = declare_parameter<bool>("safety.disengage_on_brake", true);
   safety_config_.disengage_on_cancel = declare_parameter<bool>("safety.disengage_on_cancel", true);
   safety_config_.longitudinal_override_on_gas =
@@ -301,16 +302,15 @@ void Ioniq5EcanNode::raw_can_tx_callback(const msg::RawCanFrame::SharedPtr messa
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "dropping malformed raw CAN TX frame");
     return;
   }
-  ControlState control_state = ControlState::Disconnected;
+  bool longitudinal_allowed = false;
   {
     std::lock_guard<std::mutex> lock(decision_mutex_);
-    control_state = latest_decision_.state;
+    longitudinal_allowed = latest_decision_.longitudinal_allowed;
   }
-  if (!vehicle_safety_mode_.load() || !panda_->connected() ||
-      control_state != ControlState::Active) {
+  if (!vehicle_safety_mode_.load() || !panda_->connected() || !longitudinal_allowed) {
     ++raw_can_tx_drop_count_;
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                         "raw CAN TX requires SET control toggle ON and ACTIVE state");
+                         "raw CAN TX requires SET longitudinal arm and active Panda controls");
     return;
   }
 
@@ -425,11 +425,11 @@ void Ioniq5EcanNode::control_loop() {
     const bool command_fresh = command.received_at.time_since_epoch().count() != 0 &&
                                now >= command.received_at &&
                                now - command.received_at <= safety_config_.command_timeout;
-    const bool auto_arm_ready =
-      auto_arm_on_command_ && !auto_arm_inhibited_.load() && safety_config_.allow_actuation &&
-      command_fresh && command.valid && command.enable && vehicle.valid &&
-      (!safety_config_.disengage_on_brake || !vehicle.brake_pressed) && !vehicle.eps_fault &&
-      (!safety_config_.allow_longitudinal || !vehicle.acc_fault) && panda_health.connected;
+    const bool auto_arm_ready = auto_arm_on_command_ && !auto_arm_inhibited_.load() &&
+                                safety_config_.allow_actuation && command_fresh && command.valid &&
+                                command.enable && vehicle.valid &&
+                                (!safety_config_.disengage_on_brake || !vehicle.brake_pressed) &&
+                                !vehicle.eps_fault && panda_health.connected;
     if (auto_arm_ready && !requested_arm_.load()) {
       requested_arm_ = true;
       arm_request_generation_.fetch_add(1U);
@@ -482,15 +482,14 @@ void Ioniq5EcanNode::control_loop() {
     if (vehicle_safety_mode_.load() && panda_->connected()) {
       frames.clear();
       const bool steer_request = output.steering_request;
-      frames.push_back(codec_.make_lfa(
-        output.steering_torque, decision.state == ControlState::Active, steer_request, ecan_bus_));
+      frames.push_back(codec_.make_lfa(output.steering_torque, decision.lateral_allowed,
+                                       steer_request, ecan_bus_));
       if (frame_index % 5U == 0U) {
-        frames.push_back(
-          codec_.make_lfa_cluster(decision.state == ControlState::Active, ecan_bus_));
+        frames.push_back(codec_.make_lfa_cluster(decision.lateral_allowed, ecan_bus_));
       }
       if (safety_config_.allow_longitudinal && frame_index % 2U == 0U) {
         const double target = output.longitudinal_active ? output.acceleration_mps2 : 0.0;
-        const bool acc_enabled = decision.state == ControlState::Active;
+        const bool acc_enabled = decision.longitudinal_allowed;
         if (acc_enabled) {
           const double max_delta = adapter_config_.jerk_limit_mps3 * 0.02;
           accel_last = std::clamp(target, accel_last - max_delta, accel_last + max_delta);
@@ -590,6 +589,13 @@ void Ioniq5EcanNode::publish_status() {
   message.stamp = now();
   message.valid = vehicle.valid;
   message.speed_mps = vehicle.speed_mps;
+  message.yaw_rate_deg_s = vehicle.yaw_rate_deg_s;
+  message.lateral_accel_mps2 = vehicle.lateral_accel_mps2;
+  message.longitudinal_accel_mps2 = vehicle.longitudinal_accel_mps2;
+  message.wheel_speed_fl = vehicle.wheel_speed_fl;
+  message.wheel_speed_fr = vehicle.wheel_speed_fr;
+  message.wheel_speed_rl = vehicle.wheel_speed_rl;
+  message.wheel_speed_rr = vehicle.wheel_speed_rr;
   message.steering_angle_deg = vehicle.steering_angle_deg;
   message.steering_rate_deg_s = vehicle.steering_rate_deg_s;
   message.driver_torque = vehicle.driver_torque;
@@ -603,9 +609,14 @@ void Ioniq5EcanNode::publish_status() {
   message.standstill = vehicle.standstill;
   message.gear = vehicle.gear;
   message.cruise_button = vehicle.cruise_button;
+  message.lane_keep_button_pressed = vehicle.lane_keep_button_pressed;
   message.control_state = static_cast<uint8_t>(decision.state);
   message.control_state_name = to_string(decision.state);
   message.control_reason = decision.reason;
+  message.lateral_armed = decision.lateral_armed;
+  message.longitudinal_armed = decision.longitudinal_armed;
+  message.lateral_control_active = decision.lateral_allowed;
+  message.longitudinal_control_active = decision.longitudinal_allowed;
   message.panda_connected = panda.connected;
   message.panda_controls_allowed = panda.controls_allowed;
   message.panda_safety_tx_blocked = panda.safety_tx_blocked;

@@ -8,7 +8,8 @@ from pathlib import Path
 from panda import Panda
 
 
-PINNED_VERSION = "DEV-dd8a5b3d-DEBUG"
+PINNED_VERSION = "IONIQ5-dd8a5b3d-DEBUG"
+ACCEPTED_BOOTSTUB_VERSIONS = {PINNED_VERSION, "DEV-dd8a5b3d-DEBUG"}
 
 
 def _open_in_state(serial: str, bootstub: bool, timeout_s: float = 15.0) -> Panda:
@@ -83,9 +84,10 @@ def main() -> int:
         if panda.get_type() != Panda.HW_TYPE_RED_PANDA:
             raise RuntimeError("device changed identity while entering bootstub")
         bootstub_version = panda.get_version()
-        if bootstub_version != PINNED_VERSION:
+        if bootstub_version not in ACCEPTED_BOOTSTUB_VERSIONS:
             raise RuntimeError(
-                f"bootstub is {bootstub_version!r}, expected {PINNED_VERSION!r}; "
+                f"bootstub is {bootstub_version!r}, expected one of "
+                f"{sorted(ACCEPTED_BOOTSTUB_VERSIONS)!r}; "
                 "install the pinned ALLOW_DEBUG bootstub with recover_panda.py before "
                 "flashing the application"
             )

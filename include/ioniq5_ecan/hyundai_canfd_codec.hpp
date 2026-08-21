@@ -9,7 +9,9 @@ namespace ioniq5_ecan {
 
 class HyundaiCanFdCodec {
  public:
+  static constexpr uint32_t kImuAddress = 0x04A;
   static constexpr uint32_t kWheelSpeedsAddress = 0x0A0;
+  static constexpr uint32_t kEscDynamicsAddress = 0x0E5;
   static constexpr uint32_t kSteeringSensorsAddress = 0x125;
   static constexpr uint32_t kLfaAddress = 0x12A;
   static constexpr uint32_t kSccControlAddress = 0x1A0;

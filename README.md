@@ -6,7 +6,8 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 > 이 코드는 실제 차량에서 검증되지 않았습니다. 저장소의 기본 YAML은 요청한 폐쇄
 > 연구장 프로파일로 `allow_actuation`과 종방향 제어가 활성화되어 있습니다. 노드는
 > 시작할 때 `NO_OUTPUT`이고 첫 최신 명령으로 Panda를 대기 상태로 전환합니다. 이후 물리
-> 크루즈 `SET` 버튼을 눌렀다 놓을 때마다 조향·종방향·raw CAN TX가 함께 ON/OFF 토글됩니다.
+> 차선유지(LDA) 버튼은 조향을, 크루즈 `SET` 버튼은 종방향과 raw CAN TX를 각각 ON/OFF
+> 토글합니다.
 > 종방향 제어 중에는 순정 SCC/AEB 메시지 소유권이 차단됩니다.
 
 ## 구현 범위
@@ -15,7 +16,7 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 - `LFA (0x12A)` 100 Hz 조향 토크 명령
 - 선택적 `SCC_CONTROL (0x1A0)` 및 `ADRV_0x160` 50 Hz 가속도 명령
 - CRC16, rolling counter, Panda USB CAN packet protocol
-- 차량 속도/조향/운전자 토크/페달/브레이크/크루즈 버튼 상태 파싱
+- 차량 속도·4륜 속도/요레이트/횡·종가속도/조향/토크/페달/브레이크/버튼 상태 파싱
 - `PASSIVE → ARMED → ACTIVE → FAULT` 안전 상태기계
 - carrotpilot의 Ioniq 5 횡가속도/마찰 기반 토크 제어와 ROS 2 YAML 파라미터 조정
 - Panda 프로토콜 버전, Red Panda 기종, 하네스, heartbeat, RX/TX 오류 확인
@@ -108,10 +109,14 @@ ros2 topic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/msg/ActuationCommand 
 
 기본 자동 arm 모드에서 출력 조건은 다음과 같습니다.
 
-1. 고정 DEBUG Panda firmware 및 Red Panda/Hyundai K 연결
+1. 저장소의 split-button 패치가 적용된 고정 `IONIQ5` DEBUG Panda firmware 및 Red Panda/Hyundai K 연결
 2. 유효하고 최신인 필수 차량 CAN 상태와 command
-3. 물리적인 `SET` 버튼을 눌렀다 놓아 host 토글 ON 및 Panda `controls_allowed: true`
-4. 다시 `SET`을 눌렀다 놓으면 조향·종방향·raw TX가 모두 OFF
+3. 물리적인 차선유지(LDA) 버튼을 누르면 조향 ON, 다시 누르면 조향 OFF
+4. 물리적인 `SET` 버튼을 눌렀다 놓으면 종방향·raw TX ON, 다시 누르면 OFF
+
+두 채널은 독립적입니다. `/ioniq5/vehicle_state`의 `lateral_armed`,
+`longitudinal_armed`, `lateral_control_active`, `longitudinal_control_active`로 현재 상태를
+확인할 수 있습니다.
 
 ```bash
 # auto_arm_on_command=false일 때 수동 arm
@@ -126,7 +131,7 @@ ros2 service call /ioniq5_ecan/set_armed std_srvs/srv/SetBool "{data: false}"
 firmware 경계를 넘길 수 없습니다.
 
 raw CAN은 `/ioniq5/can_rx`와 `/ioniq5/can0/rx`~`can2/rx`로 수신하고
-`/ioniq5/can_tx`로 송신합니다. TX는 `raw_can.allow_tx: true`, ACTIVE/SET ON 상태, Panda
+`/ioniq5/can_tx`로 송신합니다. TX는 `raw_can.allow_tx: true`, SET 종방향 arm/active 상태, Panda
 Hyundai safety whitelist를 모두 통과해야 실제 bus로 나갑니다. 상세 형식과 Panda/Cabana
 동시 사용 제약은 [`docs/raw_can.md`](docs/raw_can.md)를 참고하십시오.
 
@@ -144,6 +149,7 @@ config/                ROS YAML and udev rule
 launch/                ROS 2 launch file
 test/                  golden-frame, parser, safety, protocol tests
 scripts/               environment and pinned firmware helpers
+patches/               고정 opendbc/Panda split-button firmware 패치
 docs/                  safety, latency, validation, upstream evidence
 ```
 

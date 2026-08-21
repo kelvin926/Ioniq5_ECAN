@@ -43,7 +43,7 @@ class PandaPreflightTest(unittest.TestCase):
         result = {
             "is_red_panda": True,
             "application_mode": True,
-            "firmware": "DEV-dd8a5b3d-DEBUG",
+            "firmware": "IONIQ5-dd8a5b3d-DEBUG",
             "packet_versions": {"matches_pinned": True},
             "health": {
                 "faults": 0,
@@ -84,7 +84,7 @@ class PandaPreflightTest(unittest.TestCase):
         }
         failures = evaluate(result, allow_unpinned=False, require_harness=False)
         self.assertIn("Panda is in bootstub mode, not application mode", failures)
-        self.assertTrue(any("expected 'DEV-dd8a5b3d-DEBUG'" in item for item in failures))
+        self.assertTrue(any("expected 'IONIQ5-dd8a5b3d-DEBUG'" in item for item in failures))
 
 
 if __name__ == "__main__":

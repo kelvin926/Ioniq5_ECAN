@@ -29,8 +29,8 @@ ioniq5_ecan_node:
       allow_actuation: false
       allow_longitudinal: false
       auto_arm_on_command: false
-      set_button_toggle: true
-      require_set_resume_button: false
+      lateral_button_toggle: true
+      longitudinal_button_toggle: true
       disengage_on_brake: true
       disengage_on_cancel: true
       longitudinal_override_on_gas: true
