@@ -132,7 +132,7 @@ def load_usb1():
         import usb1  # type: ignore
     except ImportError as error:
         raise PreflightError(
-            "python usb1 is missing; install python3-usb1 on Ubuntu or use "
+            "python usb1 is missing; run `python3 -m pip install --user libusb1` on Ubuntu or use "
             "`uv run --with libusb1 --with libusb-package`"
         ) from error
 

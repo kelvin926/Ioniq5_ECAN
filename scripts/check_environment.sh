@@ -36,7 +36,7 @@ fi
 if python3 -c 'import usb1' >/dev/null 2>&1; then
   printf '[ok] python3 usb1 module\n'
 else
-  printf '[missing] python3 usb1 module (install python3-usb1)\n' >&2
+  printf '[missing] python3 usb1 module (run: python3 -m pip install --user libusb1)\n' >&2
   failures=$((failures + 1))
 fi
 

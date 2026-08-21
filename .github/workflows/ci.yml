@@ -47,11 +47,12 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends \
             build-essential libusb-1.0-0-dev pkg-config \
-            python3-nose python3-usb1 \
+            python3-nose python3-pip \
             ros-noetic-diagnostic-msgs \
             ros-noetic-message-generation \
             ros-noetic-roscpp \
             ros-noetic-std-srvs
+          python3 -m pip install --disable-pip-version-check libusb1
       - name: Build ROS 1 catkin workspace
         shell: bash
         run: |

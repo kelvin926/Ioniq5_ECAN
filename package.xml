@@ -16,7 +16,7 @@
   <depend>std_srvs</depend>
 
   <exec_depend>message_runtime</exec_depend>
-  <exec_depend>python3-usb1</exec_depend>
+  <exec_depend>python3-pip</exec_depend>
   <test_depend>rostest</test_depend>
 
   <export/>

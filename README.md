@@ -43,8 +43,9 @@ HDA2/LKA steering, 다른 하네스, alt buttons 또는 radar-SCC 구성은 지�
 ```bash
 sudo apt update
 sudo apt install -y build-essential libusb-1.0-0-dev pkg-config \
-  python3-nose python3-usb1 ros-noetic-ros-base ros-noetic-diagnostic-msgs \
+  python3-nose python3-pip ros-noetic-ros-base ros-noetic-diagnostic-msgs \
   ros-noetic-message-generation ros-noetic-roscpp ros-noetic-std-srvs
+python3 -m pip install --user libusb1
 
 sudo install -m 0644 config/99-red-panda.rules /etc/udev/rules.d/99-red-panda.rules
 sudo udevadm control --reload-rules
