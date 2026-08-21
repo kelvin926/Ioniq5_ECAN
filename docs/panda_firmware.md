@@ -5,6 +5,11 @@ firmware에서 param `3077`을 설정하면 LONG bit가 무시됩니다. 드라�
 비활성 SCC 프레임으로 이 능력을 검사하고, Panda가 차단하면 `NO_OUTPUT`으로 돌아가
 arm을 실패시킵니다.
 
+HDA1 종방향 실차 시험은 카메라 ECU `0x730`의 통신을 끊어 순정 LFA `0x12A`를
+정지시키는 것만으로는 충분하지 않습니다. 레이더 ECU `0x7D0`도 별도로 통신 비활성화하여
+순정 `SCC_CONTROL (0x1A0)`이 멈춘 것을 확인한 뒤 제어를 시작합니다. 두 ECU에는 시험 중
+각각 tester-present를 보내며, 종료 시 레이더와 카메라 순서로 통신을 복구합니다.
+
 이 저장소는 고정 opendbc에 opt-in safety param bit `1024`와 ECAN-only bit `2048`을
 추가합니다. `1024`가 있을 때
 차선유지(LDA) 버튼의 상승 에지도 Panda의 전역 `controls_allowed`를 허용하며, host가 LDA의
@@ -92,6 +97,6 @@ Red Panda hardware type, health ABI, fault/overflow 및 ECAN physical controller
 확인합니다. Panda에 control write나 CAN frame을 보내지 않습니다. 차량 하네스 연결 후에는
 `--require-harness`를 추가해 `harness_status=1`과 ECAN RX 증가까지 확인합니다.
 
-2026-08-21 Windows ARM GCC 13.2 재현 빌드 및 실제 Red Panda 앱 플래시에서 확인한 signed app
-SHA-256은 `cc5a34e8149327d571ad03db9169a584759e8e908d98416efd6f8ab7e26a3e6e`입니다.
+2026-08-21 Windows ARM GCC 빌드 및 실제 Red Panda 앱 플래시에서 확인한 최신 signed app
+SHA-256은 `1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae`입니다.
 부트스텁은 플래시하지 않았습니다.

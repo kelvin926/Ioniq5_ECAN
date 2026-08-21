@@ -58,17 +58,32 @@ apply_patch_once "${panda_dir}" "${panda_ecan_patch}" \
 
 uv venv --python 3.11 --clear "${venv_dir}"
 # shellcheck disable=SC1091
-source "${venv_dir}/bin/activate"
+if [[ -f "${venv_dir}/bin/activate" ]]; then
+  source "${venv_dir}/bin/activate"
+else
+  # Git Bash uses the native Windows uv layout.
+  source "${venv_dir}/Scripts/activate"
+fi
 uv pip install -e "${opendbc_dir}"
 uv pip install --no-deps -e "${panda_dir}"
 uv pip install \
-  cffi libusb1 libusb-package scons \
-  "gcc-arm-none-eabi @ git+https://github.com/commaai/dependencies.git@release-gcc-arm-none-eabi#subdirectory=gcc-arm-none-eabi"
+  cffi libusb1 libusb-package scons
+
+# The comma compiler wheel does not support native Windows. Prefer a portable
+# Arm GNU installation next to the cache when building from Git Bash.
+portable_toolchain_bin="$(dirname "${cache_root}")/toolchains/arm-gnu-14.2/bin"
+if [[ -x "${portable_toolchain_bin}/arm-none-eabi-gcc.exe" ]]; then
+  export PATH="${portable_toolchain_bin}:${PATH}"
+fi
+if ! command -v arm-none-eabi-gcc >/dev/null 2>&1; then
+  uv pip install \
+    "gcc-arm-none-eabi @ git+https://github.com/commaai/dependencies.git@release-gcc-arm-none-eabi#subdirectory=gcc-arm-none-eabi"
+fi
 
 # Do not set RELEASE: the Hyundai longitudinal flag is compiled only with ALLOW_DEBUG.
 # Also clear an ambient DEBUG variable; Panda uses it for additional debug-only code that is
 # unrelated to the debug signing key and should not vary the pinned image accidentally.
-(cd "${panda_dir}" && env -u RELEASE -u DEBUG PANDA_BUILDER=IONIQ5ECAN scons -j"$(nproc)" \
+(cd "${panda_dir}" && env -u RELEASE -u DEBUG PANDA_BUILDER=IONIQ5ECAN SETLEN=1 scons -j"$(nproc)" \
   board/obj/bootstub.panda_h7.bin board/obj/panda_h7.bin.signed)
 
 firmware="${panda_dir}/board/obj/panda_h7.bin.signed"

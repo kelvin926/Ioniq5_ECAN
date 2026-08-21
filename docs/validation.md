@@ -1,8 +1,9 @@
 # Validation plan
 
 실차 actuation 전 단계를 건너뛰지 않습니다. 현재 저장소에서 자동 검증한 것은 codec,
-parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지이며 HIL/실차 검증은
-아직 수행되지 않았습니다.
+parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지입니다. 별도 시험
+helper의 저속 조향과 15 km/h 직선 가속은 확인했지만, 최신 dual-ECU 수정과 ROS C++ 노드의
+전체 HIL/실차 검증은 아직 수행되지 않았습니다. 현재 결과는 `vehicle_handoff.md`를 봅니다.
 
 ## 1. Host-only
 

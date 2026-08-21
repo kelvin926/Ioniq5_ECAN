@@ -3,12 +3,17 @@
 Ubuntu 20.04 / ROS 1 Noetic에서 Red Panda와 Hyundai K 하네스를 통해 2022년식
 아이오닉 5 HDA1의 조향 및 가속도 명령을 전달하는 C++17 연구용 드라이버입니다.
 
-> 이 코드는 실제 차량에서 검증되지 않았습니다. 저장소의 기본 YAML은 요청한 폐쇄
+> 저속 조향과 직선 15 km/h 가속은 연구차에서 확인했지만, HDA1 radar `0x7D0`까지
+> 비활성화하는 최신 종방향 수정은 아직 실차 재시험 전입니다. 현재 상태와 다음 명령은
+> [`docs/vehicle_handoff.md`](docs/vehicle_handoff.md)에 정리되어 있습니다.
+>
+> 저장소의 기본 YAML은 요청한 폐쇄
 > 연구장 프로파일로 `allow_actuation`과 종방향 제어가 활성화되어 있습니다. 노드는
 > 시작할 때 `NO_OUTPUT`이고 첫 최신 명령으로 Panda를 대기 상태로 전환합니다. 이후 물리
 > 차선유지(LDA) 버튼은 조향 전용 모드를, 크루즈 `SET` 버튼은 조향+종방향 모드와 raw CAN
 > TX를 ON/OFF 토글합니다.
-> 종방향 제어 중에는 순정 SCC/AEB 메시지 소유권이 차단됩니다.
+> 실차 시험 helper는 종방향 제어 전에 순정 SCC 메시지 소유권을 차단합니다. 동일한
+> camera/radar UDS lifecycle의 ROS C++ 노드 통합은 아직 남아 있습니다.
 
 ## 구현 범위
 
@@ -31,14 +36,14 @@ Ubuntu 20.04 / ROS 1 Noetic에서 Red Panda와 Hyundai K 하네스를 통해 202
 
 ## 대상 구성
 
-- Hyundai Ioniq 5 2022, HDA1, EV
+- Hyundai Ioniq 5 2022, HDA1, EV, radar-SCC
 - Hyundai K camera harness
 - Red Panda USB
 - Ubuntu 20.04 + ROS 1 Noetic + C++17
 - ECAN Panda bus 0, `harness_status=1`
 - camera bus 2는 이 차량에서 사용하지 않으며 firmware가 transceiver와 forwarding을 차단
 
-HDA2/LKA steering, 다른 하네스, alt buttons 또는 radar-SCC 구성은 지원하지 않습니다.
+HDA2/LKA steering, camera-SCC, 다른 하네스 또는 alt buttons 구성은 지원하지 않습니다.
 
 ## 설치 및 빌드
 

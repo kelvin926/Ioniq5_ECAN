@@ -72,5 +72,8 @@ latched FAULT를 자동으로 지우지는 않습니다. 연구장 기본 YAML�
 
 HDA1 ECAN-only longitudinal 모드는 ECAN의 `SCC_CONTROL` 및 관련 FCA 메시지를 이 노드가
 대체하며 camera bus는 전달하지 않습니다. 순정 AEB 기능이 유지된다고 가정할 수 없습니다.
+실차 시험 helper는 시작 전에 camera `0x730`/순정 LFA `0x12A`와 radar `0x7D0`/순정
+SCC `0x1A0`을 각각 비활성화하고, 두 순정 메시지가 모두 멈추지 않으면 명령 송신 전에
+중단합니다. HDA2 ADRV 메시지는 HDA1 ECAN-only 송신 목록에 포함하지 않습니다.
 기본 연구장 프로파일은 요청에 따라 종방향이 켜져 있으므로 고정 DEBUG firmware가
 필수입니다. 수동 관찰이나 lateral-only 시험에서는 YAML에서 명시적으로 끄십시오.
