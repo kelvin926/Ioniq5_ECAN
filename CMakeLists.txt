@@ -122,6 +122,7 @@ install(PROGRAMS
 
 if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_core
+    test/gtest_main.cpp
     test/test_command_adapter.cpp
     test/test_hyundai_canfd_codec.cpp
     test/test_safety_supervisor.cpp
@@ -132,7 +133,7 @@ if(CATKIN_ENABLE_TESTING)
     target_include_directories(test_core PRIVATE include)
   endif()
 
-  catkin_add_gtest(test_panda_protocol test/test_panda_protocol.cpp)
+  catkin_add_gtest(test_panda_protocol test/gtest_main.cpp test/test_panda_protocol.cpp)
   if(TARGET test_panda_protocol)
     target_link_libraries(test_panda_protocol ioniq5_ecan_panda_protocol)
     target_include_directories(test_panda_protocol PRIVATE include)
