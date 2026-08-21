@@ -20,9 +20,10 @@ PANDA_VIDS = (0xBBAA, 0x3801)
 PANDA_PIDS = (0xDDCC, 0xDDEE)
 RED_PANDA_TYPE = 0x07
 APPLICATION_PID = 0xDDCC
-EXPECTED_FIRMWARE = "IONIQ5-dd8a5b3d-DEBUG"
+EXPECTED_FIRMWARE = "IONIQ5ECAN-dd8a5b3d-DEBUG"
 EXPECTED_HEALTH_HASH = 0x290DAE03
 EXPECTED_CAN_HASH = 0x75ABF276
+ECAN_ONLY_IGNORED_FAULTS = (1 << 3) | (1 << 4)
 
 HEALTH_STRUCT = struct.Struct("<IIIIIIIIBBBBBHBBBHfBBHHHBHf")
 HEALTH_FIELDS = (
@@ -221,7 +222,12 @@ def probe(serial: Optional[str], sample_seconds: float) -> Dict[str, Any]:
     return result
 
 
-def evaluate(result: Dict[str, Any], allow_unpinned: bool, require_harness: bool) -> List[str]:
+def evaluate(
+    result: Dict[str, Any],
+    allow_unpinned: bool,
+    require_harness: bool,
+    ecan_only: bool = False,
+) -> List[str]:
     failures = []
     if not result.get("application_mode", True):
         failures.append("Panda is in bootstub mode, not application mode")
@@ -240,9 +246,17 @@ def evaluate(result: Dict[str, Any], allow_unpinned: bool, require_harness: bool
             f"health packet length {result.get('health_packet_length')} does not match pinned ABI"
         )
         return failures
+    effective_faults = health["faults"]
+    if ecan_only:
+        effective_faults &= ~ECAN_ONLY_IGNORED_FAULTS
+    ignored_fault_is_only_fault = (
+        ecan_only and health["faults"] != 0 and effective_faults == 0
+    )
+    if effective_faults:
+        failures.append(f"health.faults={health['faults']} effective={effective_faults}")
+    if health["fault_status"] and not ignored_fault_is_only_fault:
+        failures.append(f"health.fault_status={health['fault_status']}")
     for field in (
-        "faults",
-        "fault_status",
         "heartbeat_lost",
         "safety_rx_checks_invalid",
         "tx_buffer_overflow",
@@ -250,11 +264,20 @@ def evaluate(result: Dict[str, Any], allow_unpinned: bool, require_harness: bool
     ):
         if health[field]:
             failures.append(f"health.{field}={health[field]}")
-    if require_harness and health["harness_status"] == 0:
-        failures.append("Hyundai harness is not detected")
+    if require_harness:
+        if ecan_only and health["harness_status"] != 1:
+            failures.append("ECAN-only mode requires harness_status=1")
+        elif not ecan_only and health["harness_status"] == 0:
+            failures.append("Hyundai harness is not detected")
     for bus in result.get("can", []):
+        if ecan_only and bus["bus"] != 0:
+            continue
         if bus["bus_off"] or bus["error_warning"] or bus["error_passive"]:
-            failures.append(f"CAN bus {bus['bus']} reports an error state")
+            failures.append(f"physical CAN controller {bus['bus']} reports an error state")
+    if require_harness and ecan_only:
+        ecan = next((bus for bus in result.get("can", []) if bus["bus"] == 0), None)
+        if ecan is None or ecan.get("rx_delta", 0) <= 0:
+            failures.append("ECAN physical controller 0 received no frames during the sample")
     return failures
 
 
@@ -284,7 +307,8 @@ def print_human(result: Dict[str, Any], failures: List[str]) -> None:
         )
         for bus in result.get("can", []):
             print(
-                f"[ok] CAN{bus['bus']} rx_delta={bus['rx_delta']} tx_delta={bus['tx_delta']} "
+                f"[ok] physical CAN controller {bus['bus']} "
+                f"rx_delta={bus['rx_delta']} tx_delta={bus['tx_delta']} "
                 f"bus_off={bus['bus_off']} errors={bus['total_error_count']}"
             )
     for failure in failures:
@@ -306,6 +330,11 @@ def main() -> int:
         action="store_true",
         help="fail when a Hyundai harness is not detected",
     )
+    parser.add_argument(
+        "--ecan-only",
+        action="store_true",
+        help="validate the ECAN-only firmware profile and physical controller 0 only",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     if args.sample_seconds < 0.0 or args.sample_seconds > 30.0:
@@ -313,7 +342,7 @@ def main() -> int:
 
     try:
         result = probe(args.serial, args.sample_seconds)
-        failures = evaluate(result, args.allow_unpinned, args.require_harness)
+        failures = evaluate(result, args.allow_unpinned, args.require_harness, args.ecan_only)
     except (PreflightError, OSError) as error:
         if args.json:
             print(json.dumps({"read_only": True, "failures": [str(error)]}, indent=2))

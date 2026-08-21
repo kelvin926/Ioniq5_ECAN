@@ -7,7 +7,7 @@
 | --- | --- | --- |
 | `DISCONNECTED` | 연결/health 없음 | 없음 |
 | `PASSIVE` | `NO_OUTPUT`, 순정 camera 회로 물리 연결 | 없음 |
-| `ARMED` | `HYUNDAI_CANFD`, camera 프레임 선택 차단/forward | 비활성 LFA와 선택적 비활성 SCC를 정주기로 대체 |
+| `ARMED` | `HYUNDAI_CANFD`, relay open, CAN0↔CAN2 forwarding 차단 | 비활성 LFA와 선택적 비활성 SCC를 정주기로 대체 |
 | `ACTIVE` | 동일 safety hook, `controls_allowed` 필요 | arm된 채널의 bounded LFA 및/또는 SCC |
 | `FAULT` | 즉시 arm 해제 후 `NO_OUTPUT` 복귀 | 없음 |
 
@@ -17,8 +17,8 @@ ARMED에서 비활성 프레임을 계속 보내는 이유는 relay가 순정 LF
 ## 고정된 Panda 제한
 
 - safety model `HYUNDAI_CANFD = 28`
-- Ioniq 5 HDA1 EV + camera SCC lateral param `1 | 8 | 1024 = 1033`
-- longitudinal param `1 | 4 | 8 | 1024 = 1037` (DEBUG firmware만 LONG 적용)
+- Ioniq 5 HDA1 EV + split-button + ECAN-only lateral param `1 | 1024 | 2048 = 3073`
+- longitudinal param `1 | 4 | 1024 | 2048 = 3077` (DEBUG firmware만 LONG 적용)
 - alt-buttons 차량은 위 param에 `32` 추가
 - steering max 270 count
 - steering rate up/down 2/3 count per 10 ms
@@ -43,13 +43,17 @@ angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니
 - EPS/ACC fault
 - Panda TX rejection 증가
 - safety mode/param drift
-- 하네스 미검출
+- 하네스 방향이 정확히 `harness_status=1`이 아님
 - 활성화한 경우에만 설정 속도/조향각 상한 초과
 
 `1024`는 이 저장소의 opt-in split-button 확장입니다. 차선유지(LDA) 버튼의 상승 에지가
 Panda의 전역 `controls_allowed`를 허용하게 하고, host가 LDA 조향 전용 모드와 SET
 조향+종방향 모드를 게이트합니다. upstream 그대로의 firmware는 이 비트를 모르므로 LDA 단독 조향 arm이
 동작하지 않습니다.
+
+`2048`은 ECAN-only 확장입니다. 물리 CAN1만 켜 두고 논리 bus 0으로 사용하며, CAN0↔CAN2
+forwarding을 모두 차단합니다. host는 의도적으로 꺼진 physical CAN2/CAN3의 interrupt-rate
+fault bit만 무시하고, ECAN physical CAN1과 나머지 Panda fault는 계속 FAULT로 처리합니다.
 
 정상 상태에서는 첫 최신 명령이 Panda를 HYUNDAI_CANFD 대기 상태로 만듭니다. 물리 LDA
 버튼은 조향 전용 모드를, `SET` release는 조향+종방향과 raw TX를 ON/OFF 토글합니다.
@@ -66,7 +70,7 @@ latched FAULT를 자동으로 지우지는 않습니다. 연구장 기본 YAML�
 
 ## 종방향 경고
 
-HDA1 camera-SCC longitudinal 모드는 camera의 `SCC_CONTROL` 및 관련 FCA 메시지를
-차단하고 이 노드가 대체합니다. 순정 AEB 기능이 유지된다고 가정할 수 없습니다.
+HDA1 ECAN-only longitudinal 모드는 ECAN의 `SCC_CONTROL` 및 관련 FCA 메시지를 이 노드가
+대체하며 camera bus는 전달하지 않습니다. 순정 AEB 기능이 유지된다고 가정할 수 없습니다.
 기본 연구장 프로파일은 요청에 따라 종방향이 켜져 있으므로 고정 DEBUG firmware가
 필수입니다. 수동 관찰이나 lateral-only 시험에서는 YAML에서 명시적으로 끄십시오.

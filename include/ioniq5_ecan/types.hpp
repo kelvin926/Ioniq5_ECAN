@@ -69,6 +69,8 @@ struct PandaHealth {
   bool safety_rx_checks_invalid{false};
   bool bus_off{false};
   uint32_t faults{0};
+  // Fault bits belonging only to intentionally disabled non-ECAN controllers.
+  uint32_t ignored_faults{0};
   uint8_t fault_status{0};
   uint8_t harness_status{0};
   uint8_t safety_mode{0};

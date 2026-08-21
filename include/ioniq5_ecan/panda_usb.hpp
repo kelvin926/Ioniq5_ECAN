@@ -20,6 +20,7 @@ struct PandaUsbConfig {
   int data_bitrate_kbps{2000};
   int read_timeout_ms{20};
   int write_timeout_ms{10};
+  bool ecan_only{true};
 };
 
 class PandaUsb {
@@ -34,10 +35,14 @@ class PandaUsb {
   // Repository-local Panda safety extension: an LDA press may establish controls_allowed. The
   // host selects LDA lateral-only or SET lateral-plus-longitudinal control.
   static constexpr uint16_t kHyundaiSplitButtonArm = 1024;
+  // Repository-local firmware mode: keep only ECAN (logical bus 0 in harness orientation 1),
+  // disable Panda forwarding, and leave the other physical CAN transceivers off.
+  static constexpr uint16_t kHyundaiEcanOnly = 2048;
+  static constexpr uint32_t kEcanOnlyIgnoredFaults = (1U << 3U) | (1U << 4U);
   static constexpr uint16_t kIoniq5Hda1PassiveParam =
-    kHyundaiEv | kHyundaiCameraScc | kHyundaiSplitButtonArm;
+    kHyundaiEv | kHyundaiSplitButtonArm | kHyundaiEcanOnly;
   static constexpr uint16_t kIoniq5Hda1LongParam =
-    kHyundaiEv | kHyundaiLongitudinal | kHyundaiCameraScc | kHyundaiSplitButtonArm;
+    kHyundaiEv | kHyundaiLongitudinal | kHyundaiSplitButtonArm | kHyundaiEcanOnly;
   static constexpr uint32_t kPinnedHealthPacketVersion = 0x290DAE03U;
   static constexpr uint32_t kPinnedCanPacketVersion = 0x75ABF276U;
   static constexpr uint8_t kRedPandaHardwareType = 0x07U;

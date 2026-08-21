@@ -18,6 +18,7 @@ Ubuntu 20.04 / ROS 1 Noetic에서 Red Panda와 Hyundai K 하네스를 통해 202
 - CRC16, rolling counter, Panda USB CAN packet protocol
 - 차량 속도·4륜 속도/요레이트/횡·종가속도/조향/토크/페달/브레이크/버튼 상태 파싱
 - `PASSIVE → ARMED → ACTIVE → FAULT` 안전 상태기계
+- ECAN 전용 Panda firmware: logical bus 0만 사용, 비-ECAN transceiver/forwarding 비활성화
 - carrotpilot의 Ioniq 5 횡가속도/마찰 기반 토크 제어와 ROS 1 YAML 파라미터 조정
 - Panda 프로토콜 버전, Red Panda 기종, 하네스, heartbeat, RX/TX 오류 확인
 - CAN-FD 64-byte 보존 raw RX/TX와 bus별 ROS 1 토픽
@@ -34,7 +35,8 @@ Ubuntu 20.04 / ROS 1 Noetic에서 Red Panda와 Hyundai K 하네스를 통해 202
 - Hyundai K camera harness
 - Red Panda USB
 - Ubuntu 20.04 + ROS 1 Noetic + C++17
-- ECAN Panda bus 0, camera bus 2
+- ECAN Panda bus 0, `harness_status=1`
+- camera bus 2는 이 차량에서 사용하지 않으며 firmware가 transceiver와 forwarding을 차단
 
 HDA2/LKA steering, 다른 하네스, alt buttons 또는 radar-SCC 구성은 지원하지 않습니다.
 
@@ -74,13 +76,13 @@ catkin_test_results --verbose
 먼저 Panda만 USB에 연결한 상태에서 쓰기 요청을 전혀 보내지 않는 preflight를 통과시킵니다.
 
 ```bash
-python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL
+python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only
 ```
 
 하네스 연결 후에는 다음 명령이 `harness_status`, ignition, CAN RX 증가까지 함께 검사합니다.
 
 ```bash
-python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --require-harness
+python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only --require-harness
 roslaunch ioniq5_ecan ioniq5_ecan.launch \
   config:=/path/to/Ioniq5_ECAN/config/ioniq5_ecan_passive.yaml
 ```
@@ -111,10 +113,11 @@ rostopic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/ActuationCommand \
 
 기본 자동 arm 모드에서 출력 조건은 다음과 같습니다.
 
-1. 저장소의 split-button 패치가 적용된 고정 `IONIQ5` DEBUG Panda firmware 및 Red Panda/Hyundai K 연결
-2. 유효하고 최신인 필수 차량 CAN 상태와 command
-3. 물리적인 차선유지(LDA) 버튼을 누르면 조향 전용 ON, 같은 모드에서 다시 누르면 OFF
-4. 물리적인 `SET` 버튼을 눌렀다 놓으면 조향+종방향·raw TX ON, 같은 모드에서 다시 누르면 OFF
+1. 저장소의 split-button/ECAN-only 패치가 적용된 고정 `IONIQ5ECAN` DEBUG Panda firmware
+2. Red Panda/Hyundai K 연결과 정확한 `harness_status=1`
+3. 유효하고 최신인 필수 ECAN 차량 상태와 command
+4. 물리적인 차선유지(LDA) 버튼을 누르면 조향 전용 ON, 같은 모드에서 다시 누르면 OFF
+5. 물리적인 `SET` 버튼을 눌렀다 놓으면 조향+종방향·raw TX ON, 같은 모드에서 다시 누르면 OFF
 
 LDA와 SET은 각각 조향 전용/통합 모드를 선택합니다. `/ioniq5/vehicle_state`의 `lateral_armed`,
 `longitudinal_armed`, `lateral_control_active`, `longitudinal_control_active`로 현재 상태를
@@ -132,7 +135,8 @@ rosservice call /ioniq5_ecan/set_armed "data: false"
 속도/조향각 호스트 상한은 `0`이면 비활성이고, 토크·토크 변화율·가속도 범위는 Panda
 firmware 경계를 넘길 수 없습니다.
 
-raw CAN은 `/ioniq5/can_rx`와 `/ioniq5/can0/rx`~`can2/rx`로 수신하고
+raw CAN 토픽은 `/ioniq5/can_rx`와 `/ioniq5/can0/rx`~`can2/rx`가 생성되지만 ECAN-only
+firmware에서는 실제 차량 프레임이 `/ioniq5/can0/rx`에만 들어옵니다. raw CAN은
 `/ioniq5/can_tx`로 송신합니다. TX는 `raw_can.allow_tx: true`, SET 통합 모드 arm/active 상태, Panda
 Hyundai safety whitelist를 모두 통과해야 실제 bus로 나갑니다. 상세 형식과 Panda/Cabana
 동시 사용 제약은 [`docs/raw_can.md`](docs/raw_can.md)를 참고하십시오.
@@ -151,7 +155,7 @@ config/                ROS YAML and udev rule
 launch/                ROS 1 roslaunch file
 test/                  golden-frame, parser, safety, protocol tests
 scripts/               environment and pinned firmware helpers
-patches/               고정 opendbc/Panda split-button firmware 패치
+patches/               고정 opendbc/Panda split-button·ECAN-only firmware 패치
 docs/                  safety, latency, validation, upstream evidence
 ```
 

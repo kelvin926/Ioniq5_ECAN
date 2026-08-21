@@ -18,7 +18,7 @@ struct FixtureData {
     panda.controls_allowed = true;
     panda.harness_status = 1;
     panda.safety_mode = 28;
-    panda.safety_param = 1033;
+    panda.safety_param = 3073;
     panda.updated_at = now;
     command.enable = true;
     command.valid = true;
@@ -95,14 +95,43 @@ TEST(SafetySupervisor, FaultsOnPandaHardwareFault) {
   EXPECT_FALSE(decision.longitudinal_allowed);
 }
 
+TEST(SafetySupervisor, IgnoresOnlyFaultsFromDisabledNonEcanControllers) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  SafetySupervisor supervisor(config);
+  constexpr uint32_t ignored_non_ecan_faults = (1U << 3U) | (1U << 4U);
+  data.panda.faults = ignored_non_ecan_faults;
+  data.panda.ignored_faults = ignored_non_ecan_faults;
+  data.panda.fault_status = 1U;
+  arm_lateral(supervisor, data);
+
+  data.panda.faults |= 1U << 2U;
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Fault);
+}
+
+TEST(SafetySupervisor, RequiresVerifiedEcanHarnessOrientation) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+  data.panda.harness_status = 2U;
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Fault);
+}
+
 TEST(SafetySupervisor, LaneAndSetButtonsSelectLateralOnlyOrCombinedControl) {
   using namespace ioniq5_ecan;
   FixtureData data;
   SafetyConfig config;
   config.allow_actuation = true;
   config.allow_longitudinal = true;
-  config.required_safety_param = 1037;
-  data.panda.safety_param = 1037;
+  config.required_safety_param = 3077;
+  data.panda.safety_param = 3077;
   SafetySupervisor supervisor(config);
   ASSERT_TRUE(supervisor.request_arm(true));
   EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
@@ -155,8 +184,8 @@ TEST(SafetySupervisor, SetPressReenablesCombinedModeAfterPandaDisengagement) {
   SafetyConfig config;
   config.allow_actuation = true;
   config.allow_longitudinal = true;
-  config.required_safety_param = 1037;
-  data.panda.safety_param = 1037;
+  config.required_safety_param = 3077;
+  data.panda.safety_param = 3077;
   config.disengage_on_brake = false;
   SafetySupervisor supervisor(config);
   ASSERT_TRUE(supervisor.request_arm(true));
@@ -189,8 +218,8 @@ TEST(SafetySupervisor, AccFaultOnlyBlocksLongitudinalChannel) {
   SafetyConfig config;
   config.allow_actuation = true;
   config.allow_longitudinal = true;
-  config.required_safety_param = 1037;
-  data.panda.safety_param = 1037;
+  config.required_safety_param = 3077;
+  data.panda.safety_param = 3077;
   SafetySupervisor supervisor(config);
   ASSERT_TRUE(supervisor.request_arm(true));
   ++data.vehicle.lane_keep_button_events;

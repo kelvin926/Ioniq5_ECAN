@@ -8,8 +8,12 @@ from pathlib import Path
 from panda import Panda
 
 
-PINNED_VERSION = "IONIQ5-dd8a5b3d-DEBUG"
-ACCEPTED_BOOTSTUB_VERSIONS = {PINNED_VERSION, "DEV-dd8a5b3d-DEBUG"}
+PINNED_VERSION = "IONIQ5ECAN-dd8a5b3d-DEBUG"
+ACCEPTED_BOOTSTUB_VERSIONS = {
+    PINNED_VERSION,
+    "IONIQ5-dd8a5b3d-DEBUG",
+    "DEV-dd8a5b3d-DEBUG",
+}
 
 
 def _open_in_state(serial: str, bootstub: bool, timeout_s: float = 15.0) -> Panda:

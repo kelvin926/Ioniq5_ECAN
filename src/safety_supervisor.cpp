@@ -95,8 +95,11 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   const bool cancel_event = vehicle.cancel_button_events != last_cancel_button_events_;
   last_cancel_button_events_ = vehicle.cancel_button_events;
 
+  const uint32_t effective_faults = panda.faults & ~panda.ignored_faults;
+  const bool ignored_fault_is_only_fault =
+    panda.faults != 0U && effective_faults == 0U && panda.ignored_faults != 0U;
   if (panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off ||
-      panda.faults != 0U || panda.fault_status != 0U) {
+      effective_faults != 0U || (panda.fault_status != 0U && !ignored_fault_is_only_fault)) {
     fault("Panda safety or CAN health fault");
   } else if (state_ == ControlState::Active && panda.safety_tx_blocked > last_tx_blocked_) {
     fault("Panda rejected an active control frame");
@@ -110,8 +113,8 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     return decision(false, false, false, false);
   }
 
-  if (panda.harness_status == 0U) {
-    fault("Panda harness is not detected");
+  if (panda.harness_status != config_.required_harness_status) {
+    fault("Panda harness orientation does not expose ECAN on logical bus 0");
     return decision(false, false, false, false);
   }
 

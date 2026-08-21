@@ -174,4 +174,18 @@ TEST(VehicleStateParser, ParsesLaneKeepFromAlternateButtons) {
   EXPECT_TRUE(state.lane_keep_button_pressed);
 }
 
+TEST(VehicleStateParser, EcanOnlyProfileRejectsCameraBusScc) {
+  using namespace ioniq5_ecan;
+  const TimePoint now = SteadyClock::now();
+  std::array<uint8_t, 32> scc{};
+  CanFrame camera_frame = frame_with_crc(HyundaiCanFdCodec::kSccControlAddress, scc, now);
+  camera_frame.bus = 2U;
+
+  VehicleStateParser ecan_only;
+  EXPECT_FALSE(ecan_only.update(camera_frame));
+
+  VehicleStateParser legacy_camera_profile(0U, 2U, false, true);
+  EXPECT_TRUE(legacy_camera_profile.update(camera_frame));
+}
+
 }  // namespace

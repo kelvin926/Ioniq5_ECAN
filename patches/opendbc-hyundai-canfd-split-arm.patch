@@ -2,12 +2,13 @@ diff --git a/opendbc/safety/modes/hyundai_canfd.h b/opendbc/safety/modes/hyundai
 index bf08fb17..2d4d3df1 100644
 --- a/opendbc/safety/modes/hyundai_canfd.h
 +++ b/opendbc/safety/modes/hyundai_canfd.h
-@@ -47,6 +47,8 @@
+@@ -47,6 +47,9 @@
  
  static bool hyundai_canfd_alt_buttons = false;
  static bool hyundai_canfd_lka_steer_msg_alt = false;
 +static bool hyundai_canfd_split_button_arm = false;
 +static bool hyundai_canfd_lda_button_prev = false;
++static bool hyundai_canfd_ecan_only = false;
  
  static unsigned int hyundai_canfd_get_lka_addr(void) {
    return hyundai_canfd_lka_steer_msg_alt ? 0x110U : 0x50U;
@@ -37,34 +38,45 @@ index bf08fb17..2d4d3df1 100644
      }
  
      // gas press, different for EV, hybrid, and ICE models
-@@ -218,6 +230,7 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+@@ -218,6 +231,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
  static safety_config hyundai_canfd_init(uint16_t param) {
    const uint16_t HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT = 128;
    const uint16_t HYUNDAI_PARAM_CANFD_ALT_BUTTONS = 32;
 +  const uint16_t HYUNDAI_PARAM_CANFD_SPLIT_BUTTON_ARM = 1024;
++  const uint16_t HYUNDAI_PARAM_CANFD_ECAN_ONLY = 2048;
  
    static const CanMsg HYUNDAI_CANFD_LKA_STEER_MSG_TX_MSGS[] = {
      HYUNDAI_CANFD_LKA_STEER_MSG_COMMON_TX_MSGS(0, 1)
-@@ -267,6 +280,8 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -267,6 +282,9 @@ static safety_config hyundai_canfd_init(uint16_t param) {
    gen_crc_lookup_table_16(0x1021, hyundai_canfd_crc_lut);
    hyundai_canfd_alt_buttons = GET_FLAG(param, HYUNDAI_PARAM_CANFD_ALT_BUTTONS);
    hyundai_canfd_lka_steer_msg_alt = GET_FLAG(param, HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT);
 +  hyundai_canfd_split_button_arm = GET_FLAG(param, HYUNDAI_PARAM_CANFD_SPLIT_BUTTON_ARM);
 +  hyundai_canfd_lda_button_prev = false;
++  hyundai_canfd_ecan_only = GET_FLAG(param, HYUNDAI_PARAM_CANFD_ECAN_ONLY);
  
    safety_config ret;
    if (hyundai_longitudinal) {
+@@ -369,6 +387,7 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+     }
+   }
+ 
++  ret.disable_forwarding = hyundai_canfd_ecan_only;
+   return ret;
+ }
+ 
 diff --git a/opendbc/safety/tests/test_hyundai_canfd.py b/opendbc/safety/tests/test_hyundai_canfd.py
 index 6cec7376..c3921ced 100755
 --- a/opendbc/safety/tests/test_hyundai_canfd.py
 +++ b/opendbc/safety/tests/test_hyundai_canfd.py
-@@ -284,5 +284,48 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
+@@ -284,5 +284,56 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
      pass
  
  
 +class TestHyundaiCanfdSplitButtonArm(unittest.TestCase):
 +
 +  SPLIT_BUTTON_ARM = 1024
++  ECAN_ONLY = 2048
 +
 +  def setUp(self):
 +    self.packer = CANPackerSafety("hyundai_canfd_generated")
@@ -103,6 +115,13 @@ index 6cec7376..c3921ced 100755
 +        self.safety.safety_rx_hook(self._lda_button_msg(alternate, False))
 +        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
 +        self.assertTrue(self.safety.get_controls_allowed())
++
++  def test_ecan_only_blocks_both_forwarding_directions(self):
++    param = HyundaiSafetyFlags.EV_GAS | self.SPLIT_BUTTON_ARM | self.ECAN_ONLY
++    self.safety.set_safety_hooks(CarParams.SafetyModel.hyundaiCanfd, param)
++    self.safety.init_tests()
++    self.assertEqual(-1, self.safety.safety_fwd_hook(0, 0x123))
++    self.assertEqual(-1, self.safety.safety_fwd_hook(2, 0x123))
 +
 +
  if __name__ == "__main__":

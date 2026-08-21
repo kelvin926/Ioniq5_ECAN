@@ -47,7 +47,7 @@ class PandaPreflightTest(unittest.TestCase):
         result = {
             "is_red_panda": True,
             "application_mode": True,
-            "firmware": "IONIQ5-dd8a5b3d-DEBUG",
+            "firmware": "IONIQ5ECAN-dd8a5b3d-DEBUG",
             "packet_versions": {"matches_pinned": True},
             "health": {
                 "faults": 0,
@@ -88,7 +88,37 @@ class PandaPreflightTest(unittest.TestCase):
         }
         failures = evaluate(result, allow_unpinned=False, require_harness=False)
         self.assertIn("Panda is in bootstub mode, not application mode", failures)
-        self.assertTrue(any("expected 'IONIQ5-dd8a5b3d-DEBUG'" in item for item in failures))
+        self.assertTrue(
+            any("expected 'IONIQ5ECAN-dd8a5b3d-DEBUG'" in item for item in failures)
+        )
+
+    def test_ecan_only_checks_controller_zero_and_exact_orientation(self):
+        result = {
+            "is_red_panda": True,
+            "application_mode": True,
+            "firmware": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+            "packet_versions": {"matches_pinned": True},
+            "health": {
+                "faults": (1 << 3) | (1 << 4),
+                "fault_status": 1,
+                "heartbeat_lost": 0,
+                "safety_rx_checks_invalid": 0,
+                "tx_buffer_overflow": 0,
+                "rx_buffer_overflow": 0,
+                "harness_status": 1,
+            },
+            "can": [
+                {"bus": 0, "bus_off": 0, "error_warning": 0, "error_passive": 0, "rx_delta": 1},
+                {"bus": 1, "bus_off": 1, "error_warning": 1, "error_passive": 1, "rx_delta": 0},
+                {"bus": 2, "bus_off": 1, "error_warning": 1, "error_passive": 1, "rx_delta": 0},
+            ],
+        }
+        self.assertEqual(evaluate(result, False, True, ecan_only=True), [])
+        result["health"]["harness_status"] = 2
+        self.assertIn(
+            "ECAN-only mode requires harness_status=1",
+            evaluate(result, False, True, ecan_only=True),
+        )
 
 
 if __name__ == "__main__":

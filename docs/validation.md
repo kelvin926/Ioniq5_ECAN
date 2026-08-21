@@ -13,8 +13,8 @@ parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지�
 
 ## 2. Panda bench, 차량 미연결
 
-- `python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL` 통과
-- 고정 `IONIQ5` ALLOW_DEBUG bootstub/firmware SHA-256, split-button patch hash, firmware 문자열, packet hash, Red Panda type과 health ABI 확인
+- `python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only` 통과
+- 고정 `IONIQ5ECAN` ALLOW_DEBUG firmware SHA-256, 세 patch hash, firmware 문자열, packet hash, Red Panda type과 health ABI 확인
 - `NO_OUTPUT`에서 모든 TX가 거부되는지 확인
 - CAN loopback fixture에서 100/50 Hz 주기와 counter/CRC 확인
 - `/ioniq5/can_rx`와 bus별 raw RX가 address/bus/FD/payload를 손실 없이 보존하는지 확인
@@ -23,10 +23,10 @@ parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지�
 
 ## 3. 차량 연결, 바퀴 지면 이탈
 
-- `panda_preflight.py --require-harness` 통과
-- `config/ioniq5_ecan_passive.yaml`로 ECAN/CAM bus와 주소 fingerprint 기록
-- 0x12A가 camera bus에서 보이고 ECAN bus mapping이 0인지 확인
-- 0x1A0이 camera bus 2에서 보이는 HDA1 camera-SCC 구성인지 확인
+- `panda_preflight.py --ecan-only --require-harness`로 `harness_status=1` 및 ECAN RX 증가 통과
+- `config/ioniq5_ecan_passive.yaml`로 ECAN bus 0 주소 fingerprint 기록
+- 0x12A, 0x1A0, 0x1CF/0x1AA가 ECAN bus 0에 있는지 확인
+- camera bus 2에 의존하는 parser/control 경로가 없는지 확인
 - 0x1CF/0x1AA 중 실제 버튼 메시지를 확인하고 `hardware.alternate_buttons` 설정
 - parser 값과 계기판/물리 입력의 부호와 배율 비교
 - `yaw_rate_deg_s`, 횡·종가속도와 4륜 속도의 정지 영점, 방향 및 IMU/ESC source 확인

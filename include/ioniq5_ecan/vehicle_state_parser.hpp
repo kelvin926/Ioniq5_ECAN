@@ -10,7 +10,7 @@ namespace ioniq5_ecan {
 class VehicleStateParser {
  public:
   explicit VehicleStateParser(uint8_t ecan_bus = 0, uint8_t camera_bus = 2,
-                              bool alternate_buttons = false);
+                              bool alternate_buttons = false, bool use_camera_bus = false);
 
   bool update(const CanFrame& frame);
   VehicleStateData snapshot(TimePoint now, std::chrono::milliseconds critical_timeout) const;
@@ -31,6 +31,7 @@ class VehicleStateParser {
   uint8_t ecan_bus_;
   uint8_t camera_bus_;
   bool alternate_buttons_;
+  bool use_camera_bus_;
   mutable std::mutex mutex_;
   VehicleStateData state_;
   uint8_t previous_button_{0};

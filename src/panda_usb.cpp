@@ -190,7 +190,8 @@ bool PandaUsb::connected() const { return ready_.load(); }
 const std::string& PandaUsb::serial() const { return serial_; }
 
 void PandaUsb::configure_can() {
-  for (uint16_t bus = 0; bus < 3; ++bus) {
+  const uint16_t bus_count = config_.ecan_only ? 1U : 3U;
+  for (uint16_t bus = 0; bus < bus_count; ++bus) {
     control_write(0xDE, bus, static_cast<uint16_t>(config_.nominal_bitrate_kbps * 10));
     control_write(0xF9, bus, static_cast<uint16_t>(config_.data_bitrate_kbps * 10));
     control_write(0xE8, bus, 1);  // automatic classic CAN/CAN-FD switching
@@ -219,6 +220,7 @@ PandaHealth PandaUsb::health() {
   result.heartbeat_lost = packet.heartbeat_lost != 0;
   result.safety_rx_checks_invalid = packet.safety_rx_checks_invalid != 0;
   result.faults = packet.faults;
+  result.ignored_faults = config_.ecan_only ? kEcanOnlyIgnoredFaults : 0U;
   result.fault_status = packet.fault_status;
   result.harness_status = packet.harness_status;
   result.safety_mode = packet.safety_mode;
@@ -231,7 +233,9 @@ PandaHealth PandaUsb::health() {
   for (uint16_t bus = 0; bus < 3; ++bus) {
     PandaCanHealthPacket can{};
     if (control_read(0xC2, bus, 0, &can, sizeof(can)) == static_cast<int>(sizeof(can))) {
-      result.bus_off = result.bus_off || can.bus_off != 0 || can.error_passive != 0;
+      if (!config_.ecan_only || bus == 0U) {
+        result.bus_off = result.bus_off || can.bus_off != 0 || can.error_passive != 0;
+      }
     }
   }
   result.updated_at = SteadyClock::now();

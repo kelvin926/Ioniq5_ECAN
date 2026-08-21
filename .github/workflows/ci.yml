@@ -36,6 +36,22 @@ jobs:
           python -m unittest \
             opendbc.safety.tests.test_hyundai_canfd.TestHyundaiCanfdSplitButtonArm
 
+  panda-firmware:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install uv
+        run: python -m pip install --disable-pip-version-check uv
+      - name: Build pinned ECAN-only signed firmware
+        run: ./scripts/build_panda_debug_firmware.sh /tmp/ioniq5_ecan_firmware
+      - name: Verify dedicated firmware marker
+        run: |
+          grep -a -q 'IONIQ5ECAN-dd8a5b3d-DEBUG' \
+            /tmp/ioniq5_ecan_firmware/panda/board/obj/panda_h7.bin.signed
+
   ros1-noetic:
     runs-on: ubuntu-latest
     container: ros:noetic-ros-base

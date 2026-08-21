@@ -8,15 +8,18 @@
 | [commaai/panda](https://github.com/commaai/panda) | `dd8a5b3df77706337a11555377e7180c5adc8726` | USB packet/health ABI, control requests, firmware build flags |
 | [ajouatom/openpilot](https://github.com/ajouatom/openpilot/tree/carrot-wip) | `7fae709b39ec060a0bdd8cc141877eefecb72163` | 사용자 조정 가능 파라미터 방식 참고 |
 
-LDA/SET 분리 arm은 upstream 동작이 아니라 [`patches/opendbc-hyundai-canfd-split-arm.patch`](../patches/opendbc-hyundai-canfd-split-arm.patch)의 opt-in 확장입니다.
+LDA/SET 분리 arm과 forwarding 차단은 upstream 동작이 아니라
+[`patches/opendbc-hyundai-canfd-split-arm.patch`](../patches/opendbc-hyundai-canfd-split-arm.patch)의
+opt-in 확장입니다. 비-ECAN transceiver 비활성화와 하네스 방향 gate는
+[`patches/panda-ecan-only.patch`](../patches/panda-ecan-only.patch)에 있습니다.
 
 차량 전제는 opendbc의 Ioniq 5 platform entry와 CAN-FD fingerprint logic을 따릅니다.
 
 - Ioniq 5 HDA1: Hyundai K harness
 - wheelbase 2.97 m, steering ratio 14.26
 - non-LKA HDA1는 LFA steering
-- radar-SCC flag가 없는 non-LKA 구성은 camera-SCC
-- ECAN bus 0, camera bus 2
+- 실차 passive capture에서 LFA `0x12A`, SCC `0x1A0`, 버튼 `0x1CF/0x1AA`가 ECAN bus 0에 존재
+- ECAN bus 0만 사용하고 camera bus 2는 transceiver와 forwarding 모두 비활성화
 
 대조한 주요 파일:
 

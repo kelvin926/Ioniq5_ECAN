@@ -8,6 +8,7 @@ hardware:
   # Initial HDA1/Hyundai K hypothesis. Confirm from the passive trace.
   ecan_bus: 0
   camera_bus: 2
+  ecan_only: true
   alternate_buttons: false
 
 topics:

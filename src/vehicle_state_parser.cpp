@@ -27,8 +27,12 @@ constexpr double kStandardGravityMps2 = 9.80665;
 
 }  // namespace
 
-VehicleStateParser::VehicleStateParser(uint8_t ecan_bus, uint8_t camera_bus, bool alternate_buttons)
-    : ecan_bus_(ecan_bus), camera_bus_(camera_bus), alternate_buttons_(alternate_buttons) {}
+VehicleStateParser::VehicleStateParser(uint8_t ecan_bus, uint8_t camera_bus, bool alternate_buttons,
+                                       bool use_camera_bus)
+    : ecan_bus_(ecan_bus),
+      camera_bus_(camera_bus),
+      alternate_buttons_(alternate_buttons),
+      use_camera_bus_(use_camera_bus) {}
 
 bool VehicleStateParser::require_crc(const CanFrame& frame) {
   if (!HyundaiCanFdCodec::checksum_valid(frame)) {
@@ -45,7 +49,7 @@ bool VehicleStateParser::update(const CanFrame& frame) {
 
   std::lock_guard<std::mutex> lock(mutex_);
   const bool on_ecan = frame.bus == ecan_bus_;
-  const bool on_camera = frame.bus == camera_bus_;
+  const bool on_camera = use_camera_bus_ && frame.bus == camera_bus_;
   if (!on_ecan && !on_camera) {
     return false;
   }

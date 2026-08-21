@@ -16,7 +16,7 @@ Alpamayo-side controller
                                      └─ Hyundai K harness / ECAN
 
 Red Panda CAN RX
-  └─ /ioniq5/can_rx + /ioniq5/can{0,1,2}/rx
+  └─ ECAN logical bus 0 → /ioniq5/can_rx + /ioniq5/can0/rx
        ├─ raw CAN-FD logging / rosbag / Cabana 변환
        └─ vehicle state parser
 
@@ -25,6 +25,10 @@ Red Panda CAN RX
        └─ Panda HYUNDAI_CANFD whitelist
             └─ Red Panda CAN TX
 ```
+
+전용 Panda firmware는 Hyundai K 하네스의 `harness_status=1`만 허용합니다. 이 방향에서
+physical CAN1이 logical ECAN bus 0이며, 나머지 transceiver와 CAN0↔CAN2 forwarding은
+꺼집니다. camera CAN2는 parser, 조향, 종방향, 버튼 입력에 사용하지 않습니다.
 
 차선유지(LDA) 버튼의 상승 에지는 조향 전용 모드를, 크루즈 `SET` release는 조향+종방향
 통합 모드를 선택합니다. 선택한 모드의 버튼을 다시 누르면 두 출력이 꺼집니다. Panda의

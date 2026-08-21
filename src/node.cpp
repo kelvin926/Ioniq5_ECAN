@@ -49,7 +49,8 @@ Ioniq5EcanNode::Ioniq5EcanNode(ros::NodeHandle node_handle, ros::NodeHandle priv
     : node_handle_(std::move(node_handle)), private_node_handle_(std::move(private_node_handle)) {
   load_configuration();
   panda_ = std::make_unique<PandaUsb>(panda_config_);
-  parser_ = std::make_unique<VehicleStateParser>(ecan_bus_, camera_bus_, alternate_buttons_);
+  parser_ =
+    std::make_unique<VehicleStateParser>(ecan_bus_, camera_bus_, alternate_buttons_, !ecan_only_);
   adapter_ = std::make_unique<CommandAdapter>(adapter_config_);
   supervisor_ = std::make_unique<SafetySupervisor>(safety_config_);
 
@@ -113,6 +114,8 @@ void Ioniq5EcanNode::load_configuration() {
   panda_config_.write_timeout_ms = parameter<int>("hardware/usb_write_timeout_ms", 10);
   ecan_bus_ = static_cast<uint8_t>(parameter<int>("hardware/ecan_bus", 0));
   camera_bus_ = static_cast<uint8_t>(parameter<int>("hardware/camera_bus", 2));
+  ecan_only_ = parameter<bool>("hardware/ecan_only", true);
+  panda_config_.ecan_only = ecan_only_;
   alternate_buttons_ = parameter<bool>("hardware/alternate_buttons", false);
 
   command_topic_ = parameter<std::string>("topics/command", command_topic_);
@@ -201,6 +204,7 @@ void Ioniq5EcanNode::load_configuration() {
   if (alternate_buttons_) {
     safety_config_.required_safety_param |= PandaUsb::kHyundaiAlternateButtons;
   }
+  safety_config_.required_harness_status = 1U;
   safety_config_.command_timeout =
     std::chrono::milliseconds(parameter<int>("safety/command_timeout_ms", 100));
   safety_config_.panda_timeout =
@@ -216,6 +220,9 @@ void Ioniq5EcanNode::load_configuration() {
 
   if (ecan_bus_ > 2U || camera_bus_ > 2U || ecan_bus_ == camera_bus_) {
     throw std::invalid_argument("Hyundai K bus mapping must use two distinct Panda buses in [0,2]");
+  }
+  if (!ecan_only_ || ecan_bus_ != 0U) {
+    throw std::invalid_argument("this firmware requires hardware/ecan_only=true and ecan_bus=0");
   }
   if (panda_config_.nominal_bitrate_kbps != 500 || panda_config_.data_bitrate_kbps != 2000) {
     throw std::invalid_argument("Ioniq 5 CAN-FD rates must be 500/2000 kbps");
@@ -644,6 +651,7 @@ void Ioniq5EcanNode::publish_diagnostics(const VehicleStateData& vehicle, const 
   status.values.push_back(key_value("panda_safety_mode", panda.safety_mode));
   status.values.push_back(key_value("panda_safety_param", panda.safety_param));
   status.values.push_back(key_value("panda_faults", panda.faults));
+  status.values.push_back(key_value("panda_ignored_faults", panda.ignored_faults));
   status.values.push_back(key_value("panda_fault_status", panda.fault_status));
   status.values.push_back(key_value("panda_bus_off", panda.bus_off ? 1 : 0));
   status.values.push_back(key_value("safety_tx_blocked", panda.safety_tx_blocked));

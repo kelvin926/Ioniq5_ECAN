@@ -21,7 +21,9 @@ struct SafetyConfig {
   double max_active_speed_mps{0.0};
   double max_abs_steering_angle_deg{0.0};
   uint8_t required_safety_mode{28};
-  uint16_t required_safety_param{1033};
+  uint16_t required_safety_param{3073};
+  // ECAN-only firmware is valid only in the verified Hyundai K orientation.
+  uint8_t required_harness_status{1};
   std::chrono::milliseconds command_timeout{100};
   std::chrono::milliseconds panda_timeout{250};
 };

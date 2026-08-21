@@ -8,7 +8,7 @@ from pathlib import Path
 from panda import McuType, Panda, PandaDFU
 
 
-PINNED_VERSION = "IONIQ5-dd8a5b3d-DEBUG"
+PINNED_VERSION = "IONIQ5ECAN-dd8a5b3d-DEBUG"
 
 
 def _wait_for_bootstub(serial: str, timeout_s: float = 15.0) -> Panda:

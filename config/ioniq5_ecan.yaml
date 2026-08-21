@@ -9,6 +9,8 @@ hardware:
   # Hyundai K + Ioniq 5 HDA1: ECAN=0, camera=2.
   ecan_bus: 0
   camera_bus: 2
+  # Custom firmware keeps only ECAN enabled; harness_status must be 1.
+  ecan_only: true
   # false: CRUISE_BUTTONS 0x1CF, true: CRUISE_BUTTONS_ALT 0x1AA.
   # Confirm from a passive fingerprint before actuation.
   alternate_buttons: false

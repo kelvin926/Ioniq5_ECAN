@@ -59,6 +59,7 @@ class Ioniq5EcanNode {
   SafetyConfig safety_config_;
   uint8_t ecan_bus_{0};
   uint8_t camera_bus_{2};
+  bool ecan_only_{true};
   bool alternate_buttons_{false};
   bool use_enable_field_{false};
   bool auto_arm_on_command_{true};

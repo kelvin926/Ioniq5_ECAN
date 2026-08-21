@@ -77,7 +77,7 @@ int main() {
   SafetyConfig safety_config;
   safety_config.allow_actuation = true;
   safety_config.allow_longitudinal = true;
-  safety_config.required_safety_param = 1037;
+  safety_config.required_safety_param = 3077;
   SafetySupervisor safety(safety_config);
   const TimePoint now = SteadyClock::now();
   vehicle.valid = true;
@@ -86,7 +86,7 @@ int main() {
   panda.controls_allowed = true;
   panda.harness_status = 1;
   panda.safety_mode = 28;
-  panda.safety_param = 1037;
+  panda.safety_param = 3077;
   panda.updated_at = now;
   command.received_at = now;
   require(safety.request_arm(true), "arm request rejected");
