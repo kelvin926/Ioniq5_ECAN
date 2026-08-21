@@ -95,7 +95,7 @@ TEST(SafetySupervisor, FaultsOnPandaHardwareFault) {
   EXPECT_FALSE(decision.longitudinal_allowed);
 }
 
-TEST(SafetySupervisor, LaneAndSetButtonsToggleIndependentChannels) {
+TEST(SafetySupervisor, LaneAndSetButtonsSelectLateralOnlyOrCombinedControl) {
   using namespace ioniq5_ecan;
   FixtureData data;
   SafetyConfig config;
@@ -119,20 +119,37 @@ TEST(SafetySupervisor, LaneAndSetButtonsToggleIndependentChannels) {
   SafetyDecision both = supervisor.update(data.now, data.vehicle, data.panda, data.command);
   EXPECT_TRUE(both.lateral_allowed);
   EXPECT_TRUE(both.longitudinal_allowed);
+  EXPECT_TRUE(both.lateral_armed);
+  EXPECT_TRUE(both.longitudinal_armed);
 
   ++data.vehicle.lane_keep_button_events;
-  SafetyDecision longitudinal = supervisor.update(data.now, data.vehicle, data.panda, data.command);
-  EXPECT_FALSE(longitudinal.lateral_allowed);
-  EXPECT_TRUE(longitudinal.longitudinal_allowed);
+  SafetyDecision lateral_again =
+    supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_TRUE(lateral_again.lateral_allowed);
+  EXPECT_FALSE(lateral_again.longitudinal_allowed);
+  EXPECT_TRUE(lateral_again.lateral_armed);
+  EXPECT_FALSE(lateral_again.longitudinal_armed);
 
-  ++data.vehicle.set_button_events;
+  ++data.vehicle.lane_keep_button_events;
   const SafetyDecision off = supervisor.update(data.now, data.vehicle, data.panda, data.command);
   EXPECT_EQ(off.state, ControlState::Armed);
   EXPECT_FALSE(off.lateral_armed);
   EXPECT_FALSE(off.longitudinal_armed);
+
+  ++data.vehicle.set_button_events;
+  both = supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_TRUE(both.lateral_allowed);
+  EXPECT_TRUE(both.longitudinal_allowed);
+
+  ++data.vehicle.set_button_events;
+  const SafetyDecision combined_off =
+    supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(combined_off.state, ControlState::Armed);
+  EXPECT_FALSE(combined_off.lateral_armed);
+  EXPECT_FALSE(combined_off.longitudinal_armed);
 }
 
-TEST(SafetySupervisor, OneButtonPressReenablesItsChannelAfterPandaDisengagement) {
+TEST(SafetySupervisor, SetPressReenablesCombinedModeAfterPandaDisengagement) {
   using namespace ioniq5_ecan;
   FixtureData data;
   SafetyConfig config;
@@ -143,7 +160,6 @@ TEST(SafetySupervisor, OneButtonPressReenablesItsChannelAfterPandaDisengagement)
   config.disengage_on_brake = false;
   SafetySupervisor supervisor(config);
   ASSERT_TRUE(supervisor.request_arm(true));
-  ++data.vehicle.lane_keep_button_events;
   ++data.vehicle.set_button_events;
   ASSERT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
             ControlState::Active);
@@ -154,10 +170,11 @@ TEST(SafetySupervisor, OneButtonPressReenablesItsChannelAfterPandaDisengagement)
   EXPECT_TRUE(paused.lateral_armed);
   EXPECT_TRUE(paused.longitudinal_armed);
 
-  ++data.vehicle.lane_keep_button_events;
+  ++data.vehicle.set_button_events;
   SafetyDecision button_edge = supervisor.update(data.now, data.vehicle, data.panda, data.command);
   EXPECT_EQ(button_edge.state, ControlState::Armed);
   EXPECT_TRUE(button_edge.lateral_armed);
+  EXPECT_TRUE(button_edge.longitudinal_armed);
 
   data.panda.controls_allowed = true;
   SafetyDecision resumed = supervisor.update(data.now, data.vehicle, data.panda, data.command);

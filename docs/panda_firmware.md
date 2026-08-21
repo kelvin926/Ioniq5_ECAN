@@ -6,8 +6,8 @@ firmware에서 param `1037`을 설정하면 LONG bit가 무시됩니다. 드라�
 arm을 실패시킵니다.
 
 이 저장소는 고정 opendbc에 opt-in safety param bit `1024`를 추가합니다. 이 비트가 있을 때
-차선유지(LDA) 버튼의 상승 에지도 Panda의 전역 `controls_allowed`를 허용하며, host가 조향과
-종방향을 별도로 게이트합니다. 따라서 upstream stock image가 아니라 아래 스크립트가 만든
+차선유지(LDA) 버튼의 상승 에지도 Panda의 전역 `controls_allowed`를 허용하며, host가 LDA의
+조향 전용 모드와 SET의 조향+종방향 모드를 게이트합니다. 따라서 upstream stock image가 아니라 아래 스크립트가 만든
 `IONIQ5-dd8a5b3d-DEBUG` image가 필요합니다.
 
 ## 고정 버전

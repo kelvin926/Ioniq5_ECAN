@@ -99,21 +99,23 @@ int main() {
   ++vehicle.set_button_events;
   split = safety.update(now, vehicle, panda, command);
   require(split.lateral_allowed && split.longitudinal_allowed,
-          "SET did not independently arm longitudinal control");
+          "SET did not select combined control");
   ++vehicle.lane_keep_button_events;
   split = safety.update(now, vehicle, panda, command);
-  require(!split.lateral_allowed && split.longitudinal_allowed,
-          "LDA did not toggle only lateral control off");
-  ++vehicle.set_button_events;
-  require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
-          "SET did not toggle only longitudinal control off");
-  panda.controls_allowed = false;
+  require(split.lateral_allowed && !split.longitudinal_allowed,
+          "LDA did not switch combined control to lateral-only control");
   ++vehicle.lane_keep_button_events;
   require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
-          "channel became active while Panda controls were disabled");
+          "LDA did not toggle lateral-only control off");
+  panda.controls_allowed = false;
+  ++vehicle.set_button_events;
+  require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
+          "combined mode became active while Panda controls were disabled");
   panda.controls_allowed = true;
-  require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
-          "armed lateral channel did not activate when Panda controls returned");
+  split = safety.update(now, vehicle, panda, command);
+  require(
+    split.state == ControlState::Active && split.lateral_allowed && split.longitudinal_allowed,
+    "armed combined mode did not activate when Panda controls returned");
   panda.faults = 1U;
   const SafetyDecision fault = safety.update(now, vehicle, panda, command);
   require(

@@ -201,8 +201,8 @@ void VehicleStateParser::parse_buttons(const CanFrame& frame, bool alternate) {
     lane_keep_button = get_signal(data, 23, 1, ByteOrder::LittleEndian) != 0U;
   }
 
-  // The LDA/lane-keep button arms lateral control on its rising edge. SET release separately
-  // controls longitudinal, matching Panda's Hyundai longitudinal enable edge.
+  // The LDA/lane-keep button selects lateral-only control on its rising edge. SET release selects
+  // combined lateral and longitudinal control, matching Panda's Hyundai longitudinal enable edge.
   if (lane_keep_button && !previous_lane_keep_button_) {
     ++state_.lane_keep_button_events;
   }

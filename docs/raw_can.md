@@ -32,7 +32,7 @@ false여야 하며, classic CAN은 최대 8 byte, CAN-FD는 표준 DLC 길이
 실제 송신 조건은 다음 세 가지입니다.
 
 1. `raw_can.allow_tx: true`
-2. 최신 명령과 차량 상태가 유효하고 `SET` 종방향 arm이 active
+2. 최신 명령과 차량 상태가 유효하고 `SET` 조향+종방향 통합 모드가 active
 3. Panda `HYUNDAI_CANFD` safety hook의 address/bus/content 검사 통과
 
 임의 CAN ID를 무제한 송신하도록 `SAFETY_ALLOUTPUT`을 사용하지 않습니다. 허용되지 않은

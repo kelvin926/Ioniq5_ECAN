@@ -292,7 +292,7 @@ void Ioniq5EcanNode::raw_can_tx_callback(const RawCanFrame::ConstPtr& message) {
   }
   if (!vehicle_safety_mode_.load() || !panda_->connected() || !longitudinal_allowed) {
     ++raw_can_tx_drop_count_;
-    ROS_WARN_THROTTLE(1.0, "raw CAN TX requires SET longitudinal arm and active Panda controls");
+    ROS_WARN_THROTTLE(1.0, "raw CAN TX requires SET combined mode and active Panda controls");
     return;
   }
 

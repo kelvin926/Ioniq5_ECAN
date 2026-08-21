@@ -11,6 +11,7 @@ namespace ioniq5_ecan {
 struct SafetyConfig {
   bool allow_actuation{false};
   bool allow_longitudinal{false};
+  // Repeating the currently selected LDA-only or SET-combined mode toggles it off.
   bool lateral_button_toggle{true};
   bool longitudinal_button_toggle{true};
   bool disengage_on_brake{true};

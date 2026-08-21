@@ -47,13 +47,14 @@ angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니
 - 활성화한 경우에만 설정 속도/조향각 상한 초과
 
 `1024`는 이 저장소의 opt-in split-button 확장입니다. 차선유지(LDA) 버튼의 상승 에지가
-Panda의 전역 `controls_allowed`를 허용하게 하고, host가 조향과 종방향 출력을 독립적으로
-게이트합니다. upstream 그대로의 firmware는 이 비트를 모르므로 LDA 단독 조향 arm이
+Panda의 전역 `controls_allowed`를 허용하게 하고, host가 LDA 조향 전용 모드와 SET
+조향+종방향 모드를 게이트합니다. upstream 그대로의 firmware는 이 비트를 모르므로 LDA 단독 조향 arm이
 동작하지 않습니다.
 
 정상 상태에서는 첫 최신 명령이 Panda를 HYUNDAI_CANFD 대기 상태로 만듭니다. 물리 LDA
-버튼은 조향을, `SET` release는 종방향과 raw TX를 각각 ON/OFF 토글합니다. 어느 한 채널만
-켜져도 상태는 `ACTIVE`이며, `/ioniq5/vehicle_state`의 채널별 arm/active 필드로 구분합니다.
+버튼은 조향 전용 모드를, `SET` release는 조향+종방향과 raw TX를 ON/OFF 토글합니다.
+LDA를 누르면 종방향은 항상 꺼지고, SET을 누르면 조향이 항상 함께 켜집니다.
+`/ioniq5/vehicle_state`의 채널별 arm/active 필드로 구분합니다.
 OFF에서도 순정 차단 구간의 timeout을 막기 위한 비활성 LFA/SCC 프레임은 유지됩니다.
 
 FAULT 후 재arm하려면 먼저 `set_armed=false`를 호출해 fault를 명시적으로 acknowledge한

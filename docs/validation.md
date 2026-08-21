@@ -18,7 +18,7 @@ parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지�
 - `NO_OUTPUT`에서 모든 TX가 거부되는지 확인
 - CAN loopback fixture에서 100/50 Hz 주기와 counter/CRC 확인
 - `/ioniq5/can_rx`와 bus별 raw RX가 address/bus/FD/payload를 손실 없이 보존하는지 확인
-- `/ioniq5/can_tx`가 SET 종방향 OFF에서 drop되고 SET ON/active에서 Panda whitelist를 통과하는지 확인
+- `/ioniq5/can_tx`가 SET 통합 모드 OFF에서 drop되고 SET ON/active에서 Panda whitelist를 통과하는지 확인
 - USB 제거 시 설정한 `panda_timeout_ms` 이내 DISCONNECTED 및 heartbeat false 확인
 
 ## 3. 차량 연결, 바퀴 지면 이탈
@@ -31,7 +31,7 @@ parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지�
 - parser 값과 계기판/물리 입력의 부호와 배율 비교
 - `yaw_rate_deg_s`, 횡·종가속도와 4륜 속도의 정지 영점, 방향 및 IMU/ESC source 확인
 - arm 전후 relay forwarding 및 정주기 비활성 프레임 확인
-- LDA가 조향만, SET이 종방향만 ON/OFF하는지 먼저 확인하고 조향 토크 ±1 count부터 방향과 운전자 override 확인
+- LDA가 조향 전용, SET이 조향+종방향 모드를 ON/OFF하는지 먼저 확인하고 조향 토크 ±1 count부터 방향과 운전자 override 확인
 
 fingerprint가 위 전제와 다르면 actuation하지 말고 codec/safety param을 수정합니다.
 

@@ -79,13 +79,18 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   }
 
   if (arm_requested_ && lane_keep_button_event) {
-    lateral_enabled_ =
-      config_.lateral_button_toggle ? !(lateral_enabled_ && panda.controls_allowed) : true;
+    const bool lateral_only_selected = lateral_enabled_ && !longitudinal_enabled_;
+    const bool turn_off =
+      config_.lateral_button_toggle && lateral_only_selected && panda.controls_allowed;
+    lateral_enabled_ = !turn_off;
+    longitudinal_enabled_ = false;
   }
   if (arm_requested_ && set_button_event) {
-    longitudinal_enabled_ = config_.longitudinal_button_toggle
-                              ? !(longitudinal_enabled_ && panda.controls_allowed)
-                              : true;
+    const bool combined_selected = lateral_enabled_ && longitudinal_enabled_;
+    const bool turn_off =
+      config_.longitudinal_button_toggle && combined_selected && panda.controls_allowed;
+    lateral_enabled_ = !turn_off;
+    longitudinal_enabled_ = !turn_off;
   }
   const bool cancel_event = vehicle.cancel_button_events != last_cancel_button_events_;
   last_cancel_button_events_ = vehicle.cancel_button_events;
@@ -173,7 +178,7 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   const bool lateral_requested = lateral_enabled_;
   const bool longitudinal_requested = config_.allow_longitudinal && longitudinal_enabled_;
   if (!lateral_requested && !longitudinal_requested) {
-    transition(ControlState::Armed, "waiting for LDA lateral arm or SET longitudinal arm");
+    transition(ControlState::Armed, "waiting for LDA lateral-only or SET combined arm");
     return decision(false, false, true, false);
   }
   if (!panda.controls_allowed) {
@@ -189,9 +194,8 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     return decision(false, false, true, false);
   }
 
-  transition(ControlState::Active, lateral && longitudinal ? "active: lateral + longitudinal"
-                                   : lateral               ? "active: lateral"
-                                                           : "active: longitudinal");
+  transition(ControlState::Active,
+             lateral && longitudinal ? "active: lateral + longitudinal" : "active: lateral");
   return decision(lateral, longitudinal, true, true);
 }
 

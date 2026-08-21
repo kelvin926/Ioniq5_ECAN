@@ -29,7 +29,7 @@ index bf08fb17..2d4d3df1 100644
        hyundai_common_cruise_buttons_check(cruise_button, main_button);
 +
 +      // Repository-local opt-in: allow an LDA rising edge to establish Panda's global
-+      // controls_allowed. Host software still gates lateral and longitudinal independently.
++      // controls_allowed. Host software selects lateral-only or combined control.
 +      if (hyundai_canfd_split_button_arm && lda_button && !hyundai_canfd_lda_button_prev) {
 +        controls_allowed = true;
 +      }

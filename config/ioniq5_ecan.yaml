@@ -85,7 +85,7 @@ longitudinal:
 
 safety:
   # Research-site profile: the first fresh two-value command arms automatically.
-  # LDA toggles lateral; SET release toggles longitudinal.
+  # LDA selects lateral-only; SET release selects lateral + longitudinal.
   allow_actuation: true
   allow_longitudinal: true
   auto_arm_on_command: true

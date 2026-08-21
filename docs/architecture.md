@@ -21,14 +21,15 @@ Red Panda CAN RX
        └─ vehicle state parser
 
 /ioniq5/can_tx
-  └─ SET longitudinal arm + active gate
+  └─ SET combined-mode arm + active gate
        └─ Panda HYUNDAI_CANFD whitelist
             └─ Red Panda CAN TX
 ```
 
-차선유지(LDA) 버튼의 상승 에지는 조향 채널만, 크루즈 `SET` release는 종방향 채널만
-토글합니다. Panda의 `controls_allowed`는 전역 값이므로 저장소의 opt-in firmware 패치가
-LDA 입력도 허용 상태로 만들고, host supervisor가 실제 LFA/SCC 출력을 채널별로 분리합니다.
+차선유지(LDA) 버튼의 상승 에지는 조향 전용 모드를, 크루즈 `SET` release는 조향+종방향
+통합 모드를 선택합니다. 선택한 모드의 버튼을 다시 누르면 두 출력이 꺼집니다. Panda의
+`controls_allowed`는 전역 값이므로 저장소의 opt-in firmware 패치가 LDA 입력도 허용 상태로
+만들고, host supervisor가 실제 LFA/SCC 출력을 선택된 모드에 맞게 게이트합니다.
 
 ROS callback은 최신 command 하나만 mutex로 교환합니다. CAN RX와 제어 루프는 별도
 스레드이고, 제어 루프는 ROS callback spinner와 독립된 steady clock 100 Hz 주기를 사용합니다.
