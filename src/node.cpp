@@ -20,6 +20,14 @@
 namespace ioniq5_ecan {
 namespace {
 
+constexpr std::array<uint8_t, 16> kCanPayloadSizes{0, 1,  2,  3,  4,  5,  6,  7,
+                                                   8, 12, 16, 20, 24, 32, 48, 64};
+
+bool valid_can_payload_size(uint8_t size) {
+  return std::find(kCanPayloadSizes.begin(), kCanPayloadSizes.end(), size) !=
+         kCanPayloadSizes.end();
+}
+
 template <typename T>
 diagnostic_msgs::msg::KeyValue key_value(const std::string& key, T value) {
   diagnostic_msgs::msg::KeyValue item;
@@ -56,6 +64,22 @@ Ioniq5EcanNode::Ioniq5EcanNode() : Node("ioniq5_ecan_node") {
     command_topic_, command_qos,
     std::bind(&Ioniq5EcanNode::command_callback, this, std::placeholders::_1));
   state_publisher_ = create_publisher<msg::VehicleState>(state_topic_, rclcpp::QoS(10));
+  auto raw_can_qos = rclcpp::QoS(rclcpp::KeepLast(256));
+  raw_can_qos.best_effort();
+  if (publish_raw_can_rx_) {
+    raw_can_rx_publisher_ = create_publisher<msg::RawCanFrame>(raw_can_rx_topic_, raw_can_qos);
+    if (publish_raw_can_bus_topics_) {
+      for (std::size_t bus = 0; bus < raw_can_bus_publishers_.size(); ++bus) {
+        raw_can_bus_publishers_[bus] = create_publisher<msg::RawCanFrame>(
+          raw_can_bus_prefix_ + std::to_string(bus) + "/rx", raw_can_qos);
+      }
+    }
+  }
+  if (allow_raw_can_tx_) {
+    raw_can_tx_subscription_ = create_subscription<msg::RawCanFrame>(
+      raw_can_tx_topic_, raw_can_qos,
+      std::bind(&Ioniq5EcanNode::raw_can_tx_callback, this, std::placeholders::_1));
+  }
   diagnostics_publisher_ =
     create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", rclcpp::QoS(10));
   arm_service_ = create_service<std_srvs::srv::SetBool>(
@@ -98,6 +122,13 @@ void Ioniq5EcanNode::load_configuration() {
 
   command_topic_ = declare_parameter<std::string>("topics.command", command_topic_);
   state_topic_ = declare_parameter<std::string>("topics.vehicle_state", state_topic_);
+  raw_can_rx_topic_ = declare_parameter<std::string>("topics.raw_can_rx", raw_can_rx_topic_);
+  raw_can_tx_topic_ = declare_parameter<std::string>("topics.raw_can_tx", raw_can_tx_topic_);
+  raw_can_bus_prefix_ =
+    declare_parameter<std::string>("topics.raw_can_bus_prefix", raw_can_bus_prefix_);
+  publish_raw_can_rx_ = declare_parameter<bool>("raw_can.publish_rx", true);
+  publish_raw_can_bus_topics_ = declare_parameter<bool>("raw_can.publish_bus_topics", true);
+  allow_raw_can_tx_ = declare_parameter<bool>("raw_can.allow_tx", false);
   adapter_config_.lateral_mode = lateral_mode_from_string(
     declare_parameter<std::string>("input.lateral_mode", "steering_rate_deg_s"));
   adapter_config_.lateral_scale = declare_parameter<double>("input.lateral_scale", 1.0);
@@ -166,6 +197,7 @@ void Ioniq5EcanNode::load_configuration() {
 
   safety_config_.allow_actuation = declare_parameter<bool>("safety.allow_actuation", false);
   safety_config_.allow_longitudinal = declare_parameter<bool>("safety.allow_longitudinal", false);
+  safety_config_.set_button_toggle = declare_parameter<bool>("safety.set_button_toggle", true);
   auto_arm_on_command_ = declare_parameter<bool>("safety.auto_arm_on_command", true);
   safety_config_.require_set_resume_button =
     declare_parameter<bool>("safety.require_set_resume_button", true);
@@ -257,6 +289,47 @@ void Ioniq5EcanNode::command_callback(const msg::ActuationCommand::SharedPtr mes
   latest_command_.received_at = received_at;
 }
 
+void Ioniq5EcanNode::raw_can_tx_callback(const msg::RawCanFrame::SharedPtr message) {
+  if (!allow_raw_can_tx_) return;
+  const auto size = static_cast<uint8_t>(message->data.size());
+  const bool valid = message->bus < 3U && message->address < (1U << 29U) &&
+                     (message->extended || message->address < 0x800U) &&
+                     valid_can_payload_size(size) && (message->fd || size <= 8U) &&
+                     !message->returned && !message->rejected;
+  if (!valid) {
+    ++raw_can_tx_drop_count_;
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "dropping malformed raw CAN TX frame");
+    return;
+  }
+  ControlState control_state = ControlState::Disconnected;
+  {
+    std::lock_guard<std::mutex> lock(decision_mutex_);
+    control_state = latest_decision_.state;
+  }
+  if (!vehicle_safety_mode_.load() || !panda_->connected() ||
+      control_state != ControlState::Active) {
+    ++raw_can_tx_drop_count_;
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "raw CAN TX requires SET control toggle ON and ACTIVE state");
+    return;
+  }
+
+  CanFrame frame;
+  frame.address = message->address;
+  frame.bus = message->bus;
+  frame.fd = message->fd;
+  frame.extended = message->extended;
+  frame.size = size;
+  std::copy_n(message->data.begin(), frame.size, frame.data.begin());
+  try {
+    panda_->send(frame);
+    ++raw_can_tx_count_;
+  } catch (const std::exception& error) {
+    ++raw_can_tx_drop_count_;
+    RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 1000, "raw CAN TX failed: %s", error.what());
+  }
+}
+
 void Ioniq5EcanNode::arm_callback(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
                                   std::shared_ptr<std_srvs::srv::SetBool::Response> response) {
   if (request->data && !safety_config_.allow_actuation) {
@@ -290,7 +363,10 @@ void Ioniq5EcanNode::receive_loop() {
         next_health = SteadyClock::now();
       }
 
-      for (const CanFrame& frame : panda_->receive()) parser_->update(frame);
+      for (const CanFrame& frame : panda_->receive()) {
+        publish_raw_can(frame);
+        parser_->update(frame);
+      }
       const auto now = SteadyClock::now();
       if (now >= next_health) {
         PandaHealth health = panda_->health();
@@ -351,9 +427,9 @@ void Ioniq5EcanNode::control_loop() {
                                now - command.received_at <= safety_config_.command_timeout;
     const bool auto_arm_ready =
       auto_arm_on_command_ && !auto_arm_inhibited_.load() && safety_config_.allow_actuation &&
-      command_fresh && command.valid && command.enable && vehicle.valid && !vehicle.brake_pressed &&
-      !vehicle.eps_fault && (!safety_config_.allow_longitudinal || !vehicle.acc_fault) &&
-      panda_health.connected;
+      command_fresh && command.valid && command.enable && vehicle.valid &&
+      (!safety_config_.disengage_on_brake || !vehicle.brake_pressed) && !vehicle.eps_fault &&
+      (!safety_config_.allow_longitudinal || !vehicle.acc_fault) && panda_health.connected;
     if (auto_arm_ready && !requested_arm_.load()) {
       requested_arm_ = true;
       arm_request_generation_.fetch_add(1U);
@@ -423,8 +499,9 @@ void Ioniq5EcanNode::control_loop() {
           accel_last = 0.0;
         }
         frames.push_back(codec_.make_scc_control(
-          acc_enabled ? target : 0.0, accel_last, acc_enabled, output.stopping, vehicle.gas_pressed,
-          set_speed_kph_, adapter_config_.jerk_limit_mps3, ecan_bus_));
+          acc_enabled ? target : 0.0, accel_last, acc_enabled, output.stopping,
+          safety_config_.longitudinal_override_on_gas && vehicle.gas_pressed, set_speed_kph_,
+          adapter_config_.jerk_limit_mps3, ecan_bus_));
         frames.push_back(codec_.make_fca_warning(ecan_bus_));
       }
       try {
@@ -538,6 +615,24 @@ void Ioniq5EcanNode::publish_status() {
   publish_diagnostics(vehicle, panda, decision);
 }
 
+void Ioniq5EcanNode::publish_raw_can(const CanFrame& frame) {
+  if (!raw_can_rx_publisher_) return;
+  msg::RawCanFrame message;
+  message.stamp = now();
+  message.address = frame.address;
+  message.bus = frame.bus;
+  message.fd = frame.fd;
+  message.extended = frame.extended;
+  message.returned = frame.returned;
+  message.rejected = frame.rejected;
+  message.data.assign(frame.data.begin(), frame.data.begin() + frame.size);
+  raw_can_rx_publisher_->publish(message);
+  if (frame.bus < raw_can_bus_publishers_.size() && raw_can_bus_publishers_[frame.bus]) {
+    raw_can_bus_publishers_[frame.bus]->publish(message);
+  }
+  ++raw_can_rx_count_;
+}
+
 void Ioniq5EcanNode::publish_diagnostics(const VehicleState& vehicle, const PandaHealth& panda,
                                          const SafetyDecision& decision) {
   diagnostic_msgs::msg::DiagnosticArray array;
@@ -557,7 +652,13 @@ void Ioniq5EcanNode::publish_diagnostics(const VehicleState& vehicle, const Pand
   status.values.push_back(key_value("panda_controls_allowed", panda.controls_allowed ? 1 : 0));
   status.values.push_back(key_value("panda_safety_mode", panda.safety_mode));
   status.values.push_back(key_value("panda_safety_param", panda.safety_param));
+  status.values.push_back(key_value("panda_faults", panda.faults));
+  status.values.push_back(key_value("panda_fault_status", panda.fault_status));
+  status.values.push_back(key_value("panda_bus_off", panda.bus_off ? 1 : 0));
   status.values.push_back(key_value("safety_tx_blocked", panda.safety_tx_blocked));
+  status.values.push_back(key_value("raw_can_rx_count", raw_can_rx_count_.load()));
+  status.values.push_back(key_value("raw_can_tx_count", raw_can_tx_count_.load()));
+  status.values.push_back(key_value("raw_can_tx_drop_count", raw_can_tx_drop_count_.load()));
   status.values.push_back(key_value("can_checksum_failures", parser_->checksum_failures()));
   array.status.push_back(status);
   diagnostics_publisher_->publish(array);

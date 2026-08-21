@@ -17,6 +17,7 @@
   <depend>libusb-1.0</depend>
 
   <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>python3-usb1</exec_depend>
   <test_depend>ament_cmake_gtest</test_depend>
 
   <member_of_group>rosidl_interface_packages</member_of_group>

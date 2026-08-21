@@ -24,8 +24,28 @@ Ubuntu 20.04 기본 Python은 너무 오래되므로 `uv`가 관리하는 Python
 ./scripts/build_panda_debug_firmware.sh
 ```
 
-스크립트는 사용자 cache에 두 저장소를 정확한 SHA로 checkout하고 `RELEASE`를 제거한
-DEBUG firmware를 빌드합니다. 출력 경로와 SHA-256을 기록해 시험 로그에 보관하십시오.
+스크립트는 사용자 cache에 두 저장소를 정확한 SHA로 checkout하고 `RELEASE`와 ambient
+`DEBUG` 환경 변수를 제거한 뒤 `ALLOW_DEBUG` bootstub과 firmware를 빌드합니다. 두 출력
+경로와 SHA-256을 시험 로그에 보관하십시오.
+
+기존 RELEASE bootstub은 debug key로 서명된 앱을 거부할 수 있습니다. 플래시 후 Panda가
+`PID_DDEE` bootstub에 남으면 앱을 반복해서 쓰지 말고, 차량과 분리된 상태에서 공식 Panda
+DFU recovery 절차로 같은 빌드의 `bootstub.panda_h7.bin`을 먼저 설치해야 합니다.
+
+Windows에서 STM32 DFU 장치가 Code 28로 표시되면 [공식 Zadig](https://zadig.akeo.ie/)로
+USB ID가 정확히 `0483:DF11`인 `DFU in FS Mode`에만 WinUSB를 설치합니다. 다른 USB 장치의
+드라이버를 교체하지 마십시오. Ubuntu에서는 udev rule 적용 후 libusb가 DFU를 직접 엽니다.
+
+DFU 복구는 boot sector 0과 1을 지우므로 정상 앱 모드에서는 실행하지 않습니다. 일반 Panda
+serial과 그 serial에서 계산되는 DFU serial이 일치해야만 helper가 진행합니다.
+
+```bash
+python3 scripts/recover_panda.py \
+  --serial RED_PANDA_SERIAL \
+  --dfu-serial STM32_DFU_SERIAL \
+  --confirm STM32_DFU_SERIAL \
+  --bootstub ~/.cache/ioniq5_ecan/upstream/panda/board/obj/bootstub.panda_h7.bin
+```
 
 ## 플래시
 
@@ -40,5 +60,20 @@ python3 scripts/flash_panda.py \
   --firmware ~/.cache/ioniq5_ecan/upstream/panda/board/obj/panda_h7.bin.signed
 ```
 
+helper는 앱에서 bootstub으로 전환한 뒤 새로 USB interface를 claim하므로 Windows WinUSB에서도
+bulk flash가 가능합니다. bootstub과 앱의 버전 문자열이 모두 고정
+`DEV-dd8a5b3d-DEBUG`인지 확인하고, 플래시 후 signature까지 다시 검증합니다. RELEASE 또는
+다른 commit의 bootstub이면 앱 영역을 지우기 전에 중단합니다.
+
 플래시 후 노드를 `allow_actuation: false`로 시작해 protocol hash, hardware type,
 harness 상태와 CAN RX만 먼저 확인합니다.
+
+차량과 분리된 상태에서 다음 read-only 검사 결과가 `PREFLIGHT PASS`인지 먼저 확인합니다.
+
+```bash
+python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL
+```
+
+이 검사는 application PID와 정확한 `DEV-dd8a5b3d-DEBUG` 문자열, 두 packet hash, Red Panda hardware type, health ABI,
+fault/overflow 및 세 CAN controller의 bus-off 상태를 확인합니다. Panda에 control write나 CAN
+frame을 보내지 않습니다. 차량 하네스 연결 후에는 `--require-harness`를 추가합니다.

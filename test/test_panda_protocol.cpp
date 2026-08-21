@@ -28,8 +28,33 @@ TEST(PandaProtocol, PackAndPartialUnpackRoundTrip) {
   EXPECT_EQ(frames[0].address, source.address);
   EXPECT_EQ(frames[0].bus, source.bus);
   EXPECT_TRUE(frames[0].fd);
+  EXPECT_FALSE(frames[0].extended);
   EXPECT_EQ(frames[0].size, source.size);
   EXPECT_TRUE(carry.empty());
+}
+
+TEST(PandaProtocol, PreservesExtendedIdBitIndependentlyOfNumericAddress) {
+  using namespace ioniq5_ecan;
+  CanFrame source;
+  source.address = 0x123;
+  source.extended = true;
+  source.size = 8;
+
+  const std::vector<uint8_t> bytes = PandaUsb::pack_frames({source});
+  std::vector<uint8_t> carry;
+  const auto frames =
+    PandaUsb::unpack_frames(carry, bytes.data(), bytes.size(), SteadyClock::now());
+  ASSERT_EQ(frames.size(), 1U);
+  EXPECT_EQ(frames[0].address, source.address);
+  EXPECT_TRUE(frames[0].extended);
+}
+
+TEST(PandaProtocol, RejectsOutOfRangeStandardId) {
+  using namespace ioniq5_ecan;
+  CanFrame frame;
+  frame.address = 0x800;
+  frame.size = 8;
+  EXPECT_THROW(PandaUsb::pack_frames({frame}), std::invalid_argument);
 }
 
 TEST(PandaProtocol, RejectsCorruptUsbChecksum) {

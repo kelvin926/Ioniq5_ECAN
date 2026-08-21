@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(ioniq5_ecan LANGUAGES C CXX)
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -33,6 +33,16 @@ if(IONIQ5_ECAN_CORE_ONLY)
     target_compile_options(core_smoke PRIVATE -Wall -Wextra -Wpedantic -Werror)
   endif()
   add_test(NAME core_smoke COMMAND core_smoke)
+  find_package(Python3 QUIET COMPONENTS Interpreter)
+  if(Python3_Interpreter_FOUND)
+    add_test(
+      NAME panda_preflight_unit
+      COMMAND ${Python3_EXECUTABLE} -m unittest test.test_panda_preflight
+    )
+    set_tests_properties(panda_preflight_unit PROPERTIES
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+  endif()
   return()
 endif()
 
@@ -47,6 +57,7 @@ pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ActuationCommand.msg"
+  "msg/RawCanFrame.msg"
   "msg/VehicleState.msg"
   DEPENDENCIES builtin_interfaces
 )
@@ -86,7 +97,14 @@ install(TARGETS
 )
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY config launch DESTINATION share/${PROJECT_NAME})
-install(PROGRAMS scripts/check_environment.sh DESTINATION lib/${PROJECT_NAME})
+install(PROGRAMS
+  scripts/build_panda_debug_firmware.sh
+  scripts/check_environment.sh
+  scripts/flash_panda.py
+  scripts/panda_preflight.py
+  scripts/recover_panda.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)

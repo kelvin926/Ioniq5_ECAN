@@ -41,9 +41,15 @@ uv pip install \
   "gcc-arm-none-eabi @ git+https://github.com/commaai/dependencies.git@release-gcc-arm-none-eabi#subdirectory=gcc-arm-none-eabi"
 
 # Do not set RELEASE: the Hyundai longitudinal flag is compiled only with ALLOW_DEBUG.
-(cd "${panda_dir}" && env -u RELEASE scons -j"$(nproc)" board/obj/panda_h7.bin.signed)
+# Also clear an ambient DEBUG variable; Panda uses it for additional debug-only code that is
+# unrelated to the debug signing key and should not vary the pinned image accidentally.
+(cd "${panda_dir}" && env -u RELEASE -u DEBUG scons -j"$(nproc)" \
+  board/obj/bootstub.panda_h7.bin board/obj/panda_h7.bin.signed)
 
 firmware="${panda_dir}/board/obj/panda_h7.bin.signed"
+bootstub="${panda_dir}/board/obj/bootstub.panda_h7.bin"
+sha256sum "${bootstub}"
 sha256sum "${firmware}"
+printf 'Built pinned DEBUG bootstub: %s\n' "${bootstub}"
 printf 'Built pinned DEBUG firmware: %s\n' "${firmware}"
 printf 'Flash only after reading docs/panda_firmware.md.\n'

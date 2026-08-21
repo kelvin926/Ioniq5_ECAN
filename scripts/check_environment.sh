@@ -16,6 +16,7 @@ printf 'Ioniq5_ECAN environment check\n'
 check_command colcon
 check_command cmake
 check_command pkg-config
+check_command python3
 check_command ros2
 check_command lsusb
 
@@ -29,6 +30,13 @@ if pkg-config --exists libusb-1.0 2>/dev/null; then
   printf '[ok] libusb-1.0 development files\n'
 else
   printf '[missing] libusb-1.0 development files\n' >&2
+  failures=$((failures + 1))
+fi
+
+if python3 -c 'import usb1' >/dev/null 2>&1; then
+  printf '[ok] python3 usb1 module\n'
+else
+  printf '[missing] python3 usb1 module (install python3-usb1)\n' >&2
   failures=$((failures + 1))
 fi
 

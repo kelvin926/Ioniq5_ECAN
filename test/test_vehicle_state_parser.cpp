@@ -74,4 +74,28 @@ TEST(VehicleStateParser, RejectsBadChecksum) {
   EXPECT_EQ(parser.checksum_failures(), 1U);
 }
 
+TEST(VehicleStateParser, OnlySetReleaseCreatesControlEvent) {
+  using namespace ioniq5_ecan;
+  VehicleStateParser parser;
+  const TimePoint now = SteadyClock::now();
+
+  auto send_button = [&](uint8_t value) {
+    CanFrame frame;
+    frame.address = HyundaiCanFdCodec::kCruiseButtonsAddress;
+    frame.bus = 0;
+    frame.size = 8;
+    frame.received_at = now;
+    set_signal(frame.data, 16, 3, value, ByteOrder::LittleEndian);
+    EXPECT_TRUE(parser.update(frame));
+  };
+
+  send_button(1U);  // RES press
+  send_button(0U);  // RES release
+  EXPECT_EQ(parser.snapshot(now, std::chrono::milliseconds(100)).set_button_events, 0U);
+
+  send_button(2U);  // SET press
+  send_button(0U);  // SET release
+  EXPECT_EQ(parser.snapshot(now, std::chrono::milliseconds(100)).set_button_events, 1U);
+}
+
 }  // namespace

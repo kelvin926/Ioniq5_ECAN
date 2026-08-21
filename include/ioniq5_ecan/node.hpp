@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <memory>
@@ -12,6 +13,7 @@
 #include "ioniq5_ecan/command_adapter.hpp"
 #include "ioniq5_ecan/hyundai_canfd_codec.hpp"
 #include "ioniq5_ecan/msg/actuation_command.hpp"
+#include "ioniq5_ecan/msg/raw_can_frame.hpp"
 #include "ioniq5_ecan/msg/vehicle_state.hpp"
 #include "ioniq5_ecan/panda_usb.hpp"
 #include "ioniq5_ecan/safety_supervisor.hpp"
@@ -26,11 +28,13 @@ class Ioniq5EcanNode : public rclcpp::Node {
 
  private:
   void command_callback(const msg::ActuationCommand::SharedPtr message);
+  void raw_can_tx_callback(const msg::RawCanFrame::SharedPtr message);
   void arm_callback(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
                     std::shared_ptr<std_srvs::srv::SetBool::Response> response);
   void receive_loop();
   void control_loop();
   void publish_status();
+  void publish_raw_can(const CanFrame& frame);
   void publish_diagnostics(const VehicleState& vehicle, const PandaHealth& panda,
                            const SafetyDecision& decision);
   void apply_realtime_settings(const char* name, int priority, int cpu);
@@ -48,6 +52,9 @@ class Ioniq5EcanNode : public rclcpp::Node {
   bool alternate_buttons_{false};
   bool use_enable_field_{false};
   bool auto_arm_on_command_{true};
+  bool publish_raw_can_rx_{true};
+  bool publish_raw_can_bus_topics_{true};
+  bool allow_raw_can_tx_{false};
   int control_rate_hz_{100};
   int health_rate_hz_{10};
   int realtime_priority_{0};
@@ -57,6 +64,9 @@ class Ioniq5EcanNode : public rclcpp::Node {
   std::chrono::milliseconds vehicle_state_timeout_{100};
   std::string command_topic_{"/ioniq5/actuation_command"};
   std::string state_topic_{"/ioniq5/vehicle_state"};
+  std::string raw_can_rx_topic_{"/ioniq5/can_rx"};
+  std::string raw_can_tx_topic_{"/ioniq5/can_tx"};
+  std::string raw_can_bus_prefix_{"/ioniq5/can"};
 
   std::unique_ptr<PandaUsb> panda_;
   std::unique_ptr<VehicleStateParser> parser_;
@@ -70,6 +80,9 @@ class Ioniq5EcanNode : public rclcpp::Node {
   std::atomic<bool> auto_arm_inhibited_{false};
   std::atomic<uint64_t> arm_request_generation_{0};
   std::atomic<bool> vehicle_safety_mode_{false};
+  std::atomic<uint64_t> raw_can_rx_count_{0};
+  std::atomic<uint64_t> raw_can_tx_count_{0};
+  std::atomic<uint64_t> raw_can_tx_drop_count_{0};
   std::thread receive_thread_;
   std::thread control_thread_;
 
@@ -82,7 +95,10 @@ class Ioniq5EcanNode : public rclcpp::Node {
   SafetyDecision latest_decision_;
 
   rclcpp::Subscription<msg::ActuationCommand>::SharedPtr command_subscription_;
+  rclcpp::Subscription<msg::RawCanFrame>::SharedPtr raw_can_tx_subscription_;
   rclcpp::Publisher<msg::VehicleState>::SharedPtr state_publisher_;
+  rclcpp::Publisher<msg::RawCanFrame>::SharedPtr raw_can_rx_publisher_;
+  std::array<rclcpp::Publisher<msg::RawCanFrame>::SharedPtr, 3> raw_can_bus_publishers_;
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_publisher_;
   rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr arm_service_;
   rclcpp::TimerBase::SharedPtr status_timer_;

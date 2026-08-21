@@ -21,11 +21,11 @@ bool SafetySupervisor::request_arm(bool arm) {
     return false;
   }
   if (arm && !arm_requested_) {
-    button_latched_ = false;
+    button_enabled_ = false;
   }
   arm_requested_ = arm;
   if (!arm) {
-    button_latched_ = false;
+    button_enabled_ = false;
     if (state_ != ControlState::Disconnected) {
       transition(ControlState::Passive, "operator disarmed");
     }
@@ -40,25 +40,32 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehic
                            now - panda.updated_at <= config_.panda_timeout;
   if (!panda_fresh) {
     arm_requested_ = false;
-    button_latched_ = false;
+    button_enabled_ = false;
     transition(ControlState::Disconnected, "Panda disconnected or health timeout");
     return {state_, false, false, false, false, reason_};
   }
 
   if (!config_.allow_actuation) {
     arm_requested_ = false;
+    button_enabled_ = false;
     transition(ControlState::Passive, "actuation disabled by YAML");
     return {state_, false, false, false, false, reason_};
   }
 
-  if (vehicle.enable_button_events != last_enable_button_events_) {
-    last_enable_button_events_ = vehicle.enable_button_events;
-    button_latched_ = true;
+  if (vehicle.set_button_events != last_set_button_events_) {
+    last_set_button_events_ = vehicle.set_button_events;
+    // SET turns control off only when it was genuinely active. If Panda disabled controls after
+    // a brake intervention, one SET release re-enables instead of requiring an off/on double tap.
+    button_enabled_ =
+      config_.set_button_toggle
+        ? !(button_enabled_ && state_ == ControlState::Active && panda.controls_allowed)
+        : true;
   }
   const bool cancel_event = vehicle.cancel_button_events != last_cancel_button_events_;
   last_cancel_button_events_ = vehicle.cancel_button_events;
 
-  if (panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off) {
+  if (panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off ||
+      panda.faults != 0U || panda.fault_status != 0U) {
     arm_requested_ = false;
     transition(ControlState::Fault, "Panda safety or CAN health fault");
   } else if (state_ == ControlState::Active && panda.safety_tx_blocked > last_tx_blocked_) {
@@ -146,8 +153,12 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehic
     transition(ControlState::Armed, "command deadman is false");
     return {state_, false, false, true, false, reason_};
   }
-  if (config_.require_set_resume_button && !button_latched_) {
-    transition(ControlState::Armed, "waiting for SET/RES release");
+  if (config_.set_button_toggle && !button_enabled_) {
+    transition(ControlState::Armed, "SET control toggle is off");
+    return {state_, false, false, true, false, reason_};
+  }
+  if (!config_.set_button_toggle && config_.require_set_resume_button && !button_enabled_) {
+    transition(ControlState::Armed, "waiting for SET release");
     return {state_, false, false, true, false, reason_};
   }
   if (!panda.controls_allowed) {
@@ -168,7 +179,7 @@ void SafetySupervisor::transition(ControlState next, std::string reason) {
 
 void SafetySupervisor::disarm(std::string reason) {
   arm_requested_ = false;
-  button_latched_ = false;
+  button_enabled_ = false;
   transition(ControlState::Passive, std::move(reason));
 }
 

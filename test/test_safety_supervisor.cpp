@@ -14,7 +14,7 @@ struct FixtureData {
 
   FixtureData() {
     vehicle.valid = true;
-    vehicle.enable_button_events = 1;
+    vehicle.set_button_events = 1;
     panda.connected = true;
     panda.controls_allowed = true;
     panda.harness_status = 1;
@@ -77,7 +77,25 @@ TEST(SafetySupervisor, FailsClosedOnStaleCommand) {
             ControlState::Fault);
 }
 
-TEST(SafetySupervisor, RequiresAnEnableButtonEventAfterArming) {
+TEST(SafetySupervisor, FaultsOnPandaHardwareFault) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+  ASSERT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Active);
+
+  data.panda.faults = 1U;
+  const SafetyDecision decision =
+    supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(decision.state, ControlState::Fault);
+  EXPECT_FALSE(decision.lateral_allowed);
+  EXPECT_FALSE(decision.longitudinal_allowed);
+}
+
+TEST(SafetySupervisor, SetButtonTogglesControlOnAndOff) {
   using namespace ioniq5_ecan;
   FixtureData data;
   SafetyConfig config;
@@ -90,7 +108,39 @@ TEST(SafetySupervisor, RequiresAnEnableButtonEventAfterArming) {
   EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
             ControlState::Armed);
 
-  ++data.vehicle.enable_button_events;
+  ++data.vehicle.set_button_events;
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Active);
+
+  ++data.vehicle.set_button_events;
+  const SafetyDecision off = supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(off.state, ControlState::Armed);
+  EXPECT_FALSE(off.lateral_allowed);
+  EXPECT_FALSE(off.longitudinal_allowed);
+  EXPECT_TRUE(supervisor.arm_requested());
+
+  ++data.vehicle.set_button_events;
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Active);
+}
+
+TEST(SafetySupervisor, OneSetReleaseReenablesAfterPandaDisengagement) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  config.disengage_on_brake = false;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+  ASSERT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Active);
+
+  data.panda.controls_allowed = false;
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Armed);
+
+  data.panda.controls_allowed = true;
+  ++data.vehicle.set_button_events;
   EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
             ControlState::Active);
 }

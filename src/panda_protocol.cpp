@@ -42,14 +42,15 @@ void PandaUsb::pack_frames_into(const std::vector<CanFrame>& frames, std::vector
   for (const CanFrame& frame : frames) required += kCanHeaderSize + frame.size;
   output.reserve(required);
   for (const CanFrame& frame : frames) {
-    if (frame.bus > 7U || frame.address >= (1U << 29U)) {
+    if (frame.bus > 7U || frame.address >= (1U << 29U) ||
+        (!frame.extended && frame.address >= 0x800U)) {
       throw std::invalid_argument("invalid Panda CAN address or bus");
     }
     const uint8_t dlc = length_to_dlc(frame.size);
     const std::size_t start = output.size();
     output.resize(start + kCanHeaderSize + frame.size, 0);
     output[start] = static_cast<uint8_t>((dlc << 4U) | (frame.bus << 1U) | (frame.fd ? 1U : 0U));
-    const uint32_t word = (frame.address << 3U) | (frame.address >= 0x800U ? 4U : 0U);
+    const uint32_t word = (frame.address << 3U) | (frame.extended ? 4U : 0U);
     output[start + 1] = static_cast<uint8_t>(word & 0xFFU);
     output[start + 2] = static_cast<uint8_t>((word >> 8U) & 0xFFU);
     output[start + 3] = static_cast<uint8_t>((word >> 16U) & 0xFFU);
@@ -85,6 +86,7 @@ std::vector<CanFrame> PandaUsb::unpack_frames(std::vector<uint8_t>& carry, const
     CanFrame frame;
     frame.fd = (carry[position] & 1U) != 0;
     frame.bus = static_cast<uint8_t>((carry[position] >> 1U) & 7U);
+    frame.extended = (word & 4U) != 0U;
     frame.rejected = (carry[position + 1] & 1U) != 0;
     frame.returned = (carry[position + 1] & 2U) != 0;
     frame.address = word >> 3U;

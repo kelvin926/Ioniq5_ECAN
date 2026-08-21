@@ -11,6 +11,7 @@ namespace ioniq5_ecan {
 struct SafetyConfig {
   bool allow_actuation{false};
   bool allow_longitudinal{false};
+  bool set_button_toggle{true};
   bool require_set_resume_button{true};
   bool disengage_on_brake{true};
   bool disengage_on_cancel{true};
@@ -51,8 +52,8 @@ class SafetySupervisor {
   SafetyConfig config_;
   ControlState state_{ControlState::Disconnected};
   bool arm_requested_{false};
-  bool button_latched_{false};
-  uint64_t last_enable_button_events_{0};
+  bool button_enabled_{false};
+  uint64_t last_set_button_events_{0};
   uint64_t last_cancel_button_events_{0};
   uint32_t last_tx_blocked_{0};
   std::string reason_{"waiting for Panda"};

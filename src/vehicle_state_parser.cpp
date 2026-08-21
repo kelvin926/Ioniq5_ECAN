@@ -162,8 +162,10 @@ void VehicleStateParser::parse_buttons(const CanFrame& frame, bool alternate) {
     current = static_cast<uint8_t>(get_signal(data, 16, 3, ByteOrder::LittleEndian));
   }
 
-  if ((previous_button_ == 1U || previous_button_ == 2U) && current == 0U) {
-    ++state_.enable_button_events;
+  // Hyundai button values: RES=1, SET=2, CANCEL=4. Only a SET release controls
+  // this project's host-side actuation toggle.
+  if (previous_button_ == 2U && current == 0U) {
+    ++state_.set_button_events;
   }
   if (current == 4U && previous_button_ != 4U) {
     ++state_.cancel_button_events;

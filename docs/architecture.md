@@ -14,10 +14,22 @@ Alpamayo-side controller
                            └─ ADRV_0x160 50 Hz (optional)
                                 └─ Red Panda libusb
                                      └─ Hyundai K harness / ECAN
+
+Red Panda CAN RX
+  └─ /ioniq5/can_rx + /ioniq5/can{0,1,2}/rx
+       ├─ raw CAN-FD logging / rosbag / Cabana 변환
+       └─ vehicle state parser
+
+/ioniq5/can_tx
+  └─ SET ON + ACTIVE gate
+       └─ Panda HYUNDAI_CANFD whitelist
+            └─ Red Panda CAN TX
 ```
 
 ROS callback은 최신 command 하나만 mutex로 교환합니다. CAN RX와 제어 루프는 별도
 스레드이고, 제어 루프는 ROS executor와 독립된 steady clock 100 Hz 주기를 사용합니다.
+raw RX는 receive thread에서 즉시 publish하고 raw TX는 ROS callback에서 Panda write mutex로
+직접 전달하므로 별도 100 Hz queue 지연을 추가하지 않습니다.
 동적 할당은 CAN 프레임 묶음과 USB packet에 남아 있으므로 hard real-time 보장은 하지
 않지만, Python/IPC 경계를 제어 hot path에서 제거했습니다.
 

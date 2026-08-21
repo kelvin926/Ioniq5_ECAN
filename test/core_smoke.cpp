@@ -9,6 +9,7 @@
 #include "ioniq5_ecan/command_adapter.hpp"
 #include "ioniq5_ecan/hyundai_canfd_codec.hpp"
 #include "ioniq5_ecan/safety_supervisor.hpp"
+#include "ioniq5_ecan/vehicle_state_parser.hpp"
 
 namespace {
 
@@ -78,7 +79,7 @@ int main() {
   SafetySupervisor safety(safety_config);
   const TimePoint now = SteadyClock::now();
   vehicle.valid = true;
-  vehicle.enable_button_events = 1;
+  vehicle.set_button_events = 1;
   PandaHealth panda;
   panda.connected = true;
   panda.controls_allowed = true;
@@ -90,6 +91,43 @@ int main() {
   require(safety.request_arm(true), "arm request rejected");
   require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
           "safety supervisor did not activate");
+  ++vehicle.set_button_events;
+  require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
+          "second SET release did not toggle control off");
+  ++vehicle.set_button_events;
+  require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
+          "third SET release did not toggle control on");
+  panda.controls_allowed = false;
+  require(safety.update(now, vehicle, panda, command).state == ControlState::Armed,
+          "Panda disengagement did not pause control");
+  panda.controls_allowed = true;
+  ++vehicle.set_button_events;
+  require(safety.update(now, vehicle, panda, command).state == ControlState::Active,
+          "one SET release did not re-enable after Panda disengagement");
+  panda.faults = 1U;
+  const SafetyDecision fault = safety.update(now, vehicle, panda, command);
+  require(
+    fault.state == ControlState::Fault && !fault.lateral_allowed && !fault.longitudinal_allowed,
+    "Panda hardware fault did not stop control");
+
+  VehicleStateParser button_parser;
+  CanFrame button;
+  button.address = HyundaiCanFdCodec::kCruiseButtonsAddress;
+  button.bus = 0;
+  button.size = 8;
+  button.received_at = now;
+  set_signal(button.data, 16, 3, 1U, ByteOrder::LittleEndian);
+  require(button_parser.update(button), "RES press was not parsed");
+  set_signal(button.data, 16, 3, 0U, ByteOrder::LittleEndian);
+  require(button_parser.update(button), "RES release was not parsed");
+  require(button_parser.snapshot(now, std::chrono::milliseconds(100)).set_button_events == 0U,
+          "RES release incorrectly toggled control");
+  set_signal(button.data, 16, 3, 2U, ByteOrder::LittleEndian);
+  require(button_parser.update(button), "SET press was not parsed");
+  set_signal(button.data, 16, 3, 0U, ByteOrder::LittleEndian);
+  require(button_parser.update(button), "SET release was not parsed");
+  require(button_parser.snapshot(now, std::chrono::milliseconds(100)).set_button_events == 1U,
+          "SET release did not create control event");
 
   std::cout << "core smoke tests passed\n";
   return 0;

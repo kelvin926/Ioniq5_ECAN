@@ -35,7 +35,7 @@ angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니
 
 ## 해제 및 fault 조건
 
-- brake 또는 CANCEL
+- `disengage_on_brake`/`disengage_on_cancel`이 true일 때 brake 또는 CANCEL
 - command timeout
 - Panda health timeout/USB disconnect
 - critical vehicle CAN timeout 또는 checksum/counter에 따른 Panda RX invalid
@@ -46,9 +46,14 @@ angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니
 - 하네스 미검출
 - 활성화한 경우에만 설정 속도/조향각 상한 초과
 
+정상 상태에서는 첫 최신 명령이 Panda를 HYUNDAI_CANFD 대기 상태로 만들고, 물리 `SET`
+release마다 host 출력 토글이 ON/OFF로 바뀝니다. OFF에서도 순정 차단 구간의 timeout을
+막기 위한 비활성 LFA/SCC 프레임은 유지되지만 토크·가속 요청과 raw TX는 비활성입니다.
+
 FAULT 후 재arm하려면 먼저 `set_armed=false`를 호출해 fault를 명시적으로 acknowledge한
-뒤 `true`와 물리 SET/RES 절차를 다시 수행합니다. 기본 자동 arm은 시작과 정상적인
-브레이크 해제 후 arm 요청을 줄여 주지만, latched FAULT를 자동으로 지우지는 않습니다.
+뒤 `true`와 물리 SET 절차를 다시 수행합니다. 기본 자동 arm은 arm 요청을 줄여 주지만,
+latched FAULT를 자동으로 지우지는 않습니다. 연구장 기본 YAML에서는 host의 brake/CANCEL
+자동 해제를 끄며, Panda firmware가 자체적으로 강제하는 controls 허용 조건은 그대로입니다.
 서비스로 `set_armed=false`를 요청하면 자동 arm도 억제되고, 명시적인 `true` 요청으로
 다시 허용됩니다.
 

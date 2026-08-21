@@ -18,6 +18,16 @@ ioniq5_ecan_node:
     topics:
       command: "/ioniq5/actuation_command"
       vehicle_state: "/ioniq5/vehicle_state"
+      raw_can_rx: "/ioniq5/can_rx"
+      raw_can_tx: "/ioniq5/can_tx"
+      # Produces /ioniq5/can0/rx, /ioniq5/can1/rx, /ioniq5/can2/rx.
+      raw_can_bus_prefix: "/ioniq5/can"
+
+    raw_can:
+      publish_rx: true
+      publish_bus_topics: true
+      # TX still passes through the active Panda HYUNDAI_CANFD safety hook.
+      allow_tx: true
 
     input:
       # Placeholder contract until the Alpamayo team freezes its message definition.
@@ -77,14 +87,18 @@ ioniq5_ecan_node:
 
     safety:
       # Research-site profile: the first fresh two-value command arms automatically.
-      # Panda firmware still requires one physical SET/RES release before controls_allowed.
+      # Panda may observe SET/RES, but this host enables output only on SET release.
       allow_actuation: true
       allow_longitudinal: true
       auto_arm_on_command: true
+      # The first fresh command enters standby; each SET release toggles output ON/OFF.
+      set_button_toggle: true
       require_set_resume_button: false
-      disengage_on_brake: true
-      disengage_on_cancel: true
-      longitudinal_override_on_gas: true
+      # Optional host reactions are disabled for the closed research-site profile.
+      # Panda firmware behavior and the command/Panda watchdog remain in force.
+      disengage_on_brake: false
+      disengage_on_cancel: false
+      longitudinal_override_on_gas: false
       # Zero disables these optional host-side limits. Panda firmware limits remain.
       max_active_speed_mps: 0.0
       max_abs_steering_angle_deg: 0.0

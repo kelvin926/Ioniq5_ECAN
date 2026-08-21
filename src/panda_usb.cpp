@@ -218,6 +218,8 @@ PandaHealth PandaUsb::health() {
   result.controls_allowed = packet.controls_allowed != 0;
   result.heartbeat_lost = packet.heartbeat_lost != 0;
   result.safety_rx_checks_invalid = packet.safety_rx_checks_invalid != 0;
+  result.faults = packet.faults;
+  result.fault_status = packet.fault_status;
   result.harness_status = packet.harness_status;
   result.safety_mode = packet.safety_mode;
   result.safety_param = packet.safety_param;

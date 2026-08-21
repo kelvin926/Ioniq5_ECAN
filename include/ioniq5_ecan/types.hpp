@@ -15,6 +15,7 @@ struct CanFrame {
   uint32_t address{0};
   uint8_t bus{0};
   bool fd{false};
+  bool extended{false};
   bool returned{false};
   bool rejected{false};
   uint8_t size{0};
@@ -46,7 +47,7 @@ struct VehicleState {
   bool standstill{true};
   uint8_t gear{0};
   uint8_t cruise_button{0};
-  uint64_t enable_button_events{0};
+  uint64_t set_button_events{0};
   uint64_t cancel_button_events{0};
   bool valid{false};
   TimePoint updated_at{};
@@ -58,6 +59,8 @@ struct PandaHealth {
   bool heartbeat_lost{false};
   bool safety_rx_checks_invalid{false};
   bool bus_off{false};
+  uint32_t faults{0};
+  uint8_t fault_status{0};
   uint8_t harness_status{0};
   uint8_t safety_mode{0};
   uint16_t safety_param{0};

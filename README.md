@@ -5,8 +5,9 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 
 > 이 코드는 실제 차량에서 검증되지 않았습니다. 저장소의 기본 YAML은 요청한 폐쇄
 > 연구장 프로파일로 `allow_actuation`과 종방향 제어가 활성화되어 있습니다. 노드는
-> 시작할 때 `NO_OUTPUT`이지만 첫 최신 명령으로 자동 arm하며, 물리 SET/RES release 후
-> 출력할 수 있습니다. 종방향 제어 중에는 순정 SCC/AEB 메시지 소유권이 차단됩니다.
+> 시작할 때 `NO_OUTPUT`이고 첫 최신 명령으로 Panda를 대기 상태로 전환합니다. 이후 물리
+> 크루즈 `SET` 버튼을 눌렀다 놓을 때마다 조향·종방향·raw CAN TX가 함께 ON/OFF 토글됩니다.
+> 종방향 제어 중에는 순정 SCC/AEB 메시지 소유권이 차단됩니다.
 
 ## 구현 범위
 
@@ -18,7 +19,8 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 - `PASSIVE → ARMED → ACTIVE → FAULT` 안전 상태기계
 - carrotpilot의 Ioniq 5 횡가속도/마찰 기반 토크 제어와 ROS 2 YAML 파라미터 조정
 - Panda 프로토콜 버전, Red Panda 기종, 하네스, heartbeat, RX/TX 오류 확인
-- Panda hard limit, 명령 watchdog, 브레이크/CANCEL 및 통신 fault 해제
+- CAN-FD 64-byte 보존 raw RX/TX와 bus별 ROS 2 토픽
+- Panda hard limit, 명령 watchdog, 선택 가능한 브레이크/CANCEL 반응 및 통신 fault 해제
 
 입력 단위가 아직 확정되지 않았으므로 CAN 계층 앞에 어댑터를 두었습니다.
 `input.lateral_mode`는 `steering_rate_deg_s`, `steering_rate_rad_s`,
@@ -40,7 +42,8 @@ HDA2/LKA steering, 다른 하네스, alt buttons 또는 radar-SCC 구성은 지�
 ```bash
 sudo apt update
 sudo apt install -y build-essential libusb-1.0-0-dev pkg-config \
-  python3-colcon-common-extensions ros-foxy-diagnostic-msgs ros-foxy-std-srvs
+  python3-colcon-common-extensions python3-usb1 \
+  ros-foxy-diagnostic-msgs ros-foxy-std-srvs
 
 sudo install -m 0644 config/99-red-panda.rules /etc/udev/rules.d/99-red-panda.rules
 sudo udevadm control --reload-rules
@@ -64,14 +67,34 @@ Foxy는 공식 EOL이므로 연구 컴퓨터는 격리하고 OS 보안 업데이
 
 ## 실행
 
-수동 CAN 관찰만 하려면 YAML의 `safety.allow_actuation`과
-`safety.allow_longitudinal`을 먼저 `false`로 바꿉니다. 기본 YAML은 연구장 actuation
-프로파일입니다.
+차량에 처음 연결할 때는 actuation이 구조적으로 비활성화된 passive profile을 사용합니다.
+먼저 Panda만 USB에 연결한 상태에서 쓰기 요청을 전혀 보내지 않는 preflight를 통과시킵니다.
+
+```bash
+python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL
+```
+
+하네스 연결 후에는 다음 명령이 `harness_status`, ignition, CAN RX 증가까지 함께 검사합니다.
+
+```bash
+python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --require-harness
+ros2 launch ioniq5_ecan ioniq5_ecan.launch.py \
+  config:=/path/to/Ioniq5_ECAN/config/ioniq5_ecan_passive.yaml
+```
+
+`panda_preflight.py`는 USB vendor control read만 사용하며 CAN 통신 리셋, bitrate/safety 변경,
+heartbeat 또는 CAN TX를 수행하지 않습니다. application PID, 정확한 고정 firmware 문자열과
+packet hash도 함께 확인합니다. Cabana `--panda`와 ROS 노드를 포함해 Panda를 점유하는 다른
+프로그램은 preflight 전에 종료합니다.
+
+기본 `ioniq5_ecan.yaml`은 연구장 actuation 프로파일입니다. passive fingerprint와 parser
+검증을 끝낸 뒤에만 사용합니다.
 
 ```bash
 ros2 launch ioniq5_ecan ioniq5_ecan.launch.py \
   config:=/path/to/Ioniq5_ECAN/config/ioniq5_ecan.yaml
 ros2 topic echo /ioniq5/vehicle_state
+ros2 topic echo /ioniq5/can0/rx
 ros2 topic echo /diagnostics
 ```
 
@@ -87,8 +110,8 @@ ros2 topic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/msg/ActuationCommand 
 
 1. 고정 DEBUG Panda firmware 및 Red Panda/Hyundai K 연결
 2. 유효하고 최신인 필수 차량 CAN 상태와 command
-3. 물리적인 SET 또는 RES 버튼을 눌렀다 놓아 Panda `controls_allowed: true`
-4. 브레이크/CANCEL/timeout/fault 없음
+3. 물리적인 `SET` 버튼을 눌렀다 놓아 host 토글 ON 및 Panda `controls_allowed: true`
+4. 다시 `SET`을 눌렀다 놓으면 조향·종방향·raw TX가 모두 OFF
 
 ```bash
 # auto_arm_on_command=false일 때 수동 arm
@@ -101,6 +124,11 @@ ros2 service call /ioniq5_ecan/set_armed std_srvs/srv/SetBool "{data: false}"
 `input.use_enable_field: true`로 바꾸면 `enable`이 다시 매 메시지 deadman으로 동작합니다.
 속도/조향각 호스트 상한은 `0`이면 비활성이고, 토크·토크 변화율·가속도 범위는 Panda
 firmware 경계를 넘길 수 없습니다.
+
+raw CAN은 `/ioniq5/can_rx`와 `/ioniq5/can0/rx`~`can2/rx`로 수신하고
+`/ioniq5/can_tx`로 송신합니다. TX는 `raw_can.allow_tx: true`, ACTIVE/SET ON 상태, Panda
+Hyundai safety whitelist를 모두 통과해야 실제 bus로 나갑니다. 상세 형식과 Panda/Cabana
+동시 사용 제약은 [`docs/raw_can.md`](docs/raw_can.md)를 참고하십시오.
 
 안전 상태 전이와 시험 순서는 [`docs/safety.md`](docs/safety.md)와
 [`docs/validation.md`](docs/validation.md)를 따르십시오. 종방향 제어는
