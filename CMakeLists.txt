@@ -37,7 +37,7 @@ if(IONIQ5_ECAN_CORE_ONLY)
   if(Python3_Interpreter_FOUND)
     add_test(
       NAME panda_preflight_unit
-      COMMAND ${Python3_EXECUTABLE} -m unittest test.test_panda_preflight
+      COMMAND ${Python3_EXECUTABLE} -m unittest discover -s test -p test_panda_preflight.py
     )
     set_tests_properties(panda_preflight_unit PROPERTIES
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
