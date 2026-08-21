@@ -1,8 +1,17 @@
 diff --git a/opendbc/safety/modes/hyundai_canfd.h b/opendbc/safety/modes/hyundai_canfd.h
-index bf08fb17..2d4d3df1 100644
+index bf08fb17..22222222 100644
 --- a/opendbc/safety/modes/hyundai_canfd.h
 +++ b/opendbc/safety/modes/hyundai_canfd.h
-@@ -47,6 +47,9 @@
+@@ -21,5 +21,8 @@
+   {0x1E0, e_can, 16, .check_relay = (e_can) == 0},  /* LFAHDA_CLUSTER */ \
+ 
++#define HYUNDAI_CANFD_ECAN_ADAS_DIAG_TX_MSG(e_can) \
++  {0x730, e_can, 8, .check_relay = false},  /* tester present for disabled ADAS ECU */ \
++
+ #define HYUNDAI_CANFD_SCC_CONTROL_COMMON_TX_MSGS(e_can, longitudinal) \
+   {0x1A0, e_can, 32, .check_relay = (longitudinal)},  /* SCC_CONTROL */ \
+ 
+@@ -47,6 +50,9 @@
  
  static bool hyundai_canfd_alt_buttons = false;
  static bool hyundai_canfd_lka_steer_msg_alt = false;
@@ -12,7 +21,7 @@ index bf08fb17..2d4d3df1 100644
  
  static unsigned int hyundai_canfd_get_lka_addr(void) {
    return hyundai_canfd_lka_steer_msg_alt ? 0x110U : 0x50U;
-@@ -84,15 +86,25 @@ static void hyundai_canfd_rx_hook(const CANPacket_t *msg) {
+@@ -84,15 +90,25 @@ static void hyundai_canfd_rx_hook(const CANPacket_t *msg) {
      const unsigned int button_addr = hyundai_canfd_alt_buttons ? 0x1aaU : 0x1cfU;
      if (msg->addr == button_addr) {
        bool main_button = false;
@@ -38,7 +47,17 @@ index bf08fb17..2d4d3df1 100644
      }
  
      // gas press, different for EV, hybrid, and ICE models
-@@ -218,6 +231,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+@@ -179,7 +195,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+   }
+ 
+   // UDS: only tester present ("\x02\x3E\x80\x00\x00\x00\x00\x00") allowed on diagnostics address
+-  if (((msg->addr == 0x730U) && hyundai_canfd_lka_steer_msg) || ((msg->addr == 0x7D0U) && !hyundai_camera_scc)) {
++  if (((msg->addr == 0x730U) && (hyundai_canfd_lka_steer_msg || hyundai_canfd_ecan_only)) ||
++      ((msg->addr == 0x7D0U) && !hyundai_camera_scc)) {
+     if ((GET_BYTES(msg, 0, 4) != 0x00803E02U) || (GET_BYTES(msg, 4, 4) != 0x0U)) {
+       tx = false;
+     }
+@@ -218,6 +235,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
  static safety_config hyundai_canfd_init(uint16_t param) {
    const uint16_t HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT = 128;
    const uint16_t HYUNDAI_PARAM_CANFD_ALT_BUTTONS = 32;
@@ -47,7 +66,30 @@ index bf08fb17..2d4d3df1 100644
  
    static const CanMsg HYUNDAI_CANFD_LKA_STEER_MSG_TX_MSGS[] = {
      HYUNDAI_CANFD_LKA_STEER_MSG_COMMON_TX_MSGS(0, 1)
-@@ -267,6 +282,9 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -255,6 +274,22 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+     {0x7D0, 0, 8, .check_relay = false},  // tester present for radar ECU disable
+   };
+ 
++  static const CanMsg HYUNDAI_CANFD_LFA_STEERING_ECAN_ONLY_TX_MSGS[] = {
++    HYUNDAI_CANFD_CRUISE_BUTTON_TX_MSGS(2)
++    HYUNDAI_CANFD_LFA_STEERING_COMMON_TX_MSGS(0)
++    HYUNDAI_CANFD_SCC_CONTROL_COMMON_TX_MSGS(0, false)
++    HYUNDAI_CANFD_ECAN_ADAS_DIAG_TX_MSG(0)
++  };
++
++  static const CanMsg HYUNDAI_CANFD_LFA_STEERING_LONG_ECAN_ONLY_TX_MSGS[] = {
++    HYUNDAI_CANFD_CRUISE_BUTTON_TX_MSGS(2)
++    HYUNDAI_CANFD_LFA_STEERING_COMMON_TX_MSGS(0)
++    HYUNDAI_CANFD_SCC_CONTROL_COMMON_TX_MSGS(0, true)
++    {0x160, 0, 16, .check_relay = false}, // ADRV_0x160
++    HYUNDAI_CANFD_ECAN_ADAS_DIAG_TX_MSG(0)
++    {0x7D0, 0, 8, .check_relay = false},  // tester present for disabled HDA1 radar
++  };
++
+   // ADRV_0x160 is checked for relay malfunction
+ #define HYUNDAI_CANFD_LFA_STEERING_CAMERA_SCC_TX_MSGS(longitudinal) \
+     HYUNDAI_CANFD_CRUISE_BUTTON_TX_MSGS(2) \
+@@ -267,6 +302,9 @@ static safety_config hyundai_canfd_init(uint16_t param) {
    gen_crc_lookup_table_16(0x1021, hyundai_canfd_crc_lut);
    hyundai_canfd_alt_buttons = GET_FLAG(param, HYUNDAI_PARAM_CANFD_ALT_BUTTONS);
    hyundai_canfd_lka_steer_msg_alt = GET_FLAG(param, HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT);
@@ -57,7 +99,33 @@ index bf08fb17..2d4d3df1 100644
  
    safety_config ret;
    if (hyundai_longitudinal) {
-@@ -369,6 +387,7 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -300,7 +338,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+       if (hyundai_camera_scc) {
+         SET_TX_MSGS(hyundai_canfd_lfa_steering_camera_scc_tx_msgs, ret);
+       } else {
+-        SET_TX_MSGS(HYUNDAI_CANFD_LFA_STEERING_LONG_TX_MSGS, ret);
++        if (hyundai_canfd_ecan_only) {
++          SET_TX_MSGS(HYUNDAI_CANFD_LFA_STEERING_LONG_ECAN_ONLY_TX_MSGS, ret);
++        } else {
++          SET_TX_MSGS(HYUNDAI_CANFD_LFA_STEERING_LONG_TX_MSGS, ret);
++        }
+       }
+     }
+ 
+@@ -333,7 +375,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+         HYUNDAI_CANFD_SCC_ADDR_CHECK(0)
+       };
+ 
+-      SET_TX_MSGS(HYUNDAI_CANFD_LFA_STEERING_TX_MSGS, ret);
++      if (hyundai_canfd_ecan_only) {
++        SET_TX_MSGS(HYUNDAI_CANFD_LFA_STEERING_ECAN_ONLY_TX_MSGS, ret);
++      } else {
++        SET_TX_MSGS(HYUNDAI_CANFD_LFA_STEERING_TX_MSGS, ret);
++      }
+ 
+       if (hyundai_canfd_alt_buttons) {
+         SET_RX_CHECKS(hyundai_canfd_alt_buttons_radar_scc_rx_checks, ret);
+@@ -369,6 +415,7 @@ static safety_config hyundai_canfd_init(uint16_t param) {
      }
    }
  
@@ -66,10 +134,10 @@ index bf08fb17..2d4d3df1 100644
  }
  
 diff --git a/opendbc/safety/tests/test_hyundai_canfd.py b/opendbc/safety/tests/test_hyundai_canfd.py
-index 6cec7376..c3921ced 100755
+index 6cec7376..33333333 100755
 --- a/opendbc/safety/tests/test_hyundai_canfd.py
 +++ b/opendbc/safety/tests/test_hyundai_canfd.py
-@@ -284,5 +284,56 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
+@@ -284,5 +284,87 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
      pass
  
  
@@ -122,6 +190,37 @@ index 6cec7376..c3921ced 100755
 +    self.safety.init_tests()
 +    self.assertEqual(-1, self.safety.safety_fwd_hook(0, 0x123))
 +    self.assertEqual(-1, self.safety.safety_fwd_hook(2, 0x123))
++
++  def test_ecan_only_allows_only_required_tester_present(self):
++    tester_present = b"\x02\x3E\x80\x00\x00\x00\x00\x00"
++    wrong_payload = b"\x03\x28\x83\x01\x00\x00\x00\x00"
++
++    for longitudinal in (False, True):
++      with self.subTest(longitudinal=longitudinal):
++        param = HyundaiSafetyFlags.EV_GAS | self.SPLIT_BUTTON_ARM | self.ECAN_ONLY
++        if longitudinal:
++          param |= HyundaiSafetyFlags.LONG
++        self.safety.set_safety_hooks(CarParams.SafetyModel.hyundaiCanfd, param)
++        self.safety.init_tests()
++
++        self.assertTrue(self.safety.safety_tx_hook(
++          libsafety_py.make_CANPacket(0x730, 0, tester_present)))
++        self.assertFalse(self.safety.safety_tx_hook(
++          libsafety_py.make_CANPacket(0x730, 0, wrong_payload)))
++        self.assertFalse(self.safety.safety_tx_hook(
++          libsafety_py.make_CANPacket(0x730, 1, tester_present)))
++        self.assertEqual(longitudinal, self.safety.safety_tx_hook(
++          libsafety_py.make_CANPacket(0x7D0, 0, tester_present)))
++        self.assertFalse(self.safety.safety_tx_hook(
++          libsafety_py.make_CANPacket(0x7D0, 0, wrong_payload)))
++
++    param = HyundaiSafetyFlags.EV_GAS | self.SPLIT_BUTTON_ARM
++    self.safety.set_safety_hooks(CarParams.SafetyModel.hyundaiCanfd, param)
++    self.safety.init_tests()
++    self.assertFalse(self.safety.safety_tx_hook(
++      libsafety_py.make_CANPacket(0x730, 0, tester_present)))
++    self.assertFalse(self.safety.safety_tx_hook(
++      libsafety_py.make_CANPacket(0x7D0, 0, tester_present)))
 +
 +
  if __name__ == "__main__":

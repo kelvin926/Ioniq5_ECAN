@@ -25,8 +25,8 @@ index 1e624459..a046be58 100644
    can_init_all();
 +
 +  #ifdef IONIQ5_ECAN_ONLY
-+    // Physical CAN1 is logical ECAN bus 0 in the required normal orientation.
-+    // Keep all unused transceivers off after set_can_mode() changes their GPIOs.
++    // HDA1 control uses only physical CAN1 / logical ECAN bus 0.
++    // Keep CAN2/CAN3/CAN4 electrically disabled.
 +    for (uint8_t transceiver = 2U; transceiver <= 4U; transceiver++) {
 +      current_board->enable_can_transceiver(transceiver, false);
 +    }
@@ -38,15 +38,14 @@ diff --git a/board/sys/power_saving.h b/board/sys/power_saving.h
 index c0c82212..c3e76dc0 100644
 --- a/board/sys/power_saving.h
 +++ b/board/sys/power_saving.h
-@@ -14,7 +14,13 @@ void enable_can_transceivers(bool enabled) {
+@@ -14,7 +14,12 @@ void enable_can_transceivers(bool enabled) {
    // Leave main CAN always on for CAN-based ignition detection
    uint8_t main_bus = (harness.status == HARNESS_STATUS_FLIPPED) ? 3U : 1U;
    for(uint8_t i=1U; i<=4U; i++){
 -    current_board->enable_can_transceiver(i, (i == main_bus) || enabled);
 +    bool transceiver_enabled = (i == main_bus) || enabled;
 +    #ifdef IONIQ5_ECAN_ONLY
-+      // This build is dedicated to harness orientation 1: physical CAN1 is ECAN.
-+      // No other CAN controller participates in control or ignition detection.
++      // Harness orientation 1: HDA1 control uses only physical CAN1 / ECAN.
 +      transceiver_enabled = i == 1U;
 +    #endif
 +    current_board->enable_can_transceiver(i, transceiver_enabled);
