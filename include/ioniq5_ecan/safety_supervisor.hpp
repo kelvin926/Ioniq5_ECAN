@@ -41,7 +41,7 @@ class SafetySupervisor {
   explicit SafetySupervisor(SafetyConfig config = {});
 
   bool request_arm(bool arm);
-  SafetyDecision update(TimePoint now, const VehicleState& vehicle, const PandaHealth& panda,
+  SafetyDecision update(TimePoint now, const VehicleStateData& vehicle, const PandaHealth& panda,
                         const CommandSample& command);
   ControlState state() const;
   bool arm_requested() const;

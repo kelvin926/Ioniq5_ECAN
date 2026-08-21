@@ -54,7 +54,7 @@ int main() {
   adapter_config.max_torque = 10;
   adapter_config.torque_rate_up = 1;
   CommandAdapter adapter(adapter_config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   CommandSample command;
   command.lateral = 10.0;
   command.enable = true;
@@ -140,7 +140,7 @@ int main() {
           "SET release did not create control event");
   set_signal(button.data, 23, 1, 1U, ByteOrder::LittleEndian);
   require(button_parser.update(button), "LDA press was not parsed");
-  const VehicleState button_state = button_parser.snapshot(now, std::chrono::milliseconds(100));
+  const VehicleStateData button_state = button_parser.snapshot(now, std::chrono::milliseconds(100));
   require(button_state.lane_keep_button_events == 1U && button_state.lane_keep_button_pressed,
           "LDA press did not create lateral arm event");
 
@@ -176,7 +176,7 @@ int main() {
   wheels.data[0] = static_cast<uint8_t>(wheels_crc & 0xFFU);
   wheels.data[1] = static_cast<uint8_t>(wheels_crc >> 8U);
   require(dynamics_parser.update(wheels), "wheel-speed frame was not parsed");
-  const VehicleState dynamics = dynamics_parser.snapshot(now, std::chrono::milliseconds(100));
+  const VehicleStateData dynamics = dynamics_parser.snapshot(now, std::chrono::milliseconds(100));
   require(std::abs(dynamics.wheel_speed_fl - 10.0 / 3.6) < 1e-9 &&
             std::abs(dynamics.wheel_speed_fr - 10.0 / 3.6) < 1e-9 &&
             std::abs(dynamics.wheel_speed_rl - 10.0 / 3.6) < 1e-9 &&

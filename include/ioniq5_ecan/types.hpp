@@ -32,7 +32,7 @@ struct CommandSample {
   TimePoint received_at{};
 };
 
-struct VehicleState {
+struct VehicleStateData {
   double speed_mps{0.0};
   double yaw_rate_deg_s{0.0};
   double lateral_accel_mps2{0.0};

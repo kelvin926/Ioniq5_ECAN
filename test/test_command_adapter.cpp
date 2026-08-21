@@ -15,7 +15,7 @@ TEST(CommandAdapter, DirectTorqueUsesSoftwareSlewAndLimits) {
   config.torque_rate_up = 2;
   config.torque_rate_down = 3;
   CommandAdapter adapter(config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   CommandSample command;
   command.lateral = 100.0;
   EXPECT_EQ(adapter.update(command, vehicle, 0.01, true, false).steering_torque, 2);
@@ -31,7 +31,7 @@ TEST(CommandAdapter, ConvertsRadiansAndClampsAcceleration) {
   config.accel_min_mps2 = -0.5;
   config.accel_max_mps2 = 0.5;
   CommandAdapter adapter(config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   CommandSample command;
   command.lateral = 1.0;
   command.acceleration_mps2 = 2.0;
@@ -48,7 +48,7 @@ TEST(CommandAdapter, AppliesRateLimitBeforeIntegratingTargetAngle) {
   config.max_target_rate_deg_s = 10.0;
   config.steer_actuator_delay_s = 0.0;
   CommandAdapter adapter(config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   CommandSample command;
   command.lateral = 1000.0;
 
@@ -64,7 +64,7 @@ TEST(CommandAdapter, SlewsCurvatureTargetInsteadOfJumpingToIt) {
   config.max_target_rate_deg_s = 10.0;
   config.steer_actuator_delay_s = 0.0;
   CommandAdapter adapter(config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   CommandSample command;
   command.lateral = 1.0;
 
@@ -93,7 +93,7 @@ TEST(CommandAdapter, AppliesCarrotDirectionalDriverTorqueLimit) {
   CommandAdapterConfig config;
   config.lateral_mode = LateralInputMode::DirectTorque;
   CommandAdapter adapter(config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   vehicle.driver_torque = -400.0;
   CommandSample command;
   command.lateral = 270.0;
@@ -108,7 +108,7 @@ TEST(CommandAdapter, UsesCarrotHighAngleRequestPattern) {
   CommandAdapterConfig config;
   config.lateral_mode = LateralInputMode::DirectTorque;
   CommandAdapter adapter(config);
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   vehicle.steering_angle_deg = 90.0;
   CommandSample command;
 
@@ -133,7 +133,7 @@ TEST(CommandAdapter, RejectsParametersAbovePandaLimits) {
 TEST(CommandAdapter, RejectsNonFiniteInput) {
   using namespace ioniq5_ecan;
   CommandAdapter adapter;
-  VehicleState vehicle;
+  VehicleStateData vehicle;
   CommandSample command;
   command.lateral = std::numeric_limits<double>::quiet_NaN();
   EXPECT_THROW(adapter.update(command, vehicle, 0.01, true, false), std::invalid_argument);

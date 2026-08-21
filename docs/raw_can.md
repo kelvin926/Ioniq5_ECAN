@@ -1,4 +1,4 @@
-# Raw CAN ROS 2 interface
+# Raw CAN ROS 1 interface
 
 이 패키지는 Red Panda USB를 C++ 노드 하나가 단독 소유합니다. `pandad`, Cabana `--panda`,
 다른 Panda Python 프로세스를 동시에 실행하면 USB interface claim이 충돌합니다. Cabana가
@@ -10,11 +10,11 @@
 - `/ioniq5/can0/rx`, `/ioniq5/can1/rx`, `/ioniq5/can2/rx`: bus별 stream
 
 `RawCanFrame`은 29-bit address, Panda bus, classic/CAN-FD 구분, returned/rejected 표시와
-0~64 byte payload를 보존합니다. RX publisher는 best-effort depth 256입니다.
+0~64 byte payload를 보존합니다. RX publisher queue는 256입니다.
 
 ```bash
-ros2 topic echo /ioniq5/can0/rx
-ros2 bag record /ioniq5/can_rx /ioniq5/vehicle_state /ioniq5/actuation_command
+rostopic echo /ioniq5/can0/rx
+rosbag record /ioniq5/can_rx /ioniq5/vehicle_state /ioniq5/actuation_command
 ```
 
 ## TX
@@ -23,7 +23,8 @@ ros2 bag record /ioniq5/can_rx /ioniq5/vehicle_state /ioniq5/actuation_command
 false여야 하며, classic CAN은 최대 8 byte, CAN-FD는 표준 DLC 길이
 `0..8, 12, 16, 20, 24, 32, 48, 64`만 받습니다.
 
-메시지 구조는 `ros2 interface show ioniq5_ecan/msg/RawCanFrame`으로 확인하십시오. 실제 TX에는
+메시지 구조는 `rosmsg show ioniq5_ecan/RawCanFrame`으로 확인하십시오. ROS 1 메시지 배열은
+길이 제한을 표현하지 못하므로 노드가 수신 시 64 byte 상한을 검사합니다. 실제 TX에는
 수동 분석으로 검증한 address, bus, FD 여부, payload를 입력해야 합니다. 고수준 제어 노드가 이미
 소유하는 LFA/SCC/FCA ID를 raw TX로 동시에 보내면 counter와 주기가 충돌하므로 한 경로만
 사용합니다. `extended`는 address 숫자와 별개인 CAN IDE 비트이며 그대로 Panda에 전달됩니다.

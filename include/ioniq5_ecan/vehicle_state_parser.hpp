@@ -13,7 +13,7 @@ class VehicleStateParser {
                               bool alternate_buttons = false);
 
   bool update(const CanFrame& frame);
-  VehicleState snapshot(TimePoint now, std::chrono::milliseconds critical_timeout) const;
+  VehicleStateData snapshot(TimePoint now, std::chrono::milliseconds critical_timeout) const;
   uint64_t checksum_failures() const;
   uint64_t malformed_frames() const;
 
@@ -32,7 +32,7 @@ class VehicleStateParser {
   uint8_t camera_bus_;
   bool alternate_buttons_;
   mutable std::mutex mutex_;
-  VehicleState state_;
+  VehicleStateData state_;
   uint8_t previous_button_{0};
   bool previous_lane_keep_button_{false};
   bool have_previous_angle_{false};

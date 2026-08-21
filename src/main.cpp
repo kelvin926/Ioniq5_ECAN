@@ -1,20 +1,19 @@
-#include <memory>
-#include <rclcpp/rclcpp.hpp>
+#include <ros/ros.h>
+
+#include <exception>
 
 #include "ioniq5_ecan/node.hpp"
 
 int main(int argc, char** argv) {
-  rclcpp::init(argc, argv);
+  ros::init(argc, argv, "ioniq5_ecan_node");
   try {
-    auto node = std::make_shared<ioniq5_ecan::Ioniq5EcanNode>();
-    rclcpp::executors::SingleThreadedExecutor executor;
-    executor.add_node(node);
-    executor.spin();
+    ros::NodeHandle node_handle;
+    ros::NodeHandle private_node_handle("~");
+    ioniq5_ecan::Ioniq5EcanNode node(node_handle, private_node_handle);
+    ros::spin();
   } catch (const std::exception& error) {
-    RCLCPP_FATAL(rclcpp::get_logger("ioniq5_ecan"), "fatal error: %s", error.what());
-    rclcpp::shutdown();
+    ROS_FATAL("fatal error: %s", error.what());
     return 1;
   }
-  rclcpp::shutdown();
   return 0;
 }

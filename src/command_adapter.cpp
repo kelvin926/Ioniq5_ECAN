@@ -84,7 +84,7 @@ CommandAdapter::CommandAdapter(CommandAdapterConfig config) : config_(config) {
   }
 }
 
-void CommandAdapter::reset(const VehicleState& vehicle) {
+void CommandAdapter::reset(const VehicleStateData& vehicle) {
   target_angle_deg_ = vehicle.steering_angle_deg;
   target_rate_deg_s_ = 0.0;
   torque_integral_ = 0.0;
@@ -94,7 +94,7 @@ void CommandAdapter::reset(const VehicleState& vehicle) {
   initialized_ = true;
 }
 
-ControlOutput CommandAdapter::update(const CommandSample& command, const VehicleState& vehicle,
+ControlOutput CommandAdapter::update(const CommandSample& command, const VehicleStateData& vehicle,
                                      double dt_seconds, bool active, bool longitudinal_allowed) {
   dt_seconds = std::clamp(dt_seconds, 0.001, 0.05);
   if (!initialized_) reset(vehicle);

@@ -6,7 +6,7 @@ parser, adapter, supervisor, Panda wire protocol의 호스트 측 동작까지�
 
 ## 1. Host-only
 
-- `colcon build` 및 모든 unit test 통과
+- `catkin_make` 및 `catkin_make run_tests_ioniq5_ecan` 통과
 - opendbc 고정 SHA의 CANPacker와 LFA/SCC/FCA byte-for-byte golden frame 일치
 - malformed DLC, USB checksum, CAN CRC fault injection 통과
 - command/Panda timeout과 safety mode drift가 FAULT를 만드는지 확인

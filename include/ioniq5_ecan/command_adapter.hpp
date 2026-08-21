@@ -58,9 +58,9 @@ class CommandAdapter {
  public:
   explicit CommandAdapter(CommandAdapterConfig config = {});
 
-  ControlOutput update(const CommandSample& command, const VehicleState& vehicle, double dt_seconds,
-                       bool active, bool longitudinal_allowed);
-  void reset(const VehicleState& vehicle);
+  ControlOutput update(const CommandSample& command, const VehicleStateData& vehicle,
+                       double dt_seconds, bool active, bool longitudinal_allowed);
+  void reset(const VehicleStateData& vehicle);
   const CommandAdapterConfig& config() const;
   double target_angle_deg() const;
   double target_rate_deg_s() const;

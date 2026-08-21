@@ -1,48 +1,46 @@
-ioniq5_ecan_node:
-  ros__parameters:
-    hardware:
-      # Set this when more than one Panda can be attached.
-      panda_serial: ""
-      nominal_bitrate_kbps: 500
-      data_bitrate_kbps: 2000
-      usb_read_timeout_ms: 20
-      usb_write_timeout_ms: 10
-      # Initial HDA1/Hyundai K hypothesis. Confirm from the passive trace.
-      ecan_bus: 0
-      camera_bus: 2
-      alternate_buttons: false
+hardware:
+  # Set this when more than one Panda can be attached.
+  panda_serial: ""
+  nominal_bitrate_kbps: 500
+  data_bitrate_kbps: 2000
+  usb_read_timeout_ms: 20
+  usb_write_timeout_ms: 10
+  # Initial HDA1/Hyundai K hypothesis. Confirm from the passive trace.
+  ecan_bus: 0
+  camera_bus: 2
+  alternate_buttons: false
 
-    topics:
-      command: "/ioniq5/actuation_command"
-      vehicle_state: "/ioniq5/vehicle_state"
-      raw_can_rx: "/ioniq5/can_rx"
-      raw_can_tx: "/ioniq5/can_tx"
-      raw_can_bus_prefix: "/ioniq5/can"
+topics:
+  command: "/ioniq5/actuation_command"
+  vehicle_state: "/ioniq5/vehicle_state"
+  raw_can_rx: "/ioniq5/can_rx"
+  raw_can_tx: "/ioniq5/can_tx"
+  raw_can_bus_prefix: "/ioniq5/can"
 
-    raw_can:
-      publish_rx: true
-      publish_bus_topics: true
-      allow_tx: false
+raw_can:
+  publish_rx: true
+  publish_bus_topics: true
+  allow_tx: false
 
-    safety:
-      # This profile cannot enter the Hyundai actuation safety model.
-      allow_actuation: false
-      allow_longitudinal: false
-      auto_arm_on_command: false
-      lateral_button_toggle: true
-      longitudinal_button_toggle: true
-      disengage_on_brake: true
-      disengage_on_cancel: true
-      longitudinal_override_on_gas: true
-      max_active_speed_mps: 0.0
-      max_abs_steering_angle_deg: 0.0
-      command_timeout_ms: 250
-      panda_timeout_ms: 500
-      vehicle_state_timeout_ms: 250
+safety:
+  # This profile cannot enter the Hyundai actuation safety model.
+  allow_actuation: false
+  allow_longitudinal: false
+  auto_arm_on_command: false
+  lateral_button_toggle: true
+  longitudinal_button_toggle: true
+  disengage_on_brake: true
+  disengage_on_cancel: true
+  longitudinal_override_on_gas: true
+  max_active_speed_mps: 0.0
+  max_abs_steering_angle_deg: 0.0
+  command_timeout_ms: 250
+  panda_timeout_ms: 500
+  vehicle_state_timeout_ms: 250
 
-    runtime:
-      control_rate_hz: 100
-      health_rate_hz: 10
-      realtime_priority: 0
-      control_cpu: -1
-      receive_cpu: -1
+runtime:
+  control_rate_hz: 100
+  health_rate_hz: 10
+  realtime_priority: 0
+  control_cpu: -1
+  receive_cpu: -1

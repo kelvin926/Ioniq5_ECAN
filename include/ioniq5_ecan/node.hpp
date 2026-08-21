@@ -1,41 +1,49 @@
 #pragma once
 
+#include <diagnostic_msgs/DiagnosticArray.h>
+#include <ros/ros.h>
+#include <std_srvs/SetBool.h>
+
 #include <array>
 #include <atomic>
-#include <diagnostic_msgs/msg/diagnostic_array.hpp>
+#include <chrono>
 #include <memory>
 #include <mutex>
-#include <rclcpp/rclcpp.hpp>
-#include <std_srvs/srv/set_bool.hpp>
 #include <string>
 #include <thread>
 
+#include "ioniq5_ecan/ActuationCommand.h"
+#include "ioniq5_ecan/RawCanFrame.h"
+#include "ioniq5_ecan/VehicleState.h"
 #include "ioniq5_ecan/command_adapter.hpp"
 #include "ioniq5_ecan/hyundai_canfd_codec.hpp"
-#include "ioniq5_ecan/msg/actuation_command.hpp"
-#include "ioniq5_ecan/msg/raw_can_frame.hpp"
-#include "ioniq5_ecan/msg/vehicle_state.hpp"
 #include "ioniq5_ecan/panda_usb.hpp"
 #include "ioniq5_ecan/safety_supervisor.hpp"
 #include "ioniq5_ecan/vehicle_state_parser.hpp"
 
 namespace ioniq5_ecan {
 
-class Ioniq5EcanNode : public rclcpp::Node {
+class Ioniq5EcanNode {
  public:
-  Ioniq5EcanNode();
-  ~Ioniq5EcanNode() override;
+  Ioniq5EcanNode(ros::NodeHandle node_handle, ros::NodeHandle private_node_handle);
+  ~Ioniq5EcanNode();
 
  private:
-  void command_callback(const msg::ActuationCommand::SharedPtr message);
-  void raw_can_tx_callback(const msg::RawCanFrame::SharedPtr message);
-  void arm_callback(const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
-                    std::shared_ptr<std_srvs::srv::SetBool::Response> response);
+  template <typename T>
+  T parameter(const std::string& name, const T& default_value) const {
+    T value{};
+    private_node_handle_.param(name, value, default_value);
+    return value;
+  }
+
+  void command_callback(const ActuationCommand::ConstPtr& message);
+  void raw_can_tx_callback(const RawCanFrame::ConstPtr& message);
+  bool arm_callback(std_srvs::SetBool::Request& request, std_srvs::SetBool::Response& response);
   void receive_loop();
   void control_loop();
-  void publish_status();
+  void publish_status(const ros::TimerEvent& event);
   void publish_raw_can(const CanFrame& frame);
-  void publish_diagnostics(const VehicleState& vehicle, const PandaHealth& panda,
+  void publish_diagnostics(const VehicleStateData& vehicle, const PandaHealth& panda,
                            const SafetyDecision& decision);
   void apply_realtime_settings(const char* name, int priority, int cpu);
   void load_configuration();
@@ -44,6 +52,8 @@ class Ioniq5EcanNode : public rclcpp::Node {
   void enter_no_output_mode();
   void verify_longitudinal_firmware();
 
+  ros::NodeHandle node_handle_;
+  ros::NodeHandle private_node_handle_;
   PandaUsbConfig panda_config_;
   CommandAdapterConfig adapter_config_;
   SafetyConfig safety_config_;
@@ -94,14 +104,14 @@ class Ioniq5EcanNode : public rclcpp::Node {
   mutable std::mutex decision_mutex_;
   SafetyDecision latest_decision_;
 
-  rclcpp::Subscription<msg::ActuationCommand>::SharedPtr command_subscription_;
-  rclcpp::Subscription<msg::RawCanFrame>::SharedPtr raw_can_tx_subscription_;
-  rclcpp::Publisher<msg::VehicleState>::SharedPtr state_publisher_;
-  rclcpp::Publisher<msg::RawCanFrame>::SharedPtr raw_can_rx_publisher_;
-  std::array<rclcpp::Publisher<msg::RawCanFrame>::SharedPtr, 3> raw_can_bus_publishers_;
-  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_publisher_;
-  rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr arm_service_;
-  rclcpp::TimerBase::SharedPtr status_timer_;
+  ros::Subscriber command_subscription_;
+  ros::Subscriber raw_can_tx_subscription_;
+  ros::Publisher state_publisher_;
+  ros::Publisher raw_can_rx_publisher_;
+  std::array<ros::Publisher, 3> raw_can_bus_publishers_;
+  ros::Publisher diagnostics_publisher_;
+  ros::ServiceServer arm_service_;
+  ros::Timer status_timer_;
 };
 
 }  // namespace ioniq5_ecan

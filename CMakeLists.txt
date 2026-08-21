@@ -7,7 +7,7 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(IONIQ5_ECAN_CORE_ONLY "Build the platform-independent core without ROS 2" OFF)
+option(IONIQ5_ECAN_CORE_ONLY "Build the platform-independent core without ROS 1" OFF)
 
 find_package(Threads REQUIRED)
 
@@ -46,20 +46,27 @@ if(IONIQ5_ECAN_CORE_ONLY)
   return()
 endif()
 
-find_package(ament_cmake REQUIRED)
-find_package(builtin_interfaces REQUIRED)
-find_package(diagnostic_msgs REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  diagnostic_msgs
+  message_generation
+  roscpp
+  std_srvs
+)
 find_package(PkgConfig REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-find_package(std_srvs REQUIRED)
 pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/ActuationCommand.msg"
-  "msg/RawCanFrame.msg"
-  "msg/VehicleState.msg"
-  DEPENDENCIES builtin_interfaces
+add_message_files(
+  FILES
+  ActuationCommand.msg
+  RawCanFrame.msg
+  VehicleState.msg
+)
+generate_messages()
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES ioniq5_ecan_core ioniq5_ecan_panda ioniq5_ecan_panda_protocol
+  CATKIN_DEPENDS diagnostic_msgs message_runtime roscpp std_srvs
 )
 
 add_library(ioniq5_ecan_panda src/panda_usb.cpp)
@@ -81,48 +88,55 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_executable(ioniq5_ecan_node src/main.cpp src/node.cpp)
-target_include_directories(ioniq5_ecan_node PRIVATE include)
-target_link_libraries(ioniq5_ecan_node ioniq5_ecan_core ioniq5_ecan_panda Threads::Threads)
-ament_target_dependencies(ioniq5_ecan_node rclcpp diagnostic_msgs std_srvs)
-rosidl_target_interfaces(ioniq5_ecan_node ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_include_directories(ioniq5_ecan_node PRIVATE include ${catkin_INCLUDE_DIRS})
+target_link_libraries(ioniq5_ecan_node
+  ioniq5_ecan_core
+  ioniq5_ecan_panda
+  Threads::Threads
+  ${catkin_LIBRARIES}
+)
+add_dependencies(ioniq5_ecan_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(ioniq5_ecan_node PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
 
 install(TARGETS
   ioniq5_ecan_core
   ioniq5_ecan_panda
   ioniq5_ecan_panda_protocol
   ioniq5_ecan_node
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-install(DIRECTORY include/ DESTINATION include)
-install(DIRECTORY config launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY include/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY config launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(PROGRAMS
   scripts/build_panda_debug_firmware.sh
   scripts/check_environment.sh
   scripts/flash_panda.py
   scripts/panda_preflight.py
   scripts/recover_panda.py
-  DESTINATION lib/${PROJECT_NAME}
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-
-  ament_add_gtest(test_core
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(test_core
     test/test_command_adapter.cpp
     test/test_hyundai_canfd_codec.cpp
     test/test_safety_supervisor.cpp
     test/test_vehicle_state_parser.cpp
   )
-  target_link_libraries(test_core ioniq5_ecan_core)
-  target_include_directories(test_core PRIVATE include)
+  if(TARGET test_core)
+    target_link_libraries(test_core ioniq5_ecan_core)
+    target_include_directories(test_core PRIVATE include)
+  endif()
 
-  ament_add_gtest(test_panda_protocol test/test_panda_protocol.cpp)
-  target_link_libraries(test_panda_protocol ioniq5_ecan_panda_protocol)
-  target_include_directories(test_panda_protocol PRIVATE include)
+  catkin_add_gtest(test_panda_protocol test/test_panda_protocol.cpp)
+  if(TARGET test_panda_protocol)
+    target_link_libraries(test_panda_protocol ioniq5_ecan_panda_protocol)
+    target_include_directories(test_panda_protocol PRIVATE include)
+  endif()
+
+  catkin_add_nosetests(test/test_panda_preflight.py)
 endif()
-
-ament_export_include_directories(include)
-ament_export_dependencies(builtin_interfaces diagnostic_msgs rclcpp std_srvs)
-ament_package()

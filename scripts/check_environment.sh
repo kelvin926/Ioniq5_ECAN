@@ -13,17 +13,17 @@ check_command() {
 }
 
 printf 'Ioniq5_ECAN environment check\n'
-check_command colcon
+check_command catkin_make
 check_command cmake
 check_command pkg-config
 check_command python3
-check_command ros2
+check_command roscore
 check_command lsusb
 
-if [[ "${ROS_DISTRO:-}" == "foxy" ]]; then
-  printf '[ok] ROS_DISTRO=foxy\n'
+if [[ "${ROS_DISTRO:-}" == "noetic" ]]; then
+  printf '[ok] ROS_DISTRO=noetic\n'
 else
-  printf '[warning] expected ROS_DISTRO=foxy, got %s\n' "${ROS_DISTRO:-unset}" >&2
+  printf '[warning] expected ROS_DISTRO=noetic, got %s\n' "${ROS_DISTRO:-unset}" >&2
 fi
 
 if pkg-config --exists libusb-1.0 2>/dev/null; then

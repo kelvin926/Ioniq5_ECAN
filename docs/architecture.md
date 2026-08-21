@@ -2,7 +2,7 @@
 
 ```text
 Alpamayo-side controller
-  └─ /ioniq5/actuation_command (best effort, depth 1)
+  └─ /ioniq5/actuation_command (TCPROS, queue 1, TCP_NODELAY)
        └─ command adapter
             ├─ rate/curvature → target angle → Carrot lateral-accel torque PID
             └─ acceleration scaling and bounds
@@ -31,7 +31,7 @@ Red Panda CAN RX
 LDA 입력도 허용 상태로 만들고, host supervisor가 실제 LFA/SCC 출력을 채널별로 분리합니다.
 
 ROS callback은 최신 command 하나만 mutex로 교환합니다. CAN RX와 제어 루프는 별도
-스레드이고, 제어 루프는 ROS executor와 독립된 steady clock 100 Hz 주기를 사용합니다.
+스레드이고, 제어 루프는 ROS callback spinner와 독립된 steady clock 100 Hz 주기를 사용합니다.
 raw RX는 receive thread에서 즉시 publish하고 raw TX는 ROS callback에서 Panda write mutex로
 직접 전달하므로 별도 100 Hz queue 지연을 추가하지 않습니다.
 동적 할당은 CAN 프레임 묶음과 USB packet에 남아 있으므로 hard real-time 보장은 하지

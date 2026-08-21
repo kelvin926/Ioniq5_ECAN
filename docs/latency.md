@@ -3,7 +3,7 @@
 기본 설정은 일반 Linux scheduler에서 동작합니다. 먼저 이 상태로 안정성을 확보하고,
 측정 결과가 필요할 때만 RT 권한을 추가합니다.
 
-- command subscription: best-effort, depth 1
+- command subscription: TCPROS, queue 1, TCP_NODELAY
 - control loop: steady-clock 100 Hz
 - CAN RX: 별도 libusb thread
 - state publish: 20 Hz

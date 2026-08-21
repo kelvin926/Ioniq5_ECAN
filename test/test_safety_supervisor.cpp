@@ -8,7 +8,7 @@ namespace {
 
 struct FixtureData {
   ioniq5_ecan::TimePoint now{ioniq5_ecan::SteadyClock::now()};
-  ioniq5_ecan::VehicleState vehicle;
+  ioniq5_ecan::VehicleStateData vehicle;
   ioniq5_ecan::PandaHealth panda;
   ioniq5_ecan::CommandSample command;
 

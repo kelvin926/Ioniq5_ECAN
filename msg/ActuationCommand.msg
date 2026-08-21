@@ -1,6 +1,6 @@
 # Only lateral and acceleration are required when input.use_enable_field=false.
 # Arrival time is used for the watchdog. stamp is retained for latency analysis.
-builtin_interfaces/Time stamp
+time stamp
 # Optional. Zero disables sequence checking; wraparound and publisher restart are accepted.
 uint32 sequence
 # Optional deadman, used only when input.use_enable_field=true.

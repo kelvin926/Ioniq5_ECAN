@@ -35,7 +35,7 @@ bool SafetySupervisor::request_arm(bool arm) {
   return true;
 }
 
-SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleState& vehicle,
+SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& vehicle,
                                         const PandaHealth& panda, const CommandSample& command) {
   const auto decision = [&](bool lateral_allowed, bool longitudinal_allowed,
                             bool use_vehicle_safety_mode, bool heartbeat_engaged) {

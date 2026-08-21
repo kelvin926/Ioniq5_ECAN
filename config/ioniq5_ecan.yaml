@@ -1,114 +1,112 @@
-ioniq5_ecan_node:
-  ros__parameters:
-    hardware:
-      # Leave empty only when exactly one Panda is connected.
-      panda_serial: ""
-      # Hyundai CAN-FD nominal/data rates used by the pinned openpilot configuration.
-      nominal_bitrate_kbps: 500
-      data_bitrate_kbps: 2000
-      usb_read_timeout_ms: 20
-      usb_write_timeout_ms: 10
-      # Hyundai K + Ioniq 5 HDA1: ECAN=0, camera=2.
-      ecan_bus: 0
-      camera_bus: 2
-      # false: CRUISE_BUTTONS 0x1CF, true: CRUISE_BUTTONS_ALT 0x1AA.
-      # Confirm from a passive fingerprint before actuation.
-      alternate_buttons: false
+hardware:
+  # Leave empty only when exactly one Panda is connected.
+  panda_serial: ""
+  # Hyundai CAN-FD nominal/data rates used by the pinned openpilot configuration.
+  nominal_bitrate_kbps: 500
+  data_bitrate_kbps: 2000
+  usb_read_timeout_ms: 20
+  usb_write_timeout_ms: 10
+  # Hyundai K + Ioniq 5 HDA1: ECAN=0, camera=2.
+  ecan_bus: 0
+  camera_bus: 2
+  # false: CRUISE_BUTTONS 0x1CF, true: CRUISE_BUTTONS_ALT 0x1AA.
+  # Confirm from a passive fingerprint before actuation.
+  alternate_buttons: false
 
-    topics:
-      command: "/ioniq5/actuation_command"
-      vehicle_state: "/ioniq5/vehicle_state"
-      raw_can_rx: "/ioniq5/can_rx"
-      raw_can_tx: "/ioniq5/can_tx"
-      # Produces /ioniq5/can0/rx, /ioniq5/can1/rx, /ioniq5/can2/rx.
-      raw_can_bus_prefix: "/ioniq5/can"
+topics:
+  command: "/ioniq5/actuation_command"
+  vehicle_state: "/ioniq5/vehicle_state"
+  raw_can_rx: "/ioniq5/can_rx"
+  raw_can_tx: "/ioniq5/can_tx"
+  # Produces /ioniq5/can0/rx, /ioniq5/can1/rx, /ioniq5/can2/rx.
+  raw_can_bus_prefix: "/ioniq5/can"
 
-    raw_can:
-      publish_rx: true
-      publish_bus_topics: true
-      # TX still passes through the active Panda HYUNDAI_CANFD safety hook.
-      allow_tx: true
+raw_can:
+  publish_rx: true
+  publish_bus_topics: true
+  # TX still passes through the active Panda HYUNDAI_CANFD safety hook.
+  allow_tx: true
 
-    input:
-      # Placeholder contract until the Alpamayo team freezes its message definition.
-      # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
-      lateral_mode: "steering_rate_deg_s"
-      lateral_scale: 1.0
-      lateral_offset: 0.0
-      acceleration_scale: 1.0
-      acceleration_offset: 0.0
-      # false makes lateral + acceleration the only required command fields.
-      # Set true later if the upstream controller owns an explicit deadman bit.
-      use_enable_field: false
+input:
+  # Placeholder contract until the Alpamayo team freezes its message definition.
+  # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
+  lateral_mode: "steering_rate_deg_s"
+  lateral_scale: 1.0
+  lateral_offset: 0.0
+  acceleration_scale: 1.0
+  acceleration_offset: 0.0
+  # false makes lateral + acceleration the only required command fields.
+  # Set true later if the upstream controller owns an explicit deadman bit.
+  use_enable_field: false
 
-    vehicle:
-      wheelbase_m: 2.97
-      steering_ratio: 14.26
+vehicle:
+  wheelbase_m: 2.97
+  steering_ratio: 14.26
 
-    lateral:
-      # Carrotpilot Ioniq 5 torque-controller defaults. The steering-rate input is
-      # integrated to a target angle and converted to desired lateral acceleration.
-      steer_actuator_delay_s: 0.1
-      torque_kp: 1.0
-      torque_ki: 0.1
-      torque_kd: 0.0
-      torque_kf: 1.0
-      lat_accel_factor: 3.172929
-      friction: 0.096019
-      friction_threshold: 0.3
-      steering_angle_deadzone_deg: 0.0
-      integral_output_limit: 1.0
-      integrator_freeze_speed_mps: 5.0
-      low_speed_factor_bp_mps: [0.0, 10.0, 20.0, 30.0]
-      low_speed_factor_v: [15.0, 13.0, 10.0, 5.0]
-      # Wide host-side target bounds; change these without rebuilding.
-      max_target_angle_deg: 175.0
-      max_target_rate_deg_s: 500.0
-      # Ioniq 5 CAN-FD/Panda limits used by Carrotpilot.
-      max_torque: 270
-      torque_rate_up: 2
-      torque_rate_down: 3
-      driver_torque_allowance: 250.0
-      driver_torque_multiplier: 2.0
-      driver_torque_factor: 1.0
-      # Carrot-style EPS fault avoidance above 85 degrees: 89 request frames,
-      # then two frames with only STEER_REQ cleared. Set angle to 0 to disable.
-      steer_request_cutoff_angle_deg: 85.0
-      steer_request_valid_frames: 89
-      steer_request_cut_frames: 2
+lateral:
+  # Carrotpilot Ioniq 5 torque-controller defaults. The steering-rate input is
+  # integrated to a target angle and converted to desired lateral acceleration.
+  steer_actuator_delay_s: 0.1
+  torque_kp: 1.0
+  torque_ki: 0.1
+  torque_kd: 0.0
+  torque_kf: 1.0
+  lat_accel_factor: 3.172929
+  friction: 0.096019
+  friction_threshold: 0.3
+  steering_angle_deadzone_deg: 0.0
+  integral_output_limit: 1.0
+  integrator_freeze_speed_mps: 5.0
+  low_speed_factor_bp_mps: [0.0, 10.0, 20.0, 30.0]
+  low_speed_factor_v: [15.0, 13.0, 10.0, 5.0]
+  # Wide host-side target bounds; change these without rebuilding.
+  max_target_angle_deg: 175.0
+  max_target_rate_deg_s: 500.0
+  # Ioniq 5 CAN-FD/Panda limits used by Carrotpilot.
+  max_torque: 270
+  torque_rate_up: 2
+  torque_rate_down: 3
+  driver_torque_allowance: 250.0
+  driver_torque_multiplier: 2.0
+  driver_torque_factor: 1.0
+  # Carrot-style EPS fault avoidance above 85 degrees: 89 request frames,
+  # then two frames with only STEER_REQ cleared. Set angle to 0 to disable.
+  steer_request_cutoff_angle_deg: 85.0
+  steer_request_valid_frames: 89
+  steer_request_cut_frames: 2
 
-    longitudinal:
-      # Full Panda Hyundai longitudinal range. Carrot's wider -4.0/+2.5 values
-      # cannot pass the pinned Panda firmware's -3.5/+2.0 checks.
-      accel_min_mps2: -3.5
-      accel_max_mps2: 2.0
-      jerk_limit_mps3: 5.0
-      set_speed_kph: 30.0
+longitudinal:
+  # Full Panda Hyundai longitudinal range. Carrot's wider -4.0/+2.5 values
+  # cannot pass the pinned Panda firmware's -3.5/+2.0 checks.
+  accel_min_mps2: -3.5
+  accel_max_mps2: 2.0
+  jerk_limit_mps3: 5.0
+  set_speed_kph: 30.0
 
-    safety:
-      # Research-site profile: the first fresh two-value command arms automatically.
-      # LDA toggles lateral; SET release toggles longitudinal.
-      allow_actuation: true
-      allow_longitudinal: true
-      auto_arm_on_command: true
-      lateral_button_toggle: true
-      longitudinal_button_toggle: true
-      # Optional host reactions are disabled for the closed research-site profile.
-      # Panda firmware behavior and the command/Panda watchdog remain in force.
-      disengage_on_brake: false
-      disengage_on_cancel: false
-      longitudinal_override_on_gas: false
-      # Zero disables these optional host-side limits. Panda firmware limits remain.
-      max_active_speed_mps: 0.0
-      max_abs_steering_angle_deg: 0.0
-      command_timeout_ms: 250
-      panda_timeout_ms: 500
-      vehicle_state_timeout_ms: 250
+safety:
+  # Research-site profile: the first fresh two-value command arms automatically.
+  # LDA toggles lateral; SET release toggles longitudinal.
+  allow_actuation: true
+  allow_longitudinal: true
+  auto_arm_on_command: true
+  lateral_button_toggle: true
+  longitudinal_button_toggle: true
+  # Optional host reactions are disabled for the closed research-site profile.
+  # Panda firmware behavior and the command/Panda watchdog remain in force.
+  disengage_on_brake: false
+  disengage_on_cancel: false
+  longitudinal_override_on_gas: false
+  # Zero disables these optional host-side limits. Panda firmware limits remain.
+  max_active_speed_mps: 0.0
+  max_abs_steering_angle_deg: 0.0
+  command_timeout_ms: 250
+  panda_timeout_ms: 500
+  vehicle_state_timeout_ms: 250
 
-    runtime:
-      control_rate_hz: 100
-      health_rate_hz: 10
-      # 0/-1 work without extra privileges. See docs/latency.md for RT setup.
-      realtime_priority: 0
-      control_cpu: -1
-      receive_cpu: -1
+runtime:
+  control_rate_hz: 100
+  health_rate_hz: 10
+  # 0/-1 work without extra privileges. See docs/latency.md for RT setup.
+  realtime_priority: 0
+  control_cpu: -1
+  receive_cpu: -1

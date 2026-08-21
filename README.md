@@ -1,6 +1,6 @@
 # Ioniq5_ECAN
 
-Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022년식
+Ubuntu 20.04 / ROS 1 Noetic에서 Red Panda와 Hyundai K 하네스를 통해 2022년식
 아이오닉 5 HDA1의 조향 및 가속도 명령을 전달하는 C++17 연구용 드라이버입니다.
 
 > 이 코드는 실제 차량에서 검증되지 않았습니다. 저장소의 기본 YAML은 요청한 폐쇄
@@ -18,9 +18,9 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 - CRC16, rolling counter, Panda USB CAN packet protocol
 - 차량 속도·4륜 속도/요레이트/횡·종가속도/조향/토크/페달/브레이크/버튼 상태 파싱
 - `PASSIVE → ARMED → ACTIVE → FAULT` 안전 상태기계
-- carrotpilot의 Ioniq 5 횡가속도/마찰 기반 토크 제어와 ROS 2 YAML 파라미터 조정
+- carrotpilot의 Ioniq 5 횡가속도/마찰 기반 토크 제어와 ROS 1 YAML 파라미터 조정
 - Panda 프로토콜 버전, Red Panda 기종, 하네스, heartbeat, RX/TX 오류 확인
-- CAN-FD 64-byte 보존 raw RX/TX와 bus별 ROS 2 토픽
+- CAN-FD 64-byte 보존 raw RX/TX와 bus별 ROS 1 토픽
 - Panda hard limit, 명령 watchdog, 선택 가능한 브레이크/CANCEL 반응 및 통신 fault 해제
 
 입력 단위가 아직 확정되지 않았으므로 CAN 계층 앞에 어댑터를 두었습니다.
@@ -33,7 +33,7 @@ Ubuntu 20.04 / ROS 2 Foxy에서 Red Panda와 Hyundai K 하네스를 통해 2022�
 - Hyundai Ioniq 5 2022, HDA1, EV
 - Hyundai K camera harness
 - Red Panda USB
-- Ubuntu 20.04 + ROS 2 Foxy + C++17
+- Ubuntu 20.04 + ROS 1 Noetic + C++17
 - ECAN Panda bus 0, camera bus 2
 
 HDA2/LKA steering, 다른 하네스, alt buttons 또는 radar-SCC 구성은 지원하지 않습니다.
@@ -43,8 +43,8 @@ HDA2/LKA steering, 다른 하네스, alt buttons 또는 radar-SCC 구성은 지�
 ```bash
 sudo apt update
 sudo apt install -y build-essential libusb-1.0-0-dev pkg-config \
-  python3-colcon-common-extensions python3-usb1 \
-  ros-foxy-diagnostic-msgs ros-foxy-std-srvs
+  python3-nose python3-usb1 ros-noetic-ros-base ros-noetic-diagnostic-msgs \
+  ros-noetic-message-generation ros-noetic-roscpp ros-noetic-std-srvs
 
 sudo install -m 0644 config/99-red-panda.rules /etc/udev/rules.d/99-red-panda.rules
 sudo udevadm control --reload-rules
@@ -52,19 +52,20 @@ sudo udevadm trigger
 sudo usermod -aG plugdev "$USER"
 # group 변경 적용을 위해 다시 로그인
 
-source /opt/ros/foxy/setup.bash
+source /opt/ros/noetic/setup.bash
 ./scripts/check_environment.sh
-cd ~/ros2_ws
-ln -s /path/to/Ioniq5_ECAN src/ioniq5_ecan
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-source install/setup.bash
-colcon test --packages-select ioniq5_ecan
-colcon test-result --verbose
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/src
+ln -s /path/to/Ioniq5_ECAN ioniq5_ecan
+cd ~/catkin_ws
+catkin_make -DCMAKE_BUILD_TYPE=Release
+source devel/setup.bash
+catkin_make run_tests_ioniq5_ecan
+catkin_test_results --verbose
 ```
 
-Foxy는 공식 EOL이므로 연구 컴퓨터는 격리하고 OS 보안 업데이트 정책을 별도로
-운영해야 합니다. 코드는 Humble에서도 빌드 가능한 API만 사용했지만 기준 타깃은
-요청대로 20.04/Foxy입니다.
+기준 타깃은 연구차량과 동일한 Ubuntu 20.04/ROS 1 Noetic입니다. ROS 2 빌드와 실행은
+더 이상 지원하지 않습니다.
 
 ## 실행
 
@@ -79,7 +80,7 @@ python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL
 
 ```bash
 python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --require-harness
-ros2 launch ioniq5_ecan ioniq5_ecan.launch.py \
+roslaunch ioniq5_ecan ioniq5_ecan.launch \
   config:=/path/to/Ioniq5_ECAN/config/ioniq5_ecan_passive.yaml
 ```
 
@@ -92,18 +93,18 @@ packet hash도 함께 확인합니다. Cabana `--panda`와 ROS 노드를 포함�
 검증을 끝낸 뒤에만 사용합니다.
 
 ```bash
-ros2 launch ioniq5_ecan ioniq5_ecan.launch.py \
+roslaunch ioniq5_ecan ioniq5_ecan.launch \
   config:=/path/to/Ioniq5_ECAN/config/ioniq5_ecan.yaml
-ros2 topic echo /ioniq5/vehicle_state
-ros2 topic echo /ioniq5/can0/rx
-ros2 topic echo /diagnostics
+rostopic echo /ioniq5/vehicle_state
+rostopic echo /ioniq5/can0/rx
+rostopic echo /diagnostics
 ```
 
 기본 `input.use_enable_field: false`에서는 다음처럼 두 값만 보내면 됩니다. `sequence=0`과
 `enable=false`의 기본값은 무시되고 watchdog은 수신 시각을 사용합니다.
 
 ```bash
-ros2 topic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/msg/ActuationCommand \
+rostopic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/ActuationCommand \
   "{lateral: 0.0, acceleration: 0.0}"
 ```
 
@@ -120,9 +121,9 @@ ros2 topic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/msg/ActuationCommand 
 
 ```bash
 # auto_arm_on_command=false일 때 수동 arm
-ros2 service call /ioniq5_ecan/set_armed std_srvs/srv/SetBool "{data: true}"
+rosservice call /ioniq5_ecan/set_armed "data: true"
 # 즉시 해제
-ros2 service call /ioniq5_ecan/set_armed std_srvs/srv/SetBool "{data: false}"
+rosservice call /ioniq5_ecan/set_armed "data: false"
 ```
 
 수동 `false` 요청은 자동 arm을 함께 억제하며, 다시 `true`를 요청할 때까지 유지됩니다.
@@ -146,7 +147,7 @@ include/ioniq5_ecan/   C++ core, Panda driver, ROS node
 src/                   implementation
 msg/                   placeholder command and status interfaces
 config/                ROS YAML and udev rule
-launch/                ROS 2 launch file
+launch/                ROS 1 roslaunch file
 test/                  golden-frame, parser, safety, protocol tests
 scripts/               environment and pinned firmware helpers
 patches/               고정 opendbc/Panda split-button firmware 패치

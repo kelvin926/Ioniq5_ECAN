@@ -224,10 +224,10 @@ void VehicleStateParser::parse_scc(const CanFrame& frame) {
   state_.cruise_engaged = mode == 1U || mode == 2U;
 }
 
-VehicleState VehicleStateParser::snapshot(TimePoint now,
-                                          std::chrono::milliseconds critical_timeout) const {
+VehicleStateData VehicleStateParser::snapshot(TimePoint now,
+                                              std::chrono::milliseconds critical_timeout) const {
   std::lock_guard<std::mutex> lock(mutex_);
-  VehicleState copy = state_;
+  VehicleStateData copy = state_;
   copy.valid = recent(steering_time_, now, critical_timeout) &&
                recent(mdps_time_, now, critical_timeout) &&
                recent(wheel_time_, now, critical_timeout) &&

@@ -55,7 +55,7 @@ TEST(VehicleStateParser, BuildsValidCriticalStateFromEcan) {
   set_signal(tcs, 67, 2, 0, ByteOrder::BigEndian);
   EXPECT_TRUE(parser.update(frame_with_crc(HyundaiCanFdCodec::kTcsAddress, tcs, now)));
 
-  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  const VehicleStateData state = parser.snapshot(now, std::chrono::milliseconds(100));
   EXPECT_TRUE(state.valid);
   EXPECT_NEAR(state.steering_angle_deg, -12.3, 1e-9);
   EXPECT_NEAR(state.driver_torque, 100.0, 1e-9);
@@ -80,7 +80,7 @@ TEST(VehicleStateParser, ParsesImuDynamicsInRequestedUnits) {
   set_signal(imu, 96, 16, longitudinal_raw, ByteOrder::LittleEndian);
   EXPECT_TRUE(parser.update(frame_with_crc(HyundaiCanFdCodec::kImuAddress, imu, now)));
 
-  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  const VehicleStateData state = parser.snapshot(now, std::chrono::milliseconds(100));
   EXPECT_NEAR(state.yaw_rate_deg_s, static_cast<double>(yaw_raw) * 0.005 - 163.84, 1e-9);
   EXPECT_NEAR(state.lateral_accel_mps2,
               (static_cast<double>(lateral_raw) * 0.000127465 - 4.17677312) * 9.80665, 1e-9);
@@ -109,7 +109,7 @@ TEST(VehicleStateParser, ParsesEscDynamicsFallback) {
   set_signal(esc.data, 96, 16, 32768U, ByteOrder::LittleEndian);
   EXPECT_TRUE(parser.update(esc));
 
-  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  const VehicleStateData state = parser.snapshot(now, std::chrono::milliseconds(100));
   EXPECT_NEAR(state.yaw_rate_deg_s, 0.0, 1e-12);
   EXPECT_NEAR(state.lateral_accel_mps2, 0.0, 1e-12);
   EXPECT_NEAR(state.longitudinal_accel_mps2, 0.0, 1e-12);
@@ -148,7 +148,7 @@ TEST(VehicleStateParser, SeparatesLaneKeepPressFromSetRelease) {
 
   send_button(2U);  // SET press
   send_button(0U);  // SET release
-  VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  VehicleStateData state = parser.snapshot(now, std::chrono::milliseconds(100));
   EXPECT_EQ(state.set_button_events, 1U);
   EXPECT_EQ(state.lane_keep_button_events, 0U);
 
@@ -169,7 +169,7 @@ TEST(VehicleStateParser, ParsesLaneKeepFromAlternateButtons) {
   set_signal(buttons, 39, 1, 1U, ByteOrder::LittleEndian);
   EXPECT_TRUE(
     parser.update(frame_with_crc(HyundaiCanFdCodec::kCruiseButtonsAltAddress, buttons, now)));
-  const VehicleState state = parser.snapshot(now, std::chrono::milliseconds(100));
+  const VehicleStateData state = parser.snapshot(now, std::chrono::milliseconds(100));
   EXPECT_EQ(state.lane_keep_button_events, 1U);
   EXPECT_TRUE(state.lane_keep_button_pressed);
 }

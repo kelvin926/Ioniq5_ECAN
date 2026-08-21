@@ -1,4 +1,4 @@
-builtin_interfaces/Time stamp
+time stamp
 bool valid
 float64 speed_mps
 float64 yaw_rate_deg_s
