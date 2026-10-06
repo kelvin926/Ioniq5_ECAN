@@ -31,6 +31,7 @@ bool SafetySupervisor::request_arm(bool arm) {
   if (arm && !arm_requested_) {
     lateral_enabled_ = false;
     longitudinal_enabled_ = false;
+    longitudinal_latched_off_ = false;
   }
   arm_requested_ = arm;
   if (!arm) {
@@ -45,6 +46,7 @@ bool SafetySupervisor::request_arm(bool arm) {
 
 SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& vehicle,
                                         const PandaHealth& panda, const CommandSample& command) {
+  waiting_for_command_ = false;
   const auto decision = [&](bool lateral_allowed, bool longitudinal_allowed,
                             bool use_vehicle_safety_mode, bool heartbeat_engaged) {
     const auto remaining = state_ == ControlState::SoftDisabling && now < soft_disable_deadline_
@@ -59,7 +61,8 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
                           use_vehicle_safety_mode,
                           heartbeat_engaged,
                           reason_,
-                          static_cast<uint32_t>(remaining)};
+                          static_cast<uint32_t>(remaining),
+                          waiting_for_command_};
   };
 
   const bool panda_fresh = panda.connected && panda.updated_at.time_since_epoch().count() != 0 &&
@@ -91,17 +94,28 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     last_set_button_events_ = vehicle.set_button_events;
   }
 
-  if (arm_requested_ && lane_keep_button_event) {
+  bool selected_mode_turned_off = false;
+  if (config_.resume_on_command_return && arm_requested_) {
+    if (set_button_event && !vehicle.brake_pressed && !vehicle.acc_fault) {
+      longitudinal_latched_off_ = false;
+    }
+    selected_mode_turned_off = (lateral_enabled_ || longitudinal_enabled_) &&
+                              !panda.lateral_selected && !panda.longitudinal_selected;
+    lateral_enabled_ = panda.lateral_selected;
+    longitudinal_enabled_ = panda.longitudinal_selected && !longitudinal_latched_off_;
+  } else if (arm_requested_ && lane_keep_button_event) {
     const bool lateral_only_selected = lateral_enabled_ && !longitudinal_enabled_;
     const bool turn_off =
-      config_.lateral_button_toggle && lateral_only_selected && panda.controls_allowed;
+      config_.lateral_button_toggle && lateral_only_selected;
+    selected_mode_turned_off = turn_off;
     lateral_enabled_ = !turn_off;
     longitudinal_enabled_ = false;
   }
-  if (arm_requested_ && set_button_event) {
+  if (!config_.resume_on_command_return && arm_requested_ && set_button_event) {
     const bool combined_selected = lateral_enabled_ && longitudinal_enabled_;
     const bool turn_off =
-      config_.longitudinal_button_toggle && combined_selected && panda.controls_allowed;
+      config_.longitudinal_button_toggle && combined_selected;
+    selected_mode_turned_off = turn_off;
     lateral_enabled_ = !turn_off;
     longitudinal_enabled_ = !turn_off;
   }
@@ -111,6 +125,7 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   bool longitudinal_disengaged_by_brake = false;
   bool longitudinal_disengaged_by_acc_fault = false;
   if (vehicle.brake_pressed) {
+    if (config_.longitudinal_disengage_on_brake) longitudinal_latched_off_ = true;
     if (config_.lateral_disengage_on_brake) {
       lateral_enabled_ = false;
     }
@@ -120,6 +135,7 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     }
   }
   if (vehicle.acc_fault && config_.allow_longitudinal && longitudinal_enabled_) {
+    longitudinal_latched_off_ = true;
     longitudinal_enabled_ = false;
     longitudinal_disengaged_by_acc_fault = true;
   }
@@ -128,19 +144,29 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   const bool ignored_fault_is_only_fault =
     panda.faults != 0U && effective_faults == 0U && panda.ignored_faults != 0U;
   bool longitudinal_tx_rejected = false;
-  if (panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off ||
+  if (panda.command_session_blocked || panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off ||
       effective_faults != 0U || (panda.fault_status != 0U && !ignored_fault_is_only_fault)) {
     fault("Panda safety or CAN health fault");
   } else if (is_engaged(state_) && panda.safety_tx_blocked > last_tx_blocked_) {
+    // Firmware may process OFF before the host sees the same button edge and reject an
+    // in-flight actuator frame. This is still OFF, not a fault acknowledgement or TX bypass.
+    const bool known_actuator_address = panda.last_rejected_address == 0x12AU ||
+                                       panda.last_rejected_address == 0x1A0U ||
+                                       panda.last_rejected_address == 0x160U;
+    const bool button_off_rejection = selected_mode_turned_off && !lateral_enabled_ &&
+                                     !longitudinal_enabled_ && known_actuator_address;
     const bool longitudinal_address =
       panda.last_rejected_address == 0x1A0U || panda.last_rejected_address == 0x160U;
     // A returned rejected frame can arrive one USB read after the health counter. When brake and
     // the counter rise in the same update, the one in-flight SCC/FCA rejection belongs to the
     // longitudinal channel even if its address has not been observed yet.
     const bool pending_brake_rejection = longitudinal_disengaged_by_brake;
-    if ((longitudinal_address || pending_brake_rejection) && lateral_enabled_) {
+    if (button_off_rejection) {
+      // Both channels remain disabled; a later physical button edge is required to select ON.
+    } else if ((longitudinal_address || pending_brake_rejection) && lateral_enabled_) {
       longitudinal_enabled_ = false;
       longitudinal_tx_rejected = true;
+      longitudinal_latched_off_ = true;
     } else {
       fault("Panda rejected an active lateral or unknown control frame");
     }
@@ -158,18 +184,12 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     fault("Panda harness orientation does not expose ECAN on logical bus 0");
     return decision(false, false, false, false);
   }
-
-  if (state_ == ControlState::Fault) {
+  if (config_.resume_on_command_return && !panda.ignition_on) {
+    fault("vehicle ignition lost during command session");
     return decision(false, false, false, false);
   }
 
-  if (panda.safety_mode != config_.required_safety_mode ||
-      panda.safety_param != config_.required_safety_param) {
-    if (is_engaged(state_)) {
-      fault("Panda safety mode changed while active");
-    } else {
-      transition(ControlState::Armed, "waiting for configured Panda safety mode");
-    }
+  if (state_ == ControlState::Fault) {
     return decision(false, false, false, false);
   }
 
@@ -191,16 +211,36 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     return decision(false, false, false, false);
   }
 
+  const bool configured_mode = panda.safety_mode == config_.required_safety_mode &&
+                               panda.safety_param == config_.required_safety_param;
+  const bool standby_mode = config_.resume_on_command_return &&
+                            panda.command_session_active && panda.safety_mode == 19U &&
+                            panda.safety_param == config_.required_safety_param;
+  if (!configured_mode && (!standby_mode || is_engaged(state_))) {
+    if (is_engaged(state_) || config_.resume_on_command_return) {
+      fault("Panda safety mode changed while active");
+    } else {
+      transition(ControlState::Armed, "waiting for configured Panda safety mode");
+    }
+    return decision(false, false, false, false);
+  }
+
   const bool command_fresh = command.received_at.time_since_epoch().count() != 0 &&
                              now >= command.received_at &&
                              now - command.received_at <= config_.command_timeout;
   if (!command_fresh) {
-    if (is_engaged(state_)) {
+    if (config_.resume_on_command_return && state_ != ControlState::SoftDisabling &&
+        !vehicle.eps_fault) {
+      waiting_for_command_ = true;
+      transition(ControlState::Passive, "waiting for fresh command; preserve buttons and restore stock");
+    } else if (is_engaged(state_)) {
       fault("control command timeout");
     } else {
-      transition(ControlState::Armed, "waiting for fresh command");
+      // No active control was in progress. Stop owning stock ADAS traffic while waiting
+      // for the publisher; the ROS subscription stays alive in the node.
+      disarm("waiting for fresh command; restore stock communication");
     }
-    return decision(false, false, true, false);
+    return decision(false, false, false, false);
   }
   if (!command.valid) {
     fault("control command contains a non-finite value");
@@ -208,6 +248,19 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   }
   if (!command.enable) {
     transition(ControlState::Armed, "command deadman is false");
+    return decision(false, false, true, false);
+  }
+
+  if (standby_mode) {
+    transition(ControlState::Armed, "fresh command; waiting for verified ECU takeover");
+    return decision(false, false, false, false);
+  }
+  if (config_.resume_on_command_return && !panda.command_session_ready) {
+    if (is_engaged(state_)) {
+      fault("Panda command-session CAN freshness lost");
+      return decision(false, false, false, false);
+    }
+    transition(ControlState::Armed, "waiting for validated command-session CAN");
     return decision(false, false, true, false);
   }
 

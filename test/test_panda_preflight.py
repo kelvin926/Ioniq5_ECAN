@@ -28,6 +28,10 @@ class PandaPreflightTest(unittest.TestCase):
         self.assertEqual(parsed["format"], "hash")
         self.assertTrue(parsed["matches_pinned"])
 
+    def test_missing_command_session_extension_is_reported(self):
+        result = {"is_red_panda": True, "command_session": {"supported": False}}
+        self.assertIn("Panda lacks the tested I5R1 command-session extension", evaluate(result, True, False))
+
     def test_legacy_packet_is_not_pinned(self):
         parsed = parse_packet_versions(bytes((15, 4, 5)))
         self.assertEqual(parsed["format"], "legacy")

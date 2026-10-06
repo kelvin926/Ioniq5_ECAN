@@ -140,4 +140,8 @@ if(CATKIN_ENABLE_TESTING)
   endif()
 
   catkin_add_nosetests(test/test_panda_preflight.py)
+  catkin_add_gtest(test_panda_usb test/gtest_main.cpp test/test_panda_usb.cpp)
+  if(TARGET test_panda_usb)
+    target_link_libraries(test_panda_usb ioniq5_ecan_panda)
+  endif()
 endif()

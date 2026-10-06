@@ -1,0 +1,376 @@
+diff --git a/opendbc/safety/safety.h b/opendbc/safety/safety.h
+index 77f6c345..a5e12b3d 100644
+--- a/opendbc/safety/safety.h
++++ b/opendbc/safety/safety.h
+@@ -94,6 +94,8 @@ uint16_t current_safety_param = 0;
+ static const safety_hooks *current_hooks = &nooutput_hooks;
+ safety_config current_safety_config;
+ 
++#include "opendbc/safety/modes/ioniq5_command_session.h"
++
+ static void generic_rx_checks(void);
+ static void stock_ecu_check(bool stock_ecu_detected);
+ 
+@@ -195,7 +197,11 @@ bool safety_rx_hook(const CANPacket_t *msg) {
+   bool valid = rx_msg_safety_check(msg, &current_safety_config, current_hooks);
+   bool whitelisted = get_addr_check_index(msg, current_safety_config.rx_checks, current_safety_config.rx_checks_len) != -1;
+   if (valid && whitelisted) {
+-    current_hooks->rx(msg);
++    if (ioniq5_session_profile != 0U) {
++      ioniq5_session_rx(msg);
++    } else {
++      current_hooks->rx(msg);
++    }
+   }
+ 
+   // Handles gas, brake, and regen paddle
+@@ -217,6 +223,7 @@ bool safety_rx_hook(const CANPacket_t *msg) {
+     heartbeat_engaged_mismatches = 0;
+   }
+ 
++  ioniq5_session_enforce(valid);
+   return valid;
+ }
+ 
+@@ -235,6 +242,11 @@ static bool tx_msg_safety_check(const CANPacket_t *msg, const CanMsg msg_list[],
+ }
+ 
+ bool safety_tx_hook(CANPacket_t *msg) {
++  if (ioniq5_session_profile != 0U && current_safety_mode == SAFETY_HYUNDAI_CANFD &&
++      (msg->addr == 0x12AU || msg->addr == 0x1A0U || msg->addr == 0x160U) &&
++      !ioniq5_session_ready()) {
++    return false;
++  }
+   bool whitelisted = tx_msg_safety_check(msg, current_safety_config.tx_msgs, current_safety_config.tx_msgs_len);
+   if ((current_safety_mode == SAFETY_ALLOUTPUT) || (current_safety_mode == SAFETY_ELM327)) {
+     whitelisted = true;
+@@ -342,6 +354,7 @@ void safety_tick(const safety_config *cfg) {
+   }
+ 
+   safety_rx_checks_invalid = rx_checks_invalid;
++  ioniq5_session_enforce(!rx_checks_invalid);
+ }
+ 
+ static void relay_malfunction_set(void) {
+@@ -393,6 +406,7 @@ static void reset_sample(struct sample_t *sample) {
+ }
+ 
+ int set_safety_hooks(uint16_t mode, uint16_t param) {
++  ioniq5_session_prepare(mode, param);
+   const safety_hook_config safety_hook_registry[] = {
+     {SAFETY_SILENT, &nooutput_hooks},
+     {SAFETY_HONDA_NIDEC, &honda_nidec_hooks},
+@@ -483,6 +497,11 @@ int set_safety_hooks(uint16_t mode, uint16_t param) {
+     }
+   }
+   if ((set_status == 0) && (current_hooks->init != NULL)) {
++    if (ioniq5_session_profile != 0U && mode == SAFETY_NOOUTPUT) {
++      current_hooks = &ioniq5_session_nooutput_hooks;
++    } else if (ioniq5_session_profile != 0U && mode == SAFETY_ELM327) {
++      current_hooks = &ioniq5_session_elm327_hooks;
++    }
+     safety_config cfg = current_hooks->init(param);
+     current_safety_config.rx_checks = cfg.rx_checks;
+     current_safety_config.rx_checks_len = cfg.rx_checks_len;
+@@ -494,6 +513,7 @@ int set_safety_hooks(uint16_t mode, uint16_t param) {
+       current_safety_config.rx_checks[j].status = (RxStatus){0};
+     }
+   }
++  ioniq5_session_finish_init();
+   return set_status;
+ }
+ 
+diff --git a/opendbc/safety/modes/ioniq5_command_session.h b/opendbc/safety/modes/ioniq5_command_session.h
+new file mode 100644
+index 00000000..5a144eea
+--- /dev/null
++++ b/opendbc/safety/modes/ioniq5_command_session.h
+@@ -0,0 +1,145 @@
++#pragma once
++
++// Opt-in, volatile button intent. NOOUTPUT/ELM327 never grant actuator permission.
++// A SILENT/ordinary mode transition, invalid CAN, or heartbeat fault cancels the session.
++static uint16_t ioniq5_session_profile = 0U;
++static bool ioniq5_session_blocked = false;
++static bool ioniq5_session_lateral = false;
++static bool ioniq5_session_longitudinal = false;
++static bool ioniq5_session_lda_prev = false;
++static int ioniq5_session_cruise_prev = 0;
++static bool ioniq5_session_button_seen = false;
++static bool ioniq5_session_ignore_set_release = false;
++
++static void ioniq5_session_abort(void) {
++  if (ioniq5_session_profile != 0U) {
++    ioniq5_session_blocked = true;
++    ioniq5_session_lateral = false;
++    ioniq5_session_longitudinal = false;
++    hyundai_canfd_lateral_controls_allowed = false;
++    hyundai_canfd_longitudinal_controls_allowed = false;
++    controls_allowed = false;
++  }
++}
++
++static bool ioniq5_session_requested(uint16_t mode, uint16_t param) {
++  const uint16_t base = param & (uint16_t)~(4U | 32U);
++  return ((mode == SAFETY_NOOUTPUT) || (mode == SAFETY_ELM327) ||
++          (mode == SAFETY_HYUNDAI_CANFD)) && (base == (1U | 1024U | 2048U | 4096U));
++}
++
++static void ioniq5_session_prepare(uint16_t mode, uint16_t param) {
++  const uint16_t profile = ioniq5_session_requested(mode, param) ? param : 0U;
++  if (profile != ioniq5_session_profile || profile == 0U) {
++    ioniq5_session_blocked = false;
++    ioniq5_session_lateral = false;
++    ioniq5_session_longitudinal = false;
++    ioniq5_session_lda_prev = false;
++    ioniq5_session_cruise_prev = 0;
++    ioniq5_session_button_seen = false;
++    ioniq5_session_ignore_set_release = false;
++  } else if (relay_malfunction || safety_rx_checks_invalid) {
++    ioniq5_session_abort();
++  }
++  ioniq5_session_profile = profile;
++}
++
++static bool ioniq5_session_ready(void) {
++  if (ioniq5_session_profile == 0U || ioniq5_session_blocked ||
++      relay_malfunction || safety_rx_checks_invalid || current_safety_config.rx_checks_len == 0) {
++    return false;
++  }
++  const uint32_t now = microsecond_timer_get();
++  for (int i = 0; i < current_safety_config.rx_checks_len; i++) {
++    const RxStatus *s = &current_safety_config.rx_checks[i].status;
++    if (!s->msg_seen || !s->valid_checksum || !s->valid_quality_flag ||
++        s->wrong_counters >= MAX_WRONG_COUNTERS ||
++        safety_get_ts_elapsed(now, s->last_timestamp) > 100000U) {
++      return false;
++    }
++  }
++  return true;
++}
++
++static safety_config ioniq5_session_passive_init(uint16_t param) {
++  safety_config cfg = hyundai_canfd_init(param);
++  cfg.tx_msgs = NULL;
++  cfg.tx_msgs_len = 0;
++  cfg.disable_forwarding = true;
++  return cfg;
++}
++
++static void ioniq5_session_rx(const CANPacket_t *msg) {
++  const unsigned int button = hyundai_canfd_alt_buttons ? 0x1AAU : 0x1CFU;
++  const int cruise = hyundai_canfd_alt_buttons ? ((msg->data[4] >> 4) & 7U)
++                                             : (msg->data[2] & 7U);
++  // A held button at cold startup is not a new physical press.
++  if (!ioniq5_session_button_seen && msg->addr == button && msg->bus == 0U) {
++    hyundai_canfd_lda_button_prev = GET_BIT(msg, hyundai_canfd_alt_buttons ? 39U : 23U);
++    cruise_button_prev = hyundai_canfd_alt_buttons ? ((msg->data[4] >> 4) & 7U)
++                                                : (msg->data[2] & 7U);
++    ioniq5_session_button_seen = true;
++    ioniq5_session_ignore_set_release = cruise == HYUNDAI_BTN_SET;
++  }
++  if (ioniq5_session_ignore_set_release && msg->addr == button && msg->bus == 0U) {
++    cruise_button_prev = cruise;
++    if (cruise != HYUNDAI_BTN_SET) ioniq5_session_ignore_set_release = false;
++  }
++  hyundai_canfd_rx_hook(msg);
++  if (msg->addr == button && msg->bus == 0U && cruise_button_prev == HYUNDAI_BTN_CANCEL) {
++    ioniq5_session_abort();
++  }
++}
++
++static void ioniq5_session_finish_init(void) {
++  if (ioniq5_session_profile != 0U) {
++    hyundai_canfd_lateral_controls_allowed = ioniq5_session_lateral;
++    hyundai_canfd_longitudinal_controls_allowed = ioniq5_session_longitudinal;
++    hyundai_canfd_lda_button_prev = ioniq5_session_lda_prev;
++    cruise_button_prev = ioniq5_session_cruise_prev;
++    controls_allowed = false;  // Every transition requires new validated CAN before output.
++  }
++}
++
++static void ioniq5_session_enforce(bool valid) {
++  if (ioniq5_session_profile != 0U) {
++    if (!valid || relay_malfunction || safety_rx_checks_invalid) ioniq5_session_abort();
++    if (ioniq5_session_blocked) {
++      hyundai_canfd_lateral_controls_allowed = false;
++      hyundai_canfd_longitudinal_controls_allowed = false;
++    }
++    ioniq5_session_lateral = hyundai_canfd_lateral_controls_allowed;
++    ioniq5_session_longitudinal = hyundai_canfd_longitudinal_controls_allowed;
++    ioniq5_session_lda_prev = hyundai_canfd_lda_button_prev;
++    ioniq5_session_cruise_prev = cruise_button_prev;
++    controls_allowed = current_safety_mode == SAFETY_HYUNDAI_CANFD &&
++                       ioniq5_session_ready() &&
++                       (ioniq5_session_lateral || ioniq5_session_longitudinal);
++  }
++}
++
++static inline uint32_t ioniq5_session_status(void) {
++  return (ioniq5_session_lateral ? 1U : 0U) |
++         (ioniq5_session_longitudinal ? 2U : 0U) |
++         (ioniq5_session_ready() ? 4U : 0U) |
++         (ioniq5_session_blocked ? 8U : 0U) |
++         (ioniq5_session_profile != 0U ? 16U : 0U);
++}
++
++static const safety_hooks ioniq5_session_nooutput_hooks = {
++  .init = ioniq5_session_passive_init,
++  .rx = ioniq5_session_rx,
++  .tx = nooutput_tx_hook,
++  .get_counter = hyundai_canfd_get_counter,
++  .get_checksum = hyundai_canfd_get_checksum,
++  .compute_checksum = hyundai_common_canfd_compute_checksum,
++};
++
++static const safety_hooks ioniq5_session_elm327_hooks = {
++  .init = ioniq5_session_passive_init,
++  .rx = ioniq5_session_rx,
++  .tx = elm327_tx_hook,
++  .get_counter = hyundai_canfd_get_counter,
++  .get_checksum = hyundai_canfd_get_checksum,
++  .compute_checksum = hyundai_common_canfd_compute_checksum,
++};
+diff --git a/opendbc/safety/tests/test_ioniq5_command_session.py b/opendbc/safety/tests/test_ioniq5_command_session.py
+new file mode 100644
+index 00000000..66f03938
+--- /dev/null
++++ b/opendbc/safety/tests/test_ioniq5_command_session.py
+@@ -0,0 +1,137 @@
++import unittest
++
++from opendbc.car.structs import CarParams
++from opendbc.safety.tests.common import CANPackerSafety
++from opendbc.safety.tests.libsafety import libsafety_py
++
++
++class TestIoniq5CommandSession(unittest.TestCase):
++  PARAM = 1 | 4 | 1024 | 2048 | 4096
++
++  def setUp(self):
++    self.safety = libsafety_py.libsafety
++    self.packer = CANPackerSafety("hyundai_canfd_generated")
++    self.counters = {}
++    self.safety.set_safety_hooks(CarParams.SafetyModel.silent, 0)
++    self.mode(CarParams.SafetyModel.noOutput)
++
++  def mode(self, mode):
++    self.assertEqual(0, self.safety.set_safety_hooks(mode, self.PARAM))
++    self.safety.init_tests()
++
++  def rx(self, name, values=None, bus=0):
++    counter = self.counters.get(name, -1) + 1
++    self.counters[name] = counter
++    values = dict(values or {})
++    values["COUNTER"] = counter % (16 if name == "CRUISE_BUTTONS" else 256)
++    packet = self.packer.make_can_msg_safety(name, bus, values)
++    self.assertTrue(self.safety.safety_rx_hook(packet))
++    return packet
++
++  def fresh(self, lda=False, cruise=0, brake=False):
++    for name in ("ACCELERATOR", "TCS", "WHEEL_SPEEDS", "MDPS"):
++      self.rx(name, {"DriverBraking": brake} if name == "TCS" else {})
++    self.rx("CRUISE_BUTTONS", {"LDA_BTN": lda, "CRUISE_BUTTONS": cruise})
++
++  def lfa(self):
++    return self.packer.make_can_msg_safety("LFA", 0, {"StrTqReqVal": 1, "ActToiSta": 1})
++
++  def scc(self):
++    return self.packer.make_can_msg_safety("SCC_CONTROL", 0, {"ACCMode": 1, "aReqRaw": 0.1, "aReqValue": 0.1})
++
++  def select_lateral(self):
++    self.fresh()
++    self.rx("CRUISE_BUTTONS", {"LDA_BTN": True})
++
++  def select_combined(self):
++    self.fresh()
++    self.rx("CRUISE_BUTTONS", {"CRUISE_BUTTONS": 2})
++    self.rx("CRUISE_BUTTONS")
++
++  def test_standby_never_transmits_or_forwards(self):
++    self.select_combined()
++    self.assertFalse(self.safety.get_controls_allowed())
++    for packet in (self.lfa(), self.scc(), libsafety_py.make_CANPacket(0x730, 0, b"\x02\x3e\x80" + b"\x00" * 5)):
++      self.assertFalse(self.safety.safety_tx_hook(packet))
++    for bus in (0, 2):
++      self.assertEqual(-1, self.safety.safety_fwd_hook(bus, 0x123))
++
++  def test_intent_survives_diagnostic_and_stock_modes_but_waits_for_can(self):
++    self.select_lateral()
++    for mode in (CarParams.SafetyModel.elm327, CarParams.SafetyModel.noOutput, CarParams.SafetyModel.hyundaiCanfd):
++      self.mode(mode)
++      self.assertFalse(self.safety.get_controls_allowed())
++      self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++      self.fresh(lda=True)
++    self.assertTrue(self.safety.get_controls_allowed())
++    self.assertTrue(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_off_while_stock_prevents_resume(self):
++    self.select_lateral()
++    self.rx("CRUISE_BUTTONS", {"LDA_BTN": False})
++    self.rx("CRUISE_BUTTONS", {"LDA_BTN": True})
++    self.mode(CarParams.SafetyModel.hyundaiCanfd)
++    self.fresh(lda=True)
++    self.assertFalse(self.safety.get_controls_allowed())
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_brake_latch_survives_stock_restoration(self):
++    self.select_combined()
++    self.fresh(brake=True)
++    self.mode(CarParams.SafetyModel.hyundaiCanfd)
++    self.fresh(brake=False)
++    self.assertTrue(self.safety.safety_tx_hook(self.lfa()))
++    self.assertFalse(self.safety.safety_tx_hook(self.scc()))
++    self.rx("CRUISE_BUTTONS", {"CRUISE_BUTTONS": 2})
++    self.rx("CRUISE_BUTTONS")
++    self.assertTrue(self.safety.safety_tx_hook(self.scc()))
++
++  def test_silent_or_plain_nooutput_clears_intent(self):
++    for mode in (CarParams.SafetyModel.silent, CarParams.SafetyModel.noOutput):
++      self.setUp()
++      self.select_lateral()
++      self.safety.set_safety_hooks(mode, 0)
++      self.mode(CarParams.SafetyModel.hyundaiCanfd)
++      self.fresh()
++      self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_bad_can_cancels_session_and_cannot_be_healed_by_fresh_input(self):
++    self.select_lateral()
++    packet = self.packer.make_can_msg_safety("MDPS", 0, {"COUNTER": 2})
++    packet[0].data[0] ^= 1
++    self.assertFalse(self.safety.safety_rx_hook(packet))
++    self.mode(CarParams.SafetyModel.hyundaiCanfd)
++    self.fresh(lda=True)
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_cancel_during_standby_cancels_session(self):
++    self.select_lateral()
++    self.rx("CRUISE_BUTTONS", {"CRUISE_BUTTONS": 4})
++    self.mode(CarParams.SafetyModel.hyundaiCanfd)
++    self.fresh(lda=True)
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_held_buttons_at_cold_start_do_not_authorize(self):
++    for lda, cruise in ((True, 0), (False, 2)):
++      self.setUp()
++      self.fresh(lda=lda, cruise=cruise)
++      self.fresh()
++      self.mode(CarParams.SafetyModel.hyundaiCanfd)
++      self.fresh()
++      self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_stale_can_blocks_active_transmission(self):
++    self.select_lateral()
++    self.mode(CarParams.SafetyModel.hyundaiCanfd)
++    self.fresh(lda=True)
++    self.assertTrue(self.safety.safety_tx_hook(self.lfa()))
++    self.safety.set_timer(100001)
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++    self.safety.set_timer(1000001)
++    self.safety.safety_tick_current_safety_config()
++    self.fresh(lda=True)
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++
++if __name__ == "__main__":
++  unittest.main()

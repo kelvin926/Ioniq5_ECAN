@@ -35,6 +35,12 @@ constexpr auto kTesterPresentPeriod = std::chrono::milliseconds(800);
 constexpr auto kStockSccTimeout = std::chrono::milliseconds(500);
 constexpr double kDisableMaximumSpeedMps = 0.5 / 3.6;
 
+struct SafetyTransition {
+  explicit SafetyTransition(std::atomic<uint64_t>& value) : epoch(value) { epoch.fetch_add(1U); }
+  ~SafetyTransition() { epoch.fetch_add(1U); }
+  std::atomic<uint64_t>& epoch;
+};
+
 bool valid_can_payload_size(uint8_t size) {
   return std::find(kCanPayloadSizes.begin(), kCanPayloadSizes.end(), size) !=
          kCanPayloadSizes.end();
@@ -122,6 +128,8 @@ Ioniq5EcanNode::Ioniq5EcanNode(ros::NodeHandle node_handle, ros::NodeHandle priv
 
 Ioniq5EcanNode::~Ioniq5EcanNode() {
   auto_arm_inhibited_ = true;
+  preserve_command_session_ = false;
+  command_gap_resume_qualified_ = false;
   requested_arm_ = false;
   arm_request_generation_.fetch_add(1U);
   if (panda_ && panda_->connected()) {
@@ -222,6 +230,8 @@ void Ioniq5EcanNode::load_configuration() {
 
   safety_config_.allow_actuation = parameter<bool>("safety/allow_actuation", false);
   safety_config_.allow_longitudinal = parameter<bool>("safety/allow_longitudinal", false);
+  safety_config_.resume_on_command_return =
+    parameter<bool>("safety/resume_on_command_return", false);
   safety_config_.lateral_button_toggle = parameter<bool>("safety/lateral_button_toggle", true);
   safety_config_.longitudinal_button_toggle =
     parameter<bool>("safety/longitudinal_button_toggle", true);
@@ -242,6 +252,10 @@ void Ioniq5EcanNode::load_configuration() {
                                            : PandaUsb::kIoniq5Hda1PassiveParam;
   if (alternate_buttons_) {
     safety_config_.required_safety_param |= PandaUsb::kHyundaiAlternateButtons;
+  }
+  if (safety_config_.allow_actuation && safety_config_.resume_on_command_return) {
+    safety_config_.required_safety_param |= PandaUsb::kHyundaiCommandSession;
+    panda_config_.command_session_param = safety_config_.required_safety_param;
   }
   safety_config_.required_harness_status = 1U;
   safety_config_.command_timeout =
@@ -378,6 +392,8 @@ bool Ioniq5EcanNode::arm_callback(std_srvs::SetBool::Request& request,
     return true;
   }
   auto_arm_inhibited_ = !request.data;
+  command_gap_resume_qualified_ = false;
+  preserve_command_session_ = false;
   if (request.data) recovery_rearm_required_ = false;
   requested_arm_ = request.data;
   arm_request_generation_.fetch_add(1U);
@@ -422,10 +438,13 @@ void Ioniq5EcanNode::receive_loop() {
       }
       const auto now = SteadyClock::now();
       if (now >= next_health) {
+        const uint64_t health_epoch = safety_transition_epoch_.load();
         PandaHealth health = panda_->health();
         health.last_rejected_address = last_rejected_address_.load();
         std::lock_guard<std::mutex> lock(health_mutex_);
-        latest_health_ = health;
+        if (health_epoch % 2U == 0U && health_epoch == safety_transition_epoch_.load()) {
+          latest_health_ = health;
+        }
         next_health = now + health_period;
       }
     } catch (const std::exception& error) {
@@ -488,11 +507,20 @@ void Ioniq5EcanNode::control_loop() {
       !safety_config_.allow_longitudinal ||
       (vehicle.standstill && vehicle.speed_mps <= kDisableMaximumSpeedMps && vehicle.gear == 5U &&
        copy_recent_scc_template(now, unused_stock_scc));
+    const bool listener_ready = safety_config_.resume_on_command_return &&
+                                panda_health.ignition_on &&
+                                panda_health.safety_mode == PandaUsb::kSafetyNoOutput &&
+                                panda_health.safety_param == safety_config_.required_safety_param &&
+                                panda_health.command_session_active &&
+                                panda_health.command_session_ready &&
+                                !panda_health.command_session_blocked;
     const bool auto_arm_ready = auto_arm_on_command_ && !auto_arm_inhibited_.load() &&
                                 !recovery_pending_.load() &&
-                                safety_config_.allow_actuation && command_fresh && command.valid &&
-                                command.enable && vehicle.valid && !vehicle.eps_fault &&
-                                panda_health.connected && longitudinal_preflight_ready;
+                                safety_config_.allow_actuation && vehicle.valid && !vehicle.eps_fault &&
+                                panda_health.connected &&
+                                (listener_ready || (command_fresh && command.valid && command.enable &&
+                                                     longitudinal_preflight_ready &&
+                                                     !safety_config_.resume_on_command_return));
     if (auto_arm_ready && !requested_arm_.load()) {
       requested_arm_ = true;
       arm_request_generation_.fetch_add(1U);
@@ -505,7 +533,26 @@ void Ioniq5EcanNode::control_loop() {
       if (supervisor_->request_arm(requested)) {
         applied_arm_ = requested;
         try {
-          if (requested && panda_->connected()) enter_vehicle_safety_mode(vehicle);
+          if (requested && safety_config_.resume_on_command_return &&
+              !panda_health.command_session_active) {
+            std::lock_guard<std::mutex> actuation_lock(actuation_mutex_);
+            SafetyTransition transition(safety_transition_epoch_);
+            panda_->set_safety_mode(PandaUsb::kSafetyNoOutput,
+                                    safety_config_.required_safety_param);
+            {
+              std::lock_guard<std::mutex> lock(health_mutex_);
+              latest_health_ = panda_->health();
+            }
+            previous = SteadyClock::now();
+            next = previous + period;
+            continue;
+          }
+          if (requested && panda_->connected() && !safety_config_.resume_on_command_return) {
+            enter_vehicle_safety_mode(vehicle);
+            previous = SteadyClock::now();
+            next = previous + period;
+            continue;  // Never use a command sampled before a blocking ECU transition.
+          }
           if (!requested && panda_->connected()) {
             if (recovery_pending_.load() && !vehicle_safety_mode_.load()) {
               retry_no_output_recovery(SteadyClock::now());
@@ -528,16 +575,91 @@ void Ioniq5EcanNode::control_loop() {
 
     SafetyDecision decision = supervisor_->update(now, vehicle, panda_health, command);
 
+    if (safety_config_.resume_on_command_return) {
+      if (!decision.longitudinal_armed && panda_health.longitudinal_selected) {
+        try {
+          std::lock_guard<std::mutex> actuation_lock(actuation_mutex_);
+          panda_->drop_longitudinal_permission();  // Can only remove, never grant, permission.
+        } catch (const std::exception& error) {
+          ROS_ERROR("failed to latch Panda longitudinal OFF: %s", error.what());
+          request_internal_disarm();
+          continue;
+        }
+      }
+      if (!decision.lateral_armed && !decision.longitudinal_armed) {
+        command_gap_resume_qualified_ = false;  // Physical OFF revokes moving-resume eligibility.
+      }
+      if (decision.waiting_for_command && vehicle_safety_mode_.load()) {
+        command_gap_resume_qualified_ = previous_state == ControlState::Active &&
+                                       (decision.lateral_armed || decision.longitudinal_armed);
+        preserve_command_session_ = true;
+        adapter_->reset(vehicle);
+        try {
+          enter_no_output_mode();
+        } catch (const std::exception& error) {
+          ROS_ERROR("command-gap stock restoration failed: %s", error.what());
+          request_internal_disarm();
+        }
+        {
+          std::lock_guard<std::mutex> lock(decision_mutex_);
+          latest_decision_ = decision;
+        }
+        previous_state = decision.state;
+        previous = SteadyClock::now();
+        next = previous + period;
+        continue;
+      }
+
+      const bool moving_resume = command_gap_resume_qualified_.load() &&
+                                 panda_health.command_session_active &&
+                                 panda_health.command_session_ready &&
+                                 !panda_health.command_session_blocked;
+      const bool takeover_ready = applied_arm_.load() && requested_arm_.load() &&
+                                  panda_health.safety_mode == PandaUsb::kSafetyNoOutput &&
+                                  panda_health.safety_param == safety_config_.required_safety_param &&
+                                  !vehicle_safety_mode_.load() && !recovery_pending_.load() &&
+                                  decision.state == ControlState::Armed &&
+                                  (decision.lateral_armed || decision.longitudinal_armed) &&
+                                  command_fresh && command.valid && command.enable &&
+                                  panda_health.command_session_ready &&
+                                  (vehicle.standstill || moving_resume);
+      if (takeover_ready) {
+        try {
+          enter_vehicle_safety_mode(vehicle, moving_resume);
+          adapter_->reset(parser_->snapshot(SteadyClock::now(), vehicle_state_timeout_));
+          {
+            std::lock_guard<std::mutex> lock(health_mutex_);
+            latest_health_ = panda_->health();
+          }
+        } catch (const std::exception& error) {
+          ROS_ERROR("verified ECU takeover failed: %s", error.what());
+          request_internal_disarm();
+        }
+        previous = SteadyClock::now();
+        next = previous + period;
+        continue;  // Resample latest commands and CAN after diagnostic/quiet-period waits.
+      }
+    }
+
     if (!supervisor_->arm_requested() && applied_arm_.load()) {
       // The cleanup generation is handled here; do not implicitly acknowledge a latched fault.
       // Preserve any newer operator request that arrives during cleanup.
-      applied_arm_generation = request_internal_disarm();
+      const bool inactive_command_wait = decision.state == ControlState::Passive && !command_fresh;
+      applied_arm_generation = request_internal_disarm(!inactive_command_wait);
       applied_arm_ = false;
       try {
         if (panda_->connected()) enter_no_output_mode();
       } catch (const std::exception& error) {
         ROS_ERROR("failed to enter NO_OUTPUT: %s", error.what());
       }
+      previous = SteadyClock::now();
+      next = previous + period;
+      previous_state = decision.state;
+      {
+        std::lock_guard<std::mutex> lock(decision_mutex_);
+        latest_decision_ = decision;
+      }
+      continue;  // No stale output or long rate-integration step after restoration.
     }
 
     ControlOutput output;
@@ -558,7 +680,8 @@ void Ioniq5EcanNode::control_loop() {
     }
     try {
       std::lock_guard<std::mutex> actuation_lock(actuation_mutex_);
-      if (vehicle_safety_mode_.load() && panda_->connected()) {
+      if (vehicle_safety_mode_.load() && panda_->connected() &&
+          (!safety_config_.resume_on_command_return || panda_health.command_session_ready)) {
         frames.clear();
         const bool steer_request = output.steering_request;
         frames.push_back(codec_.make_lfa(output.steering_torque, decision.lateral_allowed,
@@ -601,10 +724,12 @@ void Ioniq5EcanNode::control_loop() {
   }
 }
 
-uint64_t Ioniq5EcanNode::request_internal_disarm() {
+uint64_t Ioniq5EcanNode::request_internal_disarm(bool require_operator_rearm) {
+  preserve_command_session_ = false;
+  command_gap_resume_qualified_ = false;
   const bool was_armed = requested_arm_.exchange(false) || applied_arm_.load() ||
                          vehicle_safety_mode_.load();
-  if (was_armed) {
+  if (was_armed && require_operator_rearm) {
     auto_arm_inhibited_ = true;
     recovery_rearm_required_ = true;
   }
@@ -612,8 +737,9 @@ uint64_t Ioniq5EcanNode::request_internal_disarm() {
   return arm_request_generation_.fetch_add(1U) + 1U;
 }
 
-void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle) {
+void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle, bool command_gap_resume) {
   std::lock_guard<std::mutex> actuation_lock(actuation_mutex_);
+  SafetyTransition transition(safety_transition_epoch_);
   if (vehicle_safety_mode_.load()) return;
   if (recovery_pending_.load()) {
     throw std::runtime_error("ECU restoration must finish before rearming");
@@ -621,7 +747,9 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle) 
   if (!vehicle.valid || vehicle.eps_fault) {
     throw std::runtime_error("vehicle state or EPS is not ready for ADAS ECU disable");
   }
-  if (!vehicle.standstill || vehicle.speed_mps > kDisableMaximumSpeedMps) {
+  if ((!vehicle.standstill || vehicle.speed_mps > kDisableMaximumSpeedMps) &&
+      !(command_gap_resume && command_gap_resume_qualified_.load() &&
+        safety_config_.resume_on_command_return)) {
     throw std::runtime_error("ADAS ECUs may only be disabled while the vehicle is stationary");
   }
 
@@ -636,7 +764,9 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle) 
   }
 
   panda_->send_heartbeat(false);
-  panda_->set_safety_mode(PandaUsb::kSafetyElm327, PandaUsb::kElm327EcanParam);
+  panda_->set_safety_mode(PandaUsb::kSafetyElm327,
+    safety_config_.resume_on_command_return ? safety_config_.required_safety_param
+                                          : PandaUsb::kElm327EcanParam);
   disable_ecu("CAMERA", kCameraRequestAddress, kCameraResponseAddress,
               HyundaiCanFdCodec::kLfaAddress, stock_lfa_count_, camera_disabled_,
               last_camera_tester_present_);
@@ -650,11 +780,17 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle) 
 
   codec_.reset_counters();
   if (safety_config_.allow_longitudinal) codec_.set_scc_control_template(stock_scc);
-  const uint16_t param = safety_config_.allow_longitudinal ? PandaUsb::kIoniq5Hda1LongParam
-                                                           : PandaUsb::kIoniq5Hda1PassiveParam;
-  const uint16_t configured_param =
-    alternate_buttons_ ? static_cast<uint16_t>(param | PandaUsb::kHyundaiAlternateButtons) : param;
+  const uint16_t configured_param = safety_config_.required_safety_param;
   panda_->set_safety_mode(PandaUsb::kSafetyHyundaiCanFd, configured_param);
+  if (safety_config_.resume_on_command_return) {
+    const auto deadline = SteadyClock::now() + std::chrono::milliseconds(500);
+    while (!panda_->health().command_session_ready) {
+      if (SteadyClock::now() >= deadline) {
+        throw std::runtime_error("Panda command-session CAN did not become ready after takeover");
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
   if (safety_config_.allow_longitudinal) verify_longitudinal_firmware();
   const PandaHealth configured_health = panda_->health();
   if (configured_health.safety_mode != PandaUsb::kSafetyHyundaiCanFd ||
@@ -668,6 +804,7 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle) 
 
 void Ioniq5EcanNode::enter_no_output_mode() {
   std::lock_guard<std::mutex> actuation_lock(actuation_mutex_);
+  SafetyTransition transition(safety_transition_epoch_);
   vehicle_safety_mode_ = false;
   recovery_pending_ = true;
   recovery_retry_.request(SteadyClock::now());
@@ -687,7 +824,9 @@ void Ioniq5EcanNode::enter_no_output_mode() {
   bool elm_ready = true;
   if (camera_disabled_ || radar_disabled_) {
     try {
-      panda_->set_safety_mode(PandaUsb::kSafetyElm327, PandaUsb::kElm327EcanParam);
+      panda_->set_safety_mode(PandaUsb::kSafetyElm327,
+        preserve_command_session_.load() ? safety_config_.required_safety_param
+                                        : PandaUsb::kElm327EcanParam);
     } catch (const std::exception& error) {
       elm_ready = false;
       record_error("ELM327 restore mode", error);
@@ -713,11 +852,17 @@ void Ioniq5EcanNode::enter_no_output_mode() {
   }
 
   try {
-    panda_->set_safety_mode(PandaUsb::kSafetyNoOutput, 0);
+    const uint16_t standby_param = preserve_command_session_.load()
+                                    ? safety_config_.required_safety_param : 0U;
+    panda_->set_safety_mode(PandaUsb::kSafetyNoOutput, standby_param);
     const PandaHealth health = panda_->health();
-    if (health.safety_mode != PandaUsb::kSafetyNoOutput || health.safety_param != 0U ||
+    if (health.safety_mode != PandaUsb::kSafetyNoOutput || health.safety_param != standby_param ||
         health.controls_allowed) {
       throw std::runtime_error("Panda NO_OUTPUT confirmation failed");
+    }
+    {
+      std::lock_guard<std::mutex> lock(health_mutex_);
+      latest_health_ = health;
     }
   } catch (const std::exception& error) {
     record_error("NO_OUTPUT", error);
@@ -1056,6 +1201,9 @@ void Ioniq5EcanNode::publish_diagnostics(const VehicleStateData& vehicle, const 
     key_value("soft_disable_remaining_ms", decision.soft_disable_remaining_ms));
   status.values.push_back(key_value("panda_connected", panda.connected ? 1 : 0));
   status.values.push_back(key_value("panda_controls_allowed", panda.controls_allowed ? 1 : 0));
+  status.values.push_back(key_value("waiting_for_command", decision.waiting_for_command ? 1 : 0));
+  status.values.push_back(key_value("command_session_ready", panda.command_session_ready ? 1 : 0));
+  status.values.push_back(key_value("command_gap_resume_qualified", command_gap_resume_qualified_.load() ? 1 : 0));
   status.values.push_back(key_value("panda_safety_mode", panda.safety_mode));
   status.values.push_back(key_value("panda_safety_param", panda.safety_param));
   status.values.push_back(key_value("panda_faults", panda.faults));

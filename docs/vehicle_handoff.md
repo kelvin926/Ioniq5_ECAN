@@ -23,7 +23,8 @@
 기본 `unfiltered_input=true`, `use_enable_field=false`입니다. 입력 scale/offset, rate→angle→torque
 변환, torque 제한/변화율, CAN 양자화, 채널 허가와 watchdog은 유지됩니다.
 270 count는 명령 상한이며 MDPS 최대 구동력이 확인된 값은 아닙니다.
-host CANCEL/gas override는 연구장 기본 YAML에서 false입니다. 자세한 단위와 상태 필드는
+host CANCEL/gas override는 연구장 기본 YAML에서 false입니다. I5R1 firmware CANCEL은
+host 설정과 독립적으로 세션을 취소합니다. 자세한 단위와 상태 필드는
 [입력 계약](input_contract.md), 활성화 조건은 [상태와 제한](safety.md)에 있습니다.
 
 초기 takeover는 정차, EPS 정상과 유효한 CAN을 요구합니다. 종방향 프로파일에서는 D와
@@ -38,6 +39,10 @@ host CANCEL/gas override는 연구장 기본 YAML에서 false입니다. 자세�
 - deadline 전에 EPS clear + 최신 유효 command/CAN + Panda 허가: 현재 명령으로 ACTIVE 복귀,
   steering 적분/목표각 초기화, brake/ACC 종방향 래치 보존, raw LFA 우회 차단
 - 3초 만료 또는 CAN/Panda/command hard fault: 전체 disarm, auto rearm 억제, stock ECU 복구
+- I5R1 정상 ACTIVE 입력 단절: 출력 중단/순정 통신 복구, 물리 ON 보존. 복구 완료와
+  새 유효 command/CAN 확인 후 같은 세션에서는 주행 중에도 현재 입력으로 재인계
+- 최초 takeover는 정차. 물리 OFF/CANCEL, CAN/USB/harness/ignition 고장 및 프로세스/장치
+  재시작은 이전 ON 또는 주행 중 재인계 자격을 자동 계승하지 않음
 - ROS stock 복구: radar→camera, valid stock 재개와 Panda NO_OUTPUT 확인, 실패 시 실행 중
   1/2/4/8/16/30초 capped retry, USB 자동 재연결, pending 동안 actuator 출력/rearm 차단
 - hard fault 복구 완료 후: 정상 상태와 정차 조건을 확인하고 `set_armed=false` → `true`,
@@ -137,9 +142,12 @@ ECAN-only 제외 mask의 non-ECAN 두 비트이며 ECAN bus-off/error-warning/er
 고장코드 소거를 재확인한 결과는 아닙니다. 원본은 [panda-post-fuse-20261006.json](evidence/2026-10-06/panda-post-fuse-20261006.json)에
 있습니다. 이전 점화 미감지와 LFA/SCC 미수신 결과는 퓨즈 교체 전의 기록입니다.
 
-native Zig 0.16 C++17 core smoke는 ECU retry와 3초 EPS 복귀 회귀 검사를 통과했습니다.
-전체 ROS Noetic 빌드, raw TX callback bench와 최신 dual-ECU/복귀/복구 실차 결과는
-미확인입니다. [검증 상태와 재현 방법](validation.md)에 정확한 범위가 있습니다.
+이후 Ubuntu 차량 컴퓨터에서 ROS Noetic Release 빌드와 최신 host 67개 test를 통과했습니다.
+사용자가 firmware 수정/flash를 승인하고 하네스를 분리한 뒤 I5R1 앱을 flash했습니다.
+설치 서명/capability, USB-only preflight PASS 및 standby 3개 송신 시도 차단/물리 TX 증가 0을
+확인했습니다. bootstub은 교체하지 않았습니다. [USB-only 기록](evidence/2026-10-06/command-session-usb-20261006.json)에
+앱/후보/patch hash가 있습니다. 최신 dual-ECU/입력 복귀/stock 복구 실차 결과와 ROS publisher
+통합 시험은 미확인입니다. [검증 상태와 재현 방법](validation.md)에 정확한 범위가 있습니다.
 
 ## 2026-08-21~24 실차 이력
 
@@ -206,8 +214,9 @@ ABI 검사 명령은 [Panda firmware](panda_firmware.md)에 있습니다.
 
 ## 다음 확인과 이전 helper 예제
 
-다음 실제 확인은 Ubuntu 20.04에서 관련 ROS 빌드, 설치 firmware revision 확인,
-passive fingerprint, ECU 수명주기/채널 동작, 일시 EPS 및 hard fault 복구입니다.
+ROS Release 빌드와 I5R1 설치 서명/capability 검증은 완료했습니다. 다음 실제 확인은
+차량 재연결 후 read-only/passive fingerprint, ECU 소유권 endpoint, 순정 통신 복구와
+주행 중 입력 복귀, 채널 동작 및 일시 EPS/hard fault 복구입니다.
 한 기록에 commit/local diff/YAML/설치 firmware provenance, CAN address/bus/counter/time,
 gear/brake/pedal/button, Panda health와 diagnostics, disable/restore 로그 및 다른 송신기
 연결 상태를 남깁니다. 정차와 low-speed 조건, 버튼 조작은 현재 코드 및 시험계획을 따릅니다.

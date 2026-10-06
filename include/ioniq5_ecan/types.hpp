@@ -64,6 +64,12 @@ struct VehicleStateData {
 };
 
 struct PandaHealth {
+  bool command_session_active{false};
+  bool ignition_on{false};
+  bool command_session_ready{false};
+  bool command_session_blocked{false};
+  bool lateral_selected{false};
+  bool longitudinal_selected{false};
   bool connected{false};
   bool controls_allowed{false};
   bool heartbeat_lost{false};

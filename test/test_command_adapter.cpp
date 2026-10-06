@@ -172,6 +172,30 @@ TEST(CommandAdapter, UnfilteredModeRejectsInsteadOfClippingUnrepresentableAccele
   EXPECT_THROW(adapter.update(command, vehicle, 0.01, true, true), std::out_of_range);
 }
 
+TEST(CommandAdapter, ButtonOffDoesNotIntegrateAndReengagementStartsAtMeasuredAngle) {
+  using namespace ioniq5_ecan;
+  CommandAdapterConfig config;
+  config.steer_actuator_delay_s = 0.0;
+  CommandAdapter adapter(config);
+  VehicleStateData vehicle;
+  vehicle.steering_angle_deg = 10.0;
+  CommandSample command;
+  command.lateral = 20.0;
+  command.acceleration_mps2 = 0.5;
+  (void)adapter.update(command, vehicle, 0.01, true, true);
+  EXPECT_NEAR(adapter.target_angle_deg(), 10.2, 1e-12);
+
+  vehicle.steering_angle_deg = -5.0;
+  for (int index = 0; index < 100; ++index) {
+    const auto off = adapter.update(command, vehicle, 0.01, false, false);
+    EXPECT_EQ(off.steering_torque, 0);
+    EXPECT_FALSE(off.longitudinal_active);
+    EXPECT_DOUBLE_EQ(adapter.target_angle_deg(), -5.0);
+  }
+  (void)adapter.update(command, vehicle, 0.01, true, true);
+  EXPECT_NEAR(adapter.target_angle_deg(), -4.8, 1e-12);
+}
+
 TEST(CommandSequence, AcceptsWraparoundAndRejectsDuplicates) {
   using ioniq5_ecan::sequence_is_newer;
   EXPECT_TRUE(sequence_is_newer(1U, 0U));

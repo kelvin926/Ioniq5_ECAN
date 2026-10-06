@@ -15,6 +15,7 @@ struct libusb_device_handle;
 namespace ioniq5_ecan {
 
 struct PandaUsbConfig {
+  uint16_t command_session_param{0};
   std::string serial;
   int nominal_bitrate_kbps{500};
   int data_bitrate_kbps{2000};
@@ -40,6 +41,7 @@ class PandaUsb {
   // Repository-local firmware mode: keep only ECAN (logical bus 0 in harness orientation 1),
   // disable Panda forwarding, and leave the other physical CAN transceivers off.
   static constexpr uint16_t kHyundaiEcanOnly = 2048;
+  static constexpr uint16_t kHyundaiCommandSession = 4096;
   static constexpr uint32_t kEcanOnlyIgnoredFaults = (1U << 3U) | (1U << 4U);
   static constexpr uint16_t kIoniq5Hda1PassiveParam =
     kHyundaiEv | kHyundaiSplitButtonArm | kHyundaiEcanOnly;
@@ -62,12 +64,15 @@ class PandaUsb {
   void configure_can();
   void set_safety_mode(uint16_t mode, uint16_t param = 0);
   void send_heartbeat(bool engaged);
+  void drop_longitudinal_permission();
   PandaHealth health();
   std::vector<CanFrame> receive();
   void send(const std::vector<CanFrame>& frames);
   void send(const CanFrame& frame);
 
   static std::vector<uint8_t> pack_frames(const std::vector<CanFrame>& frames);
+  static std::vector<CanFrame> decode_bulk_read(std::vector<uint8_t>& carry,
+    const uint8_t* bytes, std::size_t capacity, int status, int transferred, TimePoint received_at);
   static std::vector<CanFrame> unpack_frames(std::vector<uint8_t>& carry, const uint8_t* bytes,
                                              std::size_t size, TimePoint received_at);
 

@@ -11,6 +11,7 @@ namespace ioniq5_ecan {
 struct SafetyConfig {
   bool allow_actuation{false};
   bool allow_longitudinal{false};
+  bool resume_on_command_return{false};
   // Repeating the currently selected LDA-only or SET-combined mode toggles it off.
   bool lateral_button_toggle{true};
   bool longitudinal_button_toggle{true};
@@ -41,6 +42,7 @@ struct SafetyDecision {
   bool heartbeat_engaged{false};
   std::string reason{"not initialized"};
   uint32_t soft_disable_remaining_ms{0};
+  bool waiting_for_command{false};
 };
 
 class SafetySupervisor {
@@ -64,11 +66,13 @@ class SafetySupervisor {
   bool arm_requested_{false};
   bool lateral_enabled_{false};
   bool longitudinal_enabled_{false};
+  bool longitudinal_latched_off_{false};
   uint64_t last_lane_keep_button_events_{0};
   uint64_t last_set_button_events_{0};
   uint64_t last_cancel_button_events_{0};
   uint32_t last_tx_blocked_{0};
   TimePoint soft_disable_deadline_{};
+  bool waiting_for_command_{false};
   std::string reason_{"waiting for Panda"};
 };
 

@@ -8,6 +8,13 @@
 
 | 시점 | 확인한 범위 | 한계 |
 | --- | --- | --- |
+| 2026-10-06 I5R1 자동 재인계 | Release 빌드, core 50개 + protocol 5개 + USB read 4개 + preflight 8개 모두 통과. 입력 단절/주행 중 복귀, OFF, stale health/brake 래치, CAN/ignition 고장, 대기 중 mode drift 및 USB partial timeout 회귀 | 호스트 67개 unique test. 실제 ROS publisher와 차량 ECU 수명주기 통합 시험은 미실시 |
+| 2026-10-06 I5R1 firmware | 고정 Hyundai CAN-FD 및 custom safety 995개 실행, 117개 skip, 878개 통과. 이 중 command-session custom 9개 전부 통과. Red Panda DEBUG ARM 앱/bootstub 빌드 통과 | bootstub은 후보 빌드만 수행, flash하지 않음. CAN trace를 재현한 safety test는 실제 ECU 수용을 증명하지 않음 |
+| 2026-10-06 USB-only flash/bench | 사용자 확인 후 하네스 분리 상태에서 앱 flash, 서명/기능 응답 재검증. read-only preflight PASS. NO_OUTPUT 7173에서 조향/가속/진단 3개 차단, 물리 TX 증가 [0,0,0], controls_allowed=0 | [기록](evidence/2026-10-06/command-session-usb-20261006.json). 차량 CAN 수신, stock 복구 및 주행 중 재인계 실차 결과는 아님 |
+| 2026-10-06 ROS 입력/버튼 시작 경로 | catkin Release node 빌드, core 42개 + protocol 5개 + preflight unit 7개 통과. 무명령/idle timeout 대기, Panda health 도착 순서와 무관한 OFF, 알려진 OFF in-flight rejection, fault 유지, OFF 중 조향 목표 초기화 회귀 포함 | 호스트 54개 unique test. 실제 CAN 송신, ECU takeover/복구, firmware flash 미실시 |
+| 2026-10-06 실행 단축어 | workspace `ecan` 및 `start_ecan.sh` Bash 구문, `--help`/`--check`, 모의 busy-client 시작 거부, ROS 메시지 조회와 `roslaunch --nodes` 통과 | 노드/ROS master를 실행하지 않음. 실제 Cabana 프로세스는 종료하지 않음 |
+| 2026-10-06 | Ubuntu 20.04/GCC 9.4/ROS Noetic에서 전체 catkin Release 빌드 및 core 36개, Panda protocol 5개, preflight unit test 7개 통과 | 새 작업공간의 호스트 검증, 차량 수신/송신과 firmware flash 미실시 |
+| 2026-10-06 빌드 이후 | Cabana live 로그의 ECAN 8,620개/약 3초, LFA 100 Hz/SCC 50 Hz, 주요 7종 CRC 오류 0, 별도 health 관측 중 TX/overflow 증가 0 확인 | 누적 overflow로 엄격한 preflight는 FAIL; 비-ECAN 오류 유지, actuator/ECU 검증 아님; 이후 Cabana 종료 |
 | 2026-10-06 | native Zig 0.16 C++17 core 및 `core_smoke`, `-Wall -Wextra -Wpedantic -Werror` 통과 | ROS node/USB/ECU 통합 빌드가 아님 |
 | 2026-10-06 | ECU retry deadline/backoff cap, fault latch 및 명시적 재arm core smoke 통과 | 실제 UDS 복구 및 USB fault injection 미실시 |
 | 2026-10-06 | EPS 일시 복귀, 2999/3000 ms 경계, 반복 오류 deadline 유지, 새 오류 창, 정상 종방향 유지, 목표각 초기화, Panda 허가, brake/CANCEL/disarm, hard fault 우선순위, CRC/freshness core smoke 통과 | 실차 MDPS 복귀와 ROS raw callback 미시험 |
@@ -15,8 +22,10 @@
 | 2026-08-21 기록 | 임시 ROS API/message 선언으로 node object compile | 실제 ROS Noetic/catkin 빌드가 아님 |
 | 2026-08-21 기록 | helper 저속 좌우 조향, 직선 약 15 km/h 가속 1회 | 이후 가속 실패 존재, 최신 dual-ECU/ROS 경로 성공 미기록 |
 
-현재 Windows shell에는 `catkin_make`/`rosversion`이 없습니다. 전체 ROS Noetic 빌드와
-최신 firmware 설치 revision, dual-ECU HIL/실차, 실제 일시 EPS 및 hard fault 복구는 미확인입니다.
+이전 Windows 전달 작업에서는 ROS Noetic 빌드를 수행하지 못했으나, 같은 날 차량 컴퓨터의
+`/home/ave/catkin_ws_ioniq5`에서 native 빌드와 package test를 확인했습니다. 최신 I5R1 앱
+설치 서명과 capability는 USB-only로 확인했습니다. dual-ECU HIL/실차, 주행 중 입력 복귀,
+실제 일시 EPS 및 hard fault 복구는 여전히 미확인입니다.
 
 ## 변경에 맞는 host 확인
 
@@ -40,8 +49,8 @@ Panda patch 변경은 고정 opendbc의 custom safety test와 firmware 빌드가
 
 ## Panda bench 및 passive 수신
 
-- USB-only `panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only`의 실제 PASS 결과 기록
-- firmware build/flash hash와 세 patch hash를 구분하여 기록, marker/packet hash만으로 설치 revision 단정 금지
+- USB-only `panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only --require-command-session` PASS 기록 완료
+- firmware build/flash hash와 네 patch hash는 위 기록에 분리 보관, marker/packet hash만으로 설치 revision 단정 금지
 - `NO_OUTPUT` TX 차단, loopback counter/CRC/목표 주기 및 raw metadata 보존 확인
 - 차량 연결 시 `--require-harness`로 `harness_status=1`, ignition과 ECAN RX 증가 확인
 - passive YAML로 ECAN 주소 및 실제 버튼 `0x1CF`/`0x1AA` 확인 후 `alternate_buttons` 선택
@@ -57,7 +66,9 @@ passive ROS 노드는 Panda 설정을 수행합니다. control write 없는 pref
 - LDA lateral-only 및 SET combined 토글, brake 중 lateral 유지/longitudinal latch-off와 SET 재개
 - ACTIVE 중 MDPS 보조 오류에서 LFA 0/비활성, heartbeat/tester-present/소유권 유지와 정상 SCC 지속
 - 유효한 clear 샘플이 3초 전에 들어오면 현재 명령으로 복귀, CRC 불량 clear 샘플은 무시
-- 3초 만료/늦은 clear/CAN stale/Panda 장애/명령 단절에서 hard fault와 자동 재arm 억제
+- 3초 만료/늦은 clear/CAN stale/Panda 장애 또는 EPS pause 중 명령 단절은 hard fault와 자동 재arm 억제
+- 정상 ACTIVE의 입력 단절은 출력 해제/stock 복구, 물리 ON 유지, 복구 완료 후 새 입력으로 주행 중 재인계
+- 입력 대기 중 물리 OFF/CANCEL, hard fault, 프로세스/USB/Panda 재시작은 이전 ON을 자동 계승하지 않음
 - EPS 복귀가 brake/ACC 종방향 래치를 해제하지 않는지 확인
 - raw TX는 종방향 허가 gate를 따르고, 일시 EPS 대기 중 raw LFA는 차단되는지 확인
 - hard fault 복구의 radar→camera stock 재개, 유실 ACK와 valid stock 구분, Panda NO_OUTPUT 확인
@@ -67,8 +78,8 @@ passive ROS 노드는 Panda 설정을 수행합니다. control write 없는 pref
 
 폐쇄 시험장 및 기존 차량 시험계획에서 lateral-only와 combined 동작, 가속/감속/정지,
 운전자 개입, timeout과 복구를 확인합니다. 실제로 켠 YAML 옵션을 함께 기록합니다.
-기본 연구장 YAML은 host CANCEL/gas override가 false이므로 해당 옵션을 켜지 않은 시험에서
-그 동작을 기대하면 안 됩니다. 순정 AEB 유지 여부도 확인되지 않았습니다.
+기본 연구장 YAML은 host CANCEL/gas override가 false입니다. I5R1 firmware CANCEL은 이와
+독립적으로 세션을 취소하며, gas override는 자동 추가하지 않았습니다. 순정 AEB 유지 여부도 확인되지 않았습니다.
 
 각 결과에는 software commit과 local diff, YAML, 실제 설치 firmware hash/provenance,
 harness/ignition, CAN trace, Panda health, 채널 상태 및 diagnostics를 보관합니다.

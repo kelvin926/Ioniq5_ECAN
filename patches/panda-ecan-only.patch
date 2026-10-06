@@ -1,5 +1,5 @@
 diff --git a/board/main.c b/board/main.c
-index 1e624459..a046be58 100644
+index f08953d..33b90a2 100644
 --- a/board/main.c
 +++ b/board/main.c
 @@ -40,6 +40,16 @@ void debug_ring_callback(uart_ring *ring) {
@@ -34,8 +34,44 @@ index 1e624459..a046be58 100644
  }
  
  bool is_car_safety_mode(uint16_t mode) {
+@@ -201,6 +219,7 @@ static void tick_handler(void) {
+       if (controls_allowed && !heartbeat_engaged) {
+         heartbeat_engaged_mismatches += 1U;
+         if (heartbeat_engaged_mismatches >= 3U) {
++          ioniq5_session_abort();
+           controls_allowed = false;
+         }
+       } else {
+diff --git a/board/main_comms.h b/board/main_comms.h
+index 42f4265..43b0de2 100644
+--- a/board/main_comms.h
++++ b/board/main_comms.h
+@@ -293,6 +293,23 @@ int comms_control_handler(ControlPacket_t *req, uint8_t *resp) {
+         print("Clearing CAN CAN ring buffer failed: wrong bus number\n");
+       }
+       break;
++    // **** 0xb7: Repository-local volatile physical-button session status, read-only.
++    case 0xb7: {
++      const uint32_t session[2] = {0x49355231U, ioniq5_session_status()};
++      (void)memcpy(resp, session, sizeof(session));
++      resp_len = sizeof(session);
++      break;
++    }
++
++    // **** 0xb8: Permission-reducing host latch for ACC faults/brake/rejected SCC.
++    case 0xb8:
++      if (req->param1 == 1U && ioniq5_session_profile != 0U) {
++        ioniq5_session_longitudinal = false;
++        hyundai_canfd_longitudinal_controls_allowed = false;
++        ioniq5_session_enforce(true);
++      }
++      break;
++
+     // **** 0xf3: Heartbeat. Resets heartbeat counter.
+     case 0xf3:
+       {
 diff --git a/board/sys/power_saving.h b/board/sys/power_saving.h
-index c0c82212..c3e76dc0 100644
+index 791353c..40c060e 100644
 --- a/board/sys/power_saving.h
 +++ b/board/sys/power_saving.h
 @@ -14,7 +14,12 @@ void enable_can_transceivers(bool enabled) {

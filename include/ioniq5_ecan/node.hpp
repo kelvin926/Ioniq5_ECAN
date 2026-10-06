@@ -50,8 +50,8 @@ class Ioniq5EcanNode {
                            const SafetyDecision& decision);
   void apply_realtime_settings(const char* name, int priority, int cpu);
   void load_configuration();
-  uint64_t request_internal_disarm();
-  void enter_vehicle_safety_mode(const VehicleStateData& vehicle);
+  uint64_t request_internal_disarm(bool require_operator_rearm = true);
+  void enter_vehicle_safety_mode(const VehicleStateData& vehicle, bool command_gap_resume = false);
   void enter_no_output_mode();
   void retry_no_output_recovery(TimePoint now);
   void verify_longitudinal_firmware();
@@ -111,6 +111,9 @@ class Ioniq5EcanNode {
   std::atomic<uint64_t> recovery_attempts_{0};
   std::atomic<uint64_t> arm_request_generation_{0};
   std::atomic<bool> vehicle_safety_mode_{false};
+  std::atomic<bool> preserve_command_session_{false};
+  std::atomic<bool> command_gap_resume_qualified_{false};
+  std::atomic<uint64_t> safety_transition_epoch_{0};
   std::atomic<uint64_t> raw_can_rx_count_{0};
   std::atomic<uint64_t> raw_can_tx_count_{0};
   std::atomic<uint64_t> raw_can_tx_drop_count_{0};

@@ -35,17 +35,26 @@ Hyundai K의 정상 `harness_status=1`에서 physical CAN1은 Panda logical bus 
 ECAN-only firmware는 나머지 transceiver와 forwarding을 비활성화합니다.
 `camera_bus=2` 설정은 남아 있지만 이 차량의 parser와 제어에 사용하지 않습니다.
 
-초기 takeover는 유효한 CAN, EPS 정상 상태와 정차를 요구합니다. 종방향을 켠 프로파일은
+입력 구독은 대기/OFF/USB 재연결 중에도 유지합니다. I5R1 기본 프로파일은 firmware가
+NO_OUTPUT에서도 물리 버튼 선택을 검증하며, 최신 입력과 ON이 모두 있어야 첫 takeover를
+준비합니다. 초기 takeover는 유효한 CAN, EPS 정상 상태와 정차를 요구합니다. 종방향을 켠 프로파일은
 D와 최근 순정 SCC template도 요구합니다. camera `0x730/0x738`의 stock LFA `0x12A`를
 UDS로 멈추고 quiet를 확인합니다. 종방향이면 radar `0x7D0/0x7D8`의 stock SCC `0x1A0`도
 멈추고 확인한 뒤 Hyundai safety mode로 전환합니다. SCC는 마지막 순정 payload에서
 소유 신호와 counter/CRC만 덮어써 미확인 비트를 보존합니다.
 
 물리 LDA 상승 에지는 조향 전용, SET release는 조향과 종방향 통합 모드를 선택/토글합니다.
-host와 opt-in firmware가 채널을 각각 추적합니다. brake는 종방향만 래치 해제하고
+I5R1에서는 firmware의 volatile 버튼 선택을 host가 사용합니다. brake는 종방향만 래치 해제하고
 횡방향을 유지합니다. firmware 전역 `controls_allowed`와 채널 허가는 같은 개념이 아닙니다.
 
-## 두 복구 경로
+## 세 복귀/복구 경로
+
+정상 ACTIVE에서 publisher 입력만 250 ms 끊기면 actuator 출력과 적분을 중단하고
+radar→camera 순정 통신 복구/NO_OUTPUT으로 돌아갑니다. 같은 I5R1 프로파일의 진단 및
+무출력 모드 전환 동안 ON 선택은 보존됩니다. 이전 ACTIVE 자격, 정상 CAN/ignition,
+완료된 stock 복구와 새 command를 확인하면 같은 세션은 주행 중에도 재인계합니다.
+첫 takeover의 정차 조건을 전역으로 없애는 기능이 아닙니다. OFF/CANCEL/hard fault 또는
+프로세스/USB/Panda 재시작은 이 예외를 취소합니다. 이전 command/dt와 조향 목표는 재사용하지 않습니다.
 
 활성 중 일시 MDPS LKA 보조 오류는 `SOFT_DISABLING`으로 전환합니다. 최초 오류부터
 고정 3초 동안 LFA를 0/비활성으로 내리고 arm, heartbeat, ECU 소유권을 유지합니다.
@@ -53,7 +62,7 @@ host와 opt-in firmware가 채널을 각각 추적합니다. brake는 종방향�
 최신 명령/CAN 및 Panda 허가가 정상이면 `ACTIVE`로 복귀합니다. 횡방향 적분과 목표각은
 실측각으로 초기화하며 raw LFA도 일시 정지를 우회할 수 없습니다.
 
-3초 만료나 CAN/Panda/command hard fault는 전체 disarm과 순정 ECU 복구로 전환합니다.
+3초 만료나 CAN/Panda hard fault, EPS pause 중 command 단절은 전체 disarm과 순정 ECU 복구로 전환합니다.
 radar→camera 순서로 유효한 stock frame 재개를 확인하고 Panda `NO_OUTPUT`을 확인합니다.
 실패한 복구는 즉시 첫 시도 후 1, 2, 4, 8, 16, 최대 30초 간격으로 재시도합니다.
 USB 연결은 별도 재연결 루프를 사용합니다. 복구 중 재arm과 actuator 출력은 차단하며,
@@ -66,7 +75,9 @@ USB 연결은 별도 재연결 루프를 사용합니다. 복구 중 재arm과 a
 ## 스레드와 입력 경계
 
 ROS command callback은 mutex로 최신 값 하나를 교환합니다. CAN RX와 제어 루프는 별도
-스레드이며 raw RX는 receive thread에서 publish합니다. raw TX는 actuation mutex로
+스레드이며 raw RX는 receive thread에서 publish합니다. safety 전환 epoch로 오래된 health
+snapshot이 mode 전환 후 상태를 덮어쓰지 못하게 합니다. USB timeout에 부분 수신 bytes가
+있으면 packet carry에 보존합니다. raw TX는 actuation mutex로
 제어/복구 전환과 직렬화하고 Panda write mutex로 전송합니다. 별도 100 Hz 송신 queue는
 추가하지 않습니다.
 
@@ -77,7 +88,8 @@ UDS takeover/restore는 control thread에서 동기 실행하므로 제어 주�
 기본 입력은 steering rate를 목표각으로 적분한 뒤 Carrot Ioniq 5 토크 제어기로 변환합니다.
 `unfiltered_input=true`는 host 입력 clamp/평활화를 생략하지만 토크 변환과 Panda/CAN
 경계는 유지합니다. native angle 제어는 구현하지 않았습니다. 입력 변경은 메시지,
-callback, adapter 경계에서 수용하며 최종 상위 계약은 아직 미정입니다.
+callback, adapter 경계에서 수용합니다. 합의된 상위 계약은 핸들 조향각속도 deg/s와
+종방향 가속도 m/s²이며, 실제 부호/발행 주기와 차량 추종 검증은 남아 있습니다.
 
 상세 동작은 [입력 계약](input_contract.md), [상태 및 제한](safety.md),
 [raw CAN](raw_can.md), [주기와 측정](latency.md)을 참고하십시오.

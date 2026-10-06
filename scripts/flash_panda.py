@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import re
+import struct
 import time
 from pathlib import Path
 
@@ -78,6 +79,9 @@ def main() -> int:
         if panda.get_type() != Panda.HW_TYPE_RED_PANDA:
             raise RuntimeError("selected device is not a Red Panda")
         if not panda.bootstub:
+            health = panda.health()
+            if health["car_harness_status"] or health["ignition_line"] or health["ignition_can"]:
+                raise RuntimeError("disconnect Panda from the vehicle harness; flash with USB power only")
             # Panda.reconnect() intentionally does not claim USB interface 0. That is fine on
             # Linux, but Windows WinUSB needs a fresh claimed handle before EP2 bulk writes.
             panda.reset(enter_bootstub=True, reconnect=False)
@@ -106,6 +110,9 @@ def main() -> int:
             raise RuntimeError(
                 f"post-flash verification failed: device version is {firmware_version!r}"
             )
+        session = bytes(panda._handle.controlRead(Panda.REQUEST_IN, 0xB7, 0, 0, 8))
+        if len(session) != 8 or struct.unpack("<II", session)[0] != 0x49355231:
+            raise RuntimeError("post-flash I5R1 command-session capability verification failed")
     finally:
         panda.close()
 

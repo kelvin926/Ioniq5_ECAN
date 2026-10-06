@@ -13,6 +13,10 @@ LDA/SET 분리 arm과 forwarding 차단은 upstream 동작이 아니라
 [`patches/opendbc-hyundai-canfd-split-arm.patch`](../patches/opendbc-hyundai-canfd-split-arm.patch)의
 opt-in 확장입니다. 비-ECAN transceiver 비활성화와 하네스 방향 gate는
 [`patches/panda-ecan-only.patch`](../patches/panda-ecan-only.patch)에 있습니다.
+I5R1의 NO_OUTPUT/ELM/Hyundai 전환 중 버튼 선택 보존 및 새 CAN 검증은
+[`patches/opendbc-command-session.patch`](../patches/opendbc-command-session.patch)의 추가
+opt-in 확장입니다. Panda patch의 `0xB7` capability/상태 조회와 `0xB8` 허가 감소 요청도
+upstream ABI 확장입니다. marker 문자열만으로 이 확장의 설치를 식별하지 않습니다.
 
 차량 전제는 opendbc의 Ioniq 5 platform entry와 CAN-FD fingerprint logic을 따릅니다.
 
@@ -89,7 +93,9 @@ Panda wrapper의 재연결 및 시작 시 ECU disable 재시도는 운행 중 EC
 조사한 Hyundai 경로에서는 일반적인 주행 중 ECU reset/stock restore/rearm 상태기계를
 찾지 못했습니다. 로컬의 pending camera/radar 복구, valid stock 확인, NO_OUTPUT 확인과
 명시적 재arm은 이 저장소에서 구현한 기능입니다. 일시 MDPS 보조 오류의 고정 3초
-ACTIVE 복귀만 위 상태기계를 참고했습니다.
+ACTIVE 복귀는 위 상태기계를 참고했습니다. 이후 추가한 정상 publisher 단절의 stock 복구 및
+같은 ON 세션 주행 중 재인계는 I5R1 로컬 확장입니다. 재부팅/USB 장애 후 이전 ON을
+무조건 자동 계승하는 동작으로 해석하면 안 됩니다.
 
 비교 snapshot에는 angle-control/LFA_ALT 경로도 있으나 이 연구차 HDA1의 지원 증거는
 아닙니다. 해당 fork의 safety 수정도 로컬의 고정 Panda hook에 이식하지 않았습니다.

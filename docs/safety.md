@@ -7,7 +7,7 @@
 | --- | --- | --- |
 | `DISCONNECTED` | 연결/health 없음 | 없음 |
 | `PASSIVE` | `NO_OUTPUT`, 순정 camera 회로 물리 연결 | 없음 |
-| `ARMED` | `HYUNDAI_CANFD`, camera/radar 통신 비활성, forwarding 차단 | 비활성 LFA와 선택적 비활성 SCC를 정주기로 대체 |
+| `ARMED` | takeover 전에는 `NO_OUTPUT`, 완료 후 `HYUNDAI_CANFD`/순정 송신 차단 | takeover 전 없음, 완료 후 비활성 LFA/SCC를 정주기로 대체 |
 | `ACTIVE` | 동일 safety hook, `controls_allowed` 필요 | arm된 채널의 bounded LFA 및/또는 SCC |
 | `SOFT_DISABLING` | safety mode와 ECU 소유권 유지, 3초 복귀 대기 | 비활성 LFA, 허가된 정상 종방향 SCC 유지 |
 | `FAULT` | 즉시 arm 해제, 순정 ECU 복구와 `NO_OUTPUT` 확인 | actuator 명령 없음, 복구 진단 통신 가능 |
@@ -20,6 +20,7 @@ ARMED에서 비활성 프레임을 계속 보내는 이유는 UDS로 순정 송�
 - safety model `HYUNDAI_CANFD = 28`
 - Ioniq 5 HDA1 EV + split-button + ECAN-only lateral param `1 | 1024 | 2048 = 3073`
 - longitudinal param `1 | 4 | 1024 | 2048 = 3077` (DEBUG firmware만 LONG 적용)
+- I5R1 command-session opt-in은 `4096` 추가: lateral `7169`, combined `7173`
 - alt-buttons 차량은 위 param에 `32` 추가
 - steering max 270 count
 - steering rate up/down 2/3 count per 10 ms
@@ -42,9 +43,11 @@ angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니
 
 - brake: 횡방향 유지, 종방향만 래치 해제; release만으로 재개하지 않고 다음 SET 필요
 - ACC fault 또는 SCC/FCA TX rejection: 종방향만 래치 해제
-- LFA/알 수 없는 TX rejection: 전체 FAULT
-- `disengage_on_cancel`이 true일 때 CANCEL 전체 해제
-- command timeout
+- LFA/알 수 없는 TX rejection: 전체 FAULT. 단, 같은 버튼 OFF 처리 주기의 알려진
+  actuator frame(0x12A/0x1A0/0x160) rejection은 양 채널 OFF를 유지하는 정상 해제로 처리
+- `disengage_on_cancel`이 true일 때 host CANCEL 전체 해제; I5R1 firmware CANCEL은 host 설정과 독립적으로 세션 취소
+- I5R1 프로파일의 정상 command timeout: 무출력/순정 복구 대기, 버튼 선택 유지
+- I5R1 비활성 프로파일 또는 EPS soft-disable 중 command timeout: 기존 FAULT/재승인
 - Panda health timeout/USB disconnect
 - critical vehicle CAN timeout 또는 checksum/counter에 따른 Panda RX invalid
 - bus-off/error-passive
@@ -70,8 +73,9 @@ Panda RX counter 검사와 구분합니다.
 상태 이름은 `SOFT_DISABLING`, 수치 값은 `5`이며 기존 `0..4` 값은 유지됩니다.
 `/diagnostics`에 EPS 오류와 `soft_disable_remaining_ms`를 게시합니다.
 
-`1024`는 이 저장소의 opt-in split-button 확장입니다. firmware와 host가 각각 횡/종방향
-arm 상태를 같은 버튼 edge로 추적합니다. LDA 상승 에지는 조향 전용 모드를, SET release는
+`1024`는 이 저장소의 opt-in split-button 확장입니다. 기존 프로파일은 firmware와 host가
+각각 버튼 edge를 추적합니다. I5R1은 firmware의 물리 선택이 authoritative하며 host는
+그 상태와 종방향 brake/ACC latch를 사용합니다. LDA 상승 에지는 조향 전용 모드를, SET release는
 조향+종방향 모드를 토글합니다. brake는 Panda의 횡방향 `controls_allowed`를 유지한 채
 종방향 허가만 지웁니다. upstream 그대로의 firmware는 이 채널 분리를 모르므로 요구한
 브레이크 동작을 보장하지 않습니다.
@@ -81,12 +85,20 @@ forwarding을 모두 차단합니다. host는 의도적으로 꺼진 physical CA
 fault bit만 무시하고, ECAN physical CAN1과 나머지 Panda fault는 계속 FAULT로 처리합니다.
 
 초기 takeover는 정차와 EPS 정상/유효 CAN을 요구합니다. 종방향을 켠 프로파일은 D와 최근
-순정 SCC template도 요구합니다. 이 조건과 ECU quiet 확인을 만족하면 첫 최신 명령이
-Panda를 HYUNDAI_CANFD 대기 상태로 만듭니다. 물리 LDA
+순정 SCC template도 요구합니다. 기본 I5R1 프로파일에서는 이 조건과 ECU quiet 확인,
+최신 명령 및 물리 ON 선택이 함께 있어야 첫 takeover를 수행합니다. 물리 LDA
 버튼은 조향 전용 모드를, `SET` release는 조향+종방향과 raw TX를 ON/OFF 토글합니다.
 LDA를 누르면 종방향은 항상 꺼지고, SET을 누르면 조향이 항상 함께 켜집니다.
+선택 ON/OFF와 Panda 전역 `controls_allowed`는 구분되며 health 도착 순서로 허가를 새로 만들지 않습니다.
 `/ioniq5/vehicle_state`의 채널별 arm/active 필드로 구분합니다.
 OFF에서도 순정 차단 구간의 timeout을 막기 위한 비활성 LFA/SCC 프레임은 유지됩니다.
+최신 command가 없는 초기 상태는 순정 통신/NO_OUTPUT 대기이며, 준비/OFF 중 command
+단절은 순정 ECU 통신 복구 후 대기로 돌아갑니다. I5R1은 정상 ACTIVE의 입력만 끊겼을 때
+버튼 선택을 보존하고 복구 완료 후 새 입력으로 주행 중 재인계하는 예외를 제공합니다.
+NO_OUTPUT/ELM327에서 물리 버튼과 brake를 계속 검증하지만 actuator TX는 허용하지 않습니다.
+모드 전환 직후에는 새 CRC/counter/freshness-valid CAN이 모두 들어오기 전까지 출력 금지입니다.
+OFF, CANCEL, CAN/USB/시동/하네스 고장, 복구 실패는 자동 재인계 대상이 아닙니다.
+이 예외는 프로세스 재부팅 후 무승인 자동 제어가 아니며 실차 재인계 성능은 별도 검증 대상입니다.
 
 통합 모드에서 brake가 들어오면 host와 Panda가 각각 종방향 arm을 false로 래치합니다.
 host는 바로 `aReqRaw=0`, `aReqValue=0`, `ACCMode=0`을 송신하며 조향 LFA는 계속 보냅니다.

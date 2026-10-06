@@ -6,10 +6,11 @@ OPENDBC_COMMIT="b72c1fd55ae7e84763e40912bbe06b8f533cb66b"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 split_arm_patch="${repo_root}/patches/opendbc-hyundai-canfd-split-arm.patch"
+command_session_patch="${repo_root}/patches/opendbc-command-session.patch"
 panda_version_patch="${repo_root}/patches/panda-builder-env.patch"
 panda_ecan_patch="${repo_root}/patches/panda-ecan-only.patch"
 
-cache_root="${1:-${XDG_CACHE_HOME:-$HOME/.cache}/ioniq5_ecan/upstream}"
+cache_root="${1:-${repo_root}/.firmware-build}"
 panda_dir="${cache_root}/panda"
 opendbc_dir="${cache_root}/opendbc"
 venv_dir="${cache_root}/venv"
@@ -33,6 +34,12 @@ clone_pinned() {
 }
 
 mkdir -p "${cache_root}"
+export UV_CACHE_DIR="${cache_root}/cache"
+export UV_PYTHON_INSTALL_DIR="${cache_root}/python"
+export XDG_CACHE_HOME="${cache_root}/cache"
+export TMPDIR="${cache_root}/tmp"
+export PYTHONDONTWRITEBYTECODE=1
+mkdir -p "$TMPDIR"
 clone_pinned https://github.com/commaai/opendbc.git "${OPENDBC_COMMIT}" "${opendbc_dir}"
 clone_pinned https://github.com/commaai/panda.git "${PANDA_COMMIT}" "${panda_dir}"
 
@@ -51,12 +58,16 @@ apply_patch_once() {
 
 apply_patch_once "${opendbc_dir}" "${split_arm_patch}" \
   "opt-in LDA lateral / SET longitudinal Panda safety patch"
+apply_patch_once "${opendbc_dir}" "${command_session_patch}" \
+  "volatile command-gap button session and standby safety patch"
 apply_patch_once "${panda_dir}" "${panda_version_patch}" \
   "IONIQ5ECAN firmware builder marker patch"
 apply_patch_once "${panda_dir}" "${panda_ecan_patch}" \
   "ECAN-only transceiver and harness-orientation patch"
 
-uv venv --python 3.11 --clear "${venv_dir}"
+if [[ ! -d "${venv_dir}" ]]; then
+  uv venv --python 3.11 "${venv_dir}"
+fi
 # shellcheck disable=SC1091
 if [[ -f "${venv_dir}/bin/activate" ]]; then
   source "${venv_dir}/bin/activate"
@@ -90,7 +101,7 @@ firmware="${panda_dir}/board/obj/panda_h7.bin.signed"
 bootstub="${panda_dir}/board/obj/bootstub.panda_h7.bin"
 sha256sum "${bootstub}"
 sha256sum "${firmware}"
-sha256sum "${split_arm_patch}" "${panda_version_patch}" "${panda_ecan_patch}"
+sha256sum "${split_arm_patch}" "${command_session_patch}" "${panda_version_patch}" "${panda_ecan_patch}"
 printf 'Built pinned DEBUG bootstub: %s\n' "${bootstub}"
 printf 'Built pinned DEBUG firmware: %s\n' "${firmware}"
 printf 'Flash only after reading docs/panda_firmware.md.\n'

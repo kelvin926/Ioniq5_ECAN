@@ -161,7 +161,15 @@ void PandaUsb::connect() {
     }
     control_write(0xE7, 0, 0);  // disable power saving
     configure_can();
-    set_safety_mode(kSafetyNoOutput, 0);
+    set_safety_mode(kSafetyNoOutput, 0);  // A new USB session never inherits driver approval.
+    if (config_.command_session_param != 0U) {
+      std::array<uint32_t, 2> session{};
+      if (control_read(0xB7, 0, 0, session.data(), sizeof(session)) !=
+            static_cast<int>(sizeof(session)) || session[0] != 0x49355231U) {
+        throw std::runtime_error("Panda lacks Ioniq5 command-session firmware; flash the tested image");
+      }
+      set_safety_mode(kSafetyNoOutput, config_.command_session_param);
+    }
     send_heartbeat(false);
     ready_ = true;
   } catch (...) {
@@ -207,6 +215,8 @@ void PandaUsb::set_safety_mode(uint16_t mode, uint16_t param) {
 
 void PandaUsb::send_heartbeat(bool engaged) { control_write(0xF3, engaged ? 1U : 0U, 0); }
 
+void PandaUsb::drop_longitudinal_permission() { control_write(0xB8, 1U, 0U); }
+
 PandaHealth PandaUsb::health() {
   PandaHealthPacket packet{};
   const int count = control_read(0xD2, 0, 0, &packet, sizeof(packet));
@@ -216,6 +226,7 @@ PandaHealth PandaUsb::health() {
 
   PandaHealth result;
   result.connected = true;
+  result.ignition_on = packet.ignition_line != 0U || packet.ignition_can != 0U;
   result.controls_allowed = packet.controls_allowed != 0;
   result.heartbeat_lost = packet.heartbeat_lost != 0;
   result.safety_rx_checks_invalid = packet.safety_rx_checks_invalid != 0;
@@ -229,6 +240,18 @@ PandaHealth PandaUsb::health() {
   result.safety_rx_invalid = packet.safety_rx_invalid;
   result.tx_buffer_overflow = packet.tx_buffer_overflow;
   result.rx_buffer_overflow = packet.rx_buffer_overflow;
+  if (config_.command_session_param != 0U) {
+    std::array<uint32_t, 2> session{};
+    if (control_read(0xB7, 0, 0, session.data(), sizeof(session)) !=
+          static_cast<int>(sizeof(session)) || session[0] != 0x49355231U) {
+      throw std::runtime_error("Panda command-session status mismatch");
+    }
+    result.lateral_selected = (session[1] & 1U) != 0U;
+    result.longitudinal_selected = (session[1] & 2U) != 0U;
+    result.command_session_ready = (session[1] & 4U) != 0U;
+    result.command_session_blocked = (session[1] & 8U) != 0U;
+    result.command_session_active = (session[1] & 16U) != 0U;
+  }
 
   for (uint16_t bus = 0; bus < 3; ++bus) {
     PandaCanHealthPacket can{};
@@ -249,14 +272,24 @@ std::vector<CanFrame> PandaUsb::receive() {
   const int status =
     libusb_bulk_transfer(handle_, kCanReadEndpoint, buffer.data(), static_cast<int>(buffer.size()),
                          &transferred, config_.read_timeout_ms);
-  if (status == LIBUSB_ERROR_TIMEOUT) return {};
-  if (status != 0) {
+  // A timeout can contain completed USB chunks. Dropping them corrupts packet boundaries.
+  if (status != 0 && status != LIBUSB_ERROR_TIMEOUT) {
     ready_ = false;
+  }
+  return decode_bulk_read(receive_carry_, buffer.data(), buffer.size(), status, transferred,
+                          SteadyClock::now());
+}
+
+std::vector<CanFrame> PandaUsb::decode_bulk_read(std::vector<uint8_t>& carry,
+  const uint8_t* bytes, std::size_t capacity, int status, int transferred, TimePoint received_at) {
+  if (status != 0 && status != LIBUSB_ERROR_TIMEOUT) {
     throw std::runtime_error(std::string("Red Panda CAN read failed: ") +
                              libusb_error_name(status));
   }
-  return unpack_frames(receive_carry_, buffer.data(), static_cast<std::size_t>(transferred),
-                       SteadyClock::now());
+  if (transferred < 0 || static_cast<std::size_t>(transferred) > capacity) {
+    throw std::runtime_error("Red Panda CAN read returned an invalid byte count");
+  }
+  return unpack_frames(carry, bytes, static_cast<std::size_t>(transferred), received_at);
 }
 
 void PandaUsb::send(const std::vector<CanFrame>& frames) {

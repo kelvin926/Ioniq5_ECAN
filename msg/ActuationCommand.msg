@@ -6,7 +6,8 @@ uint32 sequence
 # Optional deadman, used only when input.use_enable_field=true.
 bool enable
 
-# Meaning is selected by input.lateral_mode in YAML:
+# Agreed upstream input: steering-wheel angle rate in deg/s (not yaw rate or target angle).
+# The active profile uses steering_rate_deg_s. Other profiles can select:
 # steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, or direct_torque.
 # With input.unfiltered_input=true, steering-rate/curvature targets are not host-clamped or smoothed.
 float64 lateral

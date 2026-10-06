@@ -32,7 +32,7 @@ raw_can:
   allow_tx: true
 
 input:
-  # Placeholder contract until the Alpamayo team freezes its message definition.
+  # Agreed ROS contract: lateral = steering-wheel angle rate (deg/s), acceleration = m/s^2.
   # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
   lateral_mode: "steering_rate_deg_s"
   # Do not clamp/slew the ROS steering-rate or acceleration input in the host adapter.
@@ -92,6 +92,9 @@ longitudinal:
   set_speed_kph: 30.0
 
 safety:
+  # Only publisher loss may preserve physical-button intent and resume while moving.
+  # Requires the separately tested I5R1 Panda firmware extension.
+  resume_on_command_return: true
   # Research-site profile: a fresh command may auto-arm after stationary/EPS/CAN
   # preflight and ECU quiet verification. Longitudinal also needs D and stock SCC.
   # LDA selects lateral-only; SET release selects lateral + longitudinal.

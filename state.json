@@ -2,13 +2,14 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "User-requested main delivery completed. Current implementation, vehicle-computer guide and evidence are on origin/main; git ls-remote verified the main handoff commit. A state-only verification receipt follows.",
+  "update_reason": "User requested concise README and current ROS input/control/startup documentation, followed by push to kelvin926/Ioniq5_ECAN via non-persistent one-time kelvin926 authentication. Aligned docs with existing I5R1 implementation/verified scope; user now reports Panda reconnected, so prior USB-only flash state is historical. No hardware access or new implementation/build/vehicle tests for this documentation request.",
   "current_request": {
-    "description": "Deliver the vehicle-computer handoff, current source and context on main, as explicitly requested by the user.",
-    "status": "main_handoff_pushed_and_remote_verified",
+    "description": "Update README briefly with ROS topic/message fields/units, control/button/command-return behavior and script startup. Align detailed docs and publish current related project changes to kelvin926/Ioniq5_ECAN main using kelvin926 one-time authentication without storing GitHub login on this shared computer.",
+    "status": "documentation_and_consistency_checks_passed_authenticated_ready_to_push",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
+    "historical_detail_notice": "Earlier actuation/configuration records and I5R1 flash authorization below are historical. Current scope is documentation/delivery and one-time Git push, not live ROS control, CAN/ECU actions or another firmware flash.",
     "vehicle_actuation_decision": {
       "recorded_on": "2026-10-06",
       "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
@@ -54,6 +55,122 @@
       }
     }
   },
+  "controller_startup": {
+    "implemented_on": "2026-10-06",
+    "user_confirmation": "Buttons are press-again ON/OFF toggles, not hold-to-run. The colleague's separate upper controller will publish the agreed ECAN input.",
+    "entry_point": "/home/ave/catkin_ws_ioniq5/ecan",
+    "workspace_command": "./ecan",
+    "source_script": "scripts/start_ecan.sh",
+    "global_alias_or_shell_changes": false,
+    "ros_home": "/home/ave/catkin_ws_ioniq5/logs/ros",
+    "ros_log_dir": "/home/ave/catkin_ws_ioniq5/logs/ros/log",
+    "subscription": "Always created at node startup; remains alive during no input, OFF, USB disconnect and recovery. Queue size 1, TCP_NODELAY.",
+    "no_input": "Initial state leaves stock ADAS communication intact and Panda in NO_OUTPUT. Numeric zero is a valid command, not absence.",
+    "fresh_input": "I5R1: fresh valid command plus Panda-authoritative physical ON may initiate first takeover only while stationary, with healthy ignition/CAN and existing ECU/gear/stock-SCC prerequisites. No physical ON means stock communication waiting.",
+    "buttons": "I5R1 Panda volatile LDA/SET selection is authoritative. LDA toggles lateral-only; SET release toggles combined. OFF disables ECAN assistance and revokes moving command-return eligibility. With continuously fresh input, existing inactive-frame ownership may remain until cleanup; OFF alone is not stock ECU restoration.",
+    "idle_input_loss": "NO_OUTPUT/stock-communication waiting; keep subscription and healthy physical-button intent. New input never bypasses first-takeover stationary conditions.",
+    "active_input_loss": "resume_on_command_return=true: a healthy publisher-only gap stops output and restores stock communication/NO_OUTPUT while retaining ON. Fresh input may re-take ownership while moving only after prior verified ACTIVE in the same uninterrupted session, completed restoration, fresh valid CAN and exact firmware profile. OFF/CANCEL/hard faults/restarts do not auto-resume.",
+    "button_fix": "Physical toggles are monitored by firmware across NO_OUTPUT/ELM/Hyundai transitions with the same I5R1 profile. First held button at cold start is not a new ON; SET initial release is inhibited until neutral. Host brake/ACC latch and firmware permission-reduction request prevent stale health re-enabling longitudinal.",
+    "verification": {
+      "native_release_build": "passed",
+      "core_cases": 50,
+      "panda_protocol_cases": 5,
+      "panda_usb_read_cases": 4,
+      "preflight_unit_cases": 8,
+      "unique_cases": 67,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "catkin_summary": "126 tests, 0 errors, 0 failures, 0 skipped; root and child gtest suites are double-counted.",
+      "launcher": "Bash syntax and --check passed without launching ROS master/node or accessing Panda. TMPDIR/ROS_HOME/logs scoped to this workspace.",
+      "node_sha256": "be6f94ef3049545ceda0f2f23519fd1f8af488bb6df48f9f29489a2a9963206a",
+      "scope": "Offline host/safety tests, scoped ARM firmware build and user-authorized USB-only app flash/bench completed. No actual ROS publisher integration or vehicle ECU takeover/restoration/moving-reengagement executed."
+    },
+    "cabana_observation": "Earlier PID 58228 check was historical. No Cabana or other process was started/stopped by this implementation/flash work. User closes Panda clients before starting ECAN.",
+    "changed_scope": "Necessary package source/tests/docs/state/patches/launcher plus workspace build outputs and third_party/ecan_firmware tooling/caches only. Existing unrelated edits preserved. No system Python/ROS/global shell changes, commit or push.",
+    "ros_environment_isolation": {
+      "inspected_on": "2026-10-06",
+      "source": "scripts/start_ecan.sh and workspace ecan executable",
+      "behavior": "Run as an executable child, not source: ROS setup/TMPDIR/ROS_HOME changes affect only its process tree, not the caller's shell or other programs. No global alias, shell configuration or ROS install changed.",
+      "shared_resources": "Not a fully isolated ROS master: inherited ROS_MASTER_URI/topics and fixed node name may interact with another same-name node/topic user; roslaunch may start a master if absent. Panda USB is exclusive. CPU/USB/ROS traffic are shared.",
+      "usage": "/home/ave/catkin_ws_ioniq5/ecan; do not source this launcher."
+    }
+  },
+  "can_transmission_check": {
+    "observed_at": "2026-10-06T20:59:48+09:00",
+    "sample_seconds": 5.005,
+    "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+    "packet_versions": {
+      "format": "hash",
+      "health": "0x290DAE03",
+      "can": "0x75ABF276",
+      "matches_pinned": true
+    },
+    "method": "Vendor control reads only; no interface claim, bulk CAN reads, configuration writes, heartbeat or CAN transmission by this probe.",
+    "health": {
+      "uptime_s": 2319,
+      "safety_mode": 19,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "harness_status": 1,
+      "ignition_line": 1,
+      "ignition_can": 0,
+      "safety_tx_blocked": 0,
+      "tx_buffer_overflow": 0,
+      "rx_buffer_overflow": 5186647,
+      "heartbeat_lost": 0
+    },
+    "controllers": [
+      {
+        "controller": 0,
+        "tx_count_before": 0,
+        "tx_count_after": 0,
+        "tx_delta": 0,
+        "forwarded_count": 0,
+        "forwarded_delta": 0,
+        "rx_delta": 14377
+      },
+      {
+        "controller": 1,
+        "tx_count_before": 0,
+        "tx_count_after": 0,
+        "tx_delta": 0,
+        "forwarded_count": 0,
+        "forwarded_delta": 0,
+        "rx_delta": 0
+      },
+      {
+        "controller": 2,
+        "tx_count_before": 0,
+        "tx_count_after": 0,
+        "tx_delta": 0,
+        "forwarded_count": 0,
+        "forwarded_delta": 0,
+        "rx_delta": 0
+      }
+    ],
+    "rx_buffer_overflow_delta": 0,
+    "status": "No CAN data-frame transmission or forwarding observed through the connected Panda during the 5-second sample.",
+    "running_cabana": {
+      "pid": 58228,
+      "mode": "Live CAN reception with NO_OUTPUT; process left unchanged."
+    },
+    "control_ros_node_running": false,
+    "standard_socketcan_interfaces_found": false,
+    "other_adapters_scope": "No /dev/pcan* or /dev/can* node was found. This does not establish a universal guarantee about unrecognized adapters or future transmissions.",
+    "cabana_usb_distinction": "Local PandaStream source sets NO_OUTPUT/bitrates at connect and sends USB false-heartbeats while receiving; these are not CAN data frames.",
+    "actions": "Read-only process/interface/device inspection and vendor control reads. No processes started/stopped, no CAN/bulk reads or writes, no device configuration changes, no files changed outside this project. Only state.json records this dated result."
+  },
+  "workspace_boundary": {
+    "recorded_on": "2026-10-06",
+    "source": "Direct user instruction: 이 컴퓨터의 다른 파일들이나 구조는 절대 건들면 안돼.",
+    "project_workspace": "/home/ave/catkin_ws_ioniq5",
+    "rule": "Only make necessary, user-requested changes to this project's files inside the workspace. This boundary is not blanket authorization to modify every file inside it.",
+    "protected": "All unrelated files and directory structures, other workspaces including catkin_ws_ouster, OS/ROS installation, global packages, shell settings, personal configuration, Desktop and application-menu entries outside this workspace.",
+    "incidental_writes": "Consider tools/applications that automatically write outside the workspace; do not silently bypass the constraint by launching them. Stop and seek explicit new authorization if such writes are necessary.",
+    "existing_external_changes": "Previously user-authorized Cabana settings and shortcuts remain historical changes. This instruction does not authorize changing or undoing them.",
+    "actions_for_this_request": "Project docs/AGENTS/state update and scoped Git commit/push; one-time auth script/browser profile/socket only in ignored package build/. No unrelated program/settings changes or Panda access."
+  },
   "maintenance": {
     "instructions_file": "AGENTS.md",
     "state_file": "state.json",
@@ -84,34 +201,143 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "249427e6da53716a9ed642101b804e49ffb90fbb",
-    "head_subject": "Set main as the vehicle computer handoff branch",
+    "head": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
+    "head_subject": "Record verified main handoff delivery",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
-      "origin_main": "249427e6da53716a9ed642101b804e49ffb90fbb",
+      "origin_main": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
       "origin_feature": "e47a886e9a091d797d65b2c03ece2a503eef905d",
-      "update_result": "Fast-forward push of current source, guide and evidence to main succeeded; git ls-remote matched main to the local handoff commit. A state-only receipt follows.",
-      "scope": "Remote verified before the following state-only receipt; exact checkout revision is git rev-parse HEAD."
+      "update_result": "Fetched origin/main and fast-forwarded the relocated checkout from 0787351b67c3620495765b8307d0401003ffa958 to 9aa0b8c86035a8888ab0c23c1feabc8874142a25. No commit or push for the migration.",
+      "scope": "Latest origin/main observed during migration; subsequent local documentation/state edits are uncommitted."
     },
     "working_tree": {
       "observed_on": "2026-10-06",
-      "preexisting_modified_tracked_files": 24,
-      "preexisting_changes": "Local ROS integration, unfiltered-input behavior, SCC template handling, and split-brake firmware changes.",
-      "changes_in_this_request": [
-        "docs/vehicle_computer_handoff.md",
-        "docs/evidence/2026-10-06/",
-        "README.md",
-        "docs/vehicle_handoff.md",
-        "AGENTS.md",
-        "state.json"
-      ],
+      "preexisting_modified_tracked_files": 4,
+      "preexisting_changes": "README, validation, vehicle-computer handoff and state retained uncommitted workspace-migration records. Cabana's three existing modified files are preserved separately.",
+      "changes_in_this_request": "See preserved local git status/diff: ECAN source/includes/config/tests, I5R1 firmware patches/helpers, startup launcher, AGENTS/state and aligned docs/evidence. Existing message/controller and migration edits preserved.",
       "existing_work_preserved": true,
-      "commit_or_push_performed": true,
-      "implementation_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
-      "push_status": "main_handoff_pushed_remote_verified",
-      "document_commit": "249427e6da53716a9ed642101b804e49ffb90fbb"
+      "commit_or_push_performed": false,
+      "push_status": "user_requested_main_push_with_one_time_kelvin926_auth_pending"
     },
-    "head_scope": "Verified main source/documentation revision before its state-only delivery receipt; git rev-parse HEAD returns the containing checkout revision."
+    "head_scope": "Main HEAD remains 9aa0b8c86035a8888ab0c23c1feabc8874142a25. Current source/docs/firmware patch work is local/uncommitted; exact tested node/app hashes are recorded separately."
+  },
+  "vehicle_computer_workspace": {
+    "observed_on": "2026-10-06",
+    "status": "migration_and_host_verification_complete",
+    "previous_workspace": "/home/ave/catkin_ws_ouster",
+    "workspace": "/home/ave/catkin_ws_ioniq5",
+    "package": "/home/ave/catkin_ws_ioniq5/src/ioniq5_ecan",
+    "source_head": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
+    "environment": {
+      "os": "Ubuntu 20.04.6 LTS",
+      "ros": "ROS 1 Noetic",
+      "compiler": "GCC 9.4.0",
+      "system_python": "3.8.10, unchanged",
+      "cabana_python": "3.12.13, separate recreated venv",
+      "ros_underlay": "/opt/ros/noetic, no Ouster workspace overlay"
+    },
+    "ros_verification": {
+      "build_command": "catkin_make -j4 -l4 -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3",
+      "build_result": "passed",
+      "test_command": "catkin_make -j4 -l4 run_tests_ioniq5_ecan; catkin_test_results --verbose",
+      "tests": {
+        "core": 36,
+        "panda_protocol": 5,
+        "preflight_unit": 7,
+        "unique_cases": 48,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "catkin_summary": "89 tests, 0 errors, 0 failures, 0 skipped; gtest aggregate and child suites are counted twice by this reporter."
+      },
+      "result_files": "/home/ave/catkin_ws_ioniq5/build/test_results/ioniq5_ecan",
+      "package_resolution": "rospack find resolves the relocated package; VehicleState message lookup succeeds.",
+      "launch_parse": "roslaunch --nodes with ioniq5_ecan_passive.yaml lists /ioniq5_ecan_node; node not started.",
+      "node_sha256": "5e2f5a205b6cd34e79cac41c2ee374f96b9cc7b889513db04c141872c9e9ab30"
+    },
+    "cabana": {
+      "checkout": "/home/ave/catkin_ws_ioniq5/third_party/openpilot",
+      "head": "555f48c5d28709f039b79f3f6105e51305edd4b5",
+      "upstream_revision_changed": false,
+      "preserved_modified_files": [
+        "SConstruct",
+        "openpilot/tools/cabana/SConscript",
+        "openpilot/tools/cabana/cabana.cc"
+      ],
+      "preserved_behavior": "Host runtime/rpath and librt build adjustments, plus all-three-bus CAN-FD 500/2000 configuration.",
+      "venv_setup": "uv sync --frozen --no-default-groups --extra tools; additional build packages comma-deps-eigen 3.4.0.post98, Cython 3.2.9, sympy 1.14.0 and setuptools 84.0.0.",
+      "build_script": "/home/ave/catkin_ws_ioniq5/scripts/build_cabana.sh",
+      "launch_script": "/home/ave/catkin_ws_ioniq5/scripts/cabana.sh",
+      "default_launch": "Panda serial PANDA_SERIAL and hyundai_canfd_generated.dbc; starts only when the user invokes the script.",
+      "logs": "/home/ave/catkin_ws_ioniq5/logs/cabana_live_stream",
+      "settings": "/home/ave/.config/cabana.json, existing preferences preserved with migrated DBC and log paths",
+      "verification": "Full rebuild and --help exited successfully. Dynamic libraries resolve the relocated venv/host_runtime; no missing dependencies. Live Panda connection/capture not tested during migration.",
+      "later_live_verification": "After migration the user requested a live launch. Panda connection and CAN log reception were verified, then Cabana was confirmed closed. See can_reception_test; this is not ongoing monitoring.",
+      "binary_sha256": "363fbc45767e7a3bda928bc979cddab65b28baea85925e1e7cfed2b8ddcc0486"
+    },
+    "backups": {
+      "old_venv": "/home/ave/catkin_ws_ioniq5/backups/openpilot-venv-before-move",
+      "old_cabana_settings": "/home/ave/catkin_ws_ioniq5/backups/cabana-before-move.json",
+      "old_ioniq5_build_artifacts": "/home/ave/catkin_ws_ioniq5/backups/ouster-ioniq5-artifacts",
+      "artifact_scope": "13 exact Ioniq5-only build/devel targets moved with relative paths preserved; unrelated Ouster sources and outputs untouched. Shared Ouster CMake cache is unchanged; reconfigure that workspace before its next build."
+    },
+    "vehicle_actions": "None: no Panda control writes, CAN transmission, ECU diagnostics, firmware flash, ROS node start or live Cabana capture for this migration.",
+    "evidence_scope": "Native build/test command outputs, saved XML test results, binary hashes, package/launch lookup and Cabana help/dynamic-library checks."
+  },
+  "can_reception_test": {
+    "observed_on": "2026-10-06",
+    "observed_at": "2026-10-06T20:51:21+09:00",
+    "status": "CAN_reception_confirmed_Cabana_now_closed",
+    "source": "docs/evidence/2026-10-06/vehicle-computer-can-reception-20261006.json",
+    "preflight": {
+      "mode": "Read-only, --ecan-only --require-harness, 3 seconds",
+      "rx_delta_ecan": 8619,
+      "passed": false,
+      "failure": "health.rx_buffer_overflow=4965117; accumulated count was not reset or hidden"
+    },
+    "cabana": {
+      "log": "/home/ave/catkin_ws_ioniq5/logs/cabana_live_stream/2026-10-06--20-50-26--0/rlog",
+      "log_sample_seconds": 2.998915568,
+      "log_sample_frames": 8620,
+      "log_sample_bus": 0,
+      "distinct_message_ids": 133,
+      "LFA_rate_hz": 100,
+      "SCC_CONTROL_rate_hz": 50,
+      "selected_crc_failures": 0,
+      "selected_crc_checked_frames": 1797,
+      "health_sample_seconds": 3.004450118,
+      "health_rx_delta_by_controller": [
+        8667,
+        0,
+        0
+      ],
+      "health_tx_delta_by_controller": [
+        0,
+        0,
+        0
+      ],
+      "rx_buffer_overflow_total": 5017671,
+      "rx_buffer_overflow_delta": 0,
+      "safety_mode": 19,
+      "controls_allowed": 0,
+      "ecan_bus_off": 0,
+      "ecan_error_warning": 0,
+      "ecan_error_passive": 0,
+      "ecan_total_error_count": 0,
+      "non_ecan_health": "Controllers 1 and 2 still show error-warning/error-passive and rising errors; excluded by existing ECAN-only preflight, not declared fault-free.",
+      "current_session": "Original PID had already exited before the first termination request. A new Cabana process appeared during final shortcut checks and was terminated to preserve the user's requested closed state. No agent-triggered relaunch for shortcut validation."
+    },
+    "actions": "Independent probes used vendor reads only. Cabana initialization writes NO_OUTPUT/CAN-FD bitrate settings and sends false heartbeats; no CAN commands, ECU diagnostics, steering, acceleration, flash or ROS node start.",
+    "shortcuts": {
+      "name": "Cabana (Ioniq5 CAN)",
+      "application": "/home/ave/.local/share/applications/ioniq5-cabana.desktop",
+      "desktop": "/home/ave/Desktop/ioniq5-cabana.desktop",
+      "exec": "/home/ave/catkin_ws_ioniq5/scripts/cabana.sh",
+      "terminal": false,
+      "desktop_trusted": true,
+      "verified": "desktop-file-validate, desktop database refresh, executable target, existing Cabana icon and trusted metadata. Shortcut not launched to retain requested closed state."
+    },
+    "scope": "Dated reception snapshot, not continuous monitoring or actuator/ECU validation."
   },
   "project": {
     "objective": "Deliver the upstream controller's lateral and acceleration commands to the research vehicle through Red Panda ECAN, with a low-latency C++ runtime and YAML tuning.",
@@ -147,7 +373,7 @@
     ],
     "unfiltered_input": true,
     "use_enable_field": false,
-    "final_upstream_contract": "Unresolved: units, semantics, structure, sign conventions, and publication cadence.",
+    "final_upstream_contract": "Agreed on 2026-10-06: existing ActuationCommand.lateral is steering-wheel angle rate in deg/s, acceleration is longitudinal acceleration in m/s^2. Only these two fields are required under use_enable_field=false. Non-latched 20 Hz publication recommended; physical steering sign and actual cadence/jitter still require integration validation.",
     "source": [
       "config/ioniq5_ecan.yaml",
       "msg/ActuationCommand.msg",
@@ -220,7 +446,8 @@
       "patches/opendbc-hyundai-canfd-split-arm.patch"
     ],
     "temporary_eps_fault": "ACTIVE enters SOFT_DISABLING with a fixed 3-second deadline. Lateral output is zero/inactive; existing channel arm, CAN ownership and heartbeat remain. Resume ACTIVE within the deadline only with cleared EPS status, fresh valid CAN/command and Panda permission. Healthy longitudinal commands may continue.",
-    "temporary_recovery_exclusions": "Recovery timeout and CAN/Panda/command hard faults use existing shutdown, stock-ECU restoration and explicit operator rearm. Brake/ACC-latched longitudinal disable and configured operator cancellation retain priority."
+    "temporary_recovery_exclusions": "Expired EPS pause or CAN/Panda/harness/ignition faults remain hard-fault shutdown/stock restoration and explicit rearm. Command loss during EPS pause remains a fault; healthy ACTIVE publisher loss uses the separate command_gap_resume path.",
+    "healthy_command_gap": "With current I5R1 resume profile, retain physical ON across a publisher-only gap, restore stock and automatically retake in motion only in the same previously ACTIVE session after verified restoration. OFF/CANCEL/hard faults/restarts revoke this exception."
   },
   "steering": {
     "inspected_on": "2026-10-06",
@@ -364,23 +591,23 @@
         "lat_accel_factor": 3.172929,
         "friction": 0.096019,
         "torque_pid_kp_ki_kd_kf": [
-          1.0,
+          1,
           0.1,
-          0.0,
-          1.0
+          0,
+          1
         ],
-        "steering_angle_deadzone_deg": 0.0,
+        "steering_angle_deadzone_deg": 0,
         "low_speed_factor_bp_mps": [
-          0.0,
-          10.0,
-          20.0,
-          30.0
+          0,
+          10,
+          20,
+          30
         ],
         "low_speed_factor_v": [
-          15.0,
-          13.0,
-          10.0,
-          5.0
+          15,
+          13,
+          10,
+          5
         ]
       },
       "verification": "Read pinned official opendbc Ioniq 5 specs, Hyundai delay/default torque tuning and torque_data params/override; reconfirmed Carrot PID defaults and low-speed table at eb5bbf2. Ioniq 5 has no override entry in the inspected snapshots. Compared with current YAML; no test/build, hardware action or configuration change.",
@@ -408,6 +635,80 @@
   },
   "panda": {
     "latest_observation": {
+      "observed_on": "2026-10-06",
+      "observed_at": "2026-10-06T21:52:56+09:00",
+      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json",
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "hardware_type": "0x07 / Red Panda",
+      "application_mode": true,
+      "panda_uptime_s": 195,
+      "harness_status": 0,
+      "ignition_line": 0,
+      "ignition_can": 0,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "sample_seconds": 0.2,
+      "faults": 0,
+      "fault_status": 0,
+      "rx_buffer_overflow": 0,
+      "tx_buffer_overflow": 0,
+      "heartbeat_lost": 0,
+      "tx_count_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "tx_delta_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "rx_delta_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "command_session_supported": true,
+      "preflight_passed": true,
+      "interpretation": "USB-only post-flash snapshot, no vehicle CAN traffic. Prior vehicle snapshots/accumulated counters predate the flash and are retained separately. Standby negative TX bench blocked all 3 attempts with physical TX delta zero.",
+      "exact_installed_binary_hash": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+      "provenance": "Installed app signature matched the signed candidate via Panda.up_to_date; post-reset 0xB7 magic 0x49355231 verified. Marker and packet ABI alone were not used as binary provenance."
+    },
+    "cabana_reception_observation": {
+      "observed_on": "2026-10-06",
+      "observed_at": "2026-10-06T20:51:21+09:00",
+      "method": "Vendor control-read snapshot while Cabana received CAN; Cabana initialization separately wrote NO_OUTPUT/CAN-FD settings and false heartbeats.",
+      "source": "docs/evidence/2026-10-06/vehicle-computer-can-reception-20261006.json",
+      "hardware_type": "0x07 / Red Panda",
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "panda_uptime_s": 1811,
+      "voltage_mV": 13893,
+      "harness_status": 1,
+      "ignition_line": 1,
+      "ignition_can": 0,
+      "safety_mode": 19,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "faults": 24,
+      "fault_status": 1,
+      "rx_delta_by_physical_controller": [
+        8667,
+        0,
+        0
+      ],
+      "tx_delta_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "sample_seconds": 3.004450118,
+      "rx_buffer_overflow": 5017671,
+      "rx_buffer_overflow_delta": 0,
+      "interpretation": "Current ECAN reception and LFA/SCC rates confirmed with CRC-valid live log frames; ECAN error state absent. Accumulated overflow remains and strict preflight was FAIL. Non-ECAN controller errors remain. Cabana was subsequently confirmed closed; not a continuing live observation.",
+      "exact_installed_binary_hash": "Not read; firmware marker and packet ABI do not establish exact installed binary."
+    },
+    "post_fuse_observation": {
       "observed_on": "2026-10-06",
       "method": "Read-only USB health and 3-second passive CAN sample after one-second queue drain.",
       "source": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json",
@@ -438,7 +739,7 @@
         0,
         0
       ],
-      "sample_seconds": 3.0,
+      "sample_seconds": 3,
       "harness_direction": "NORMAL",
       "selected_crc_valid_counts": {
         "0x125": 299,
@@ -454,10 +755,10 @@
       "decoded_values": {
         "steering_angle_deg": 0.30000000000000004,
         "wheel_speeds_kph": [
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0,
+          0
         ],
         "MDPS_LkaFailSta": 0,
         "MDPS_LkaToiFltSta": 0,
@@ -557,7 +858,50 @@
       "recorded_on": "2026-08-21",
       "last_recorded_flashed_sha256": "1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae",
       "split_brake_candidate_sha256": "ffe0428536394ee7743a37f10338b4a19668f343f742e1b5de25c43df43f6986",
-      "candidate_status": "Built but not flashed in the historical record; no flash performed in this session."
+      "candidate_status": "Historical split-brake candidate was built without a recorded flash then; superseded by separately recorded 2026-10-06 I5R1 build/authorized USB-only app flash. Do not infer its installation from marker."
+    },
+    "command_session_firmware_build": {
+      "recorded_on": "2026-10-06",
+      "status": "passed",
+      "builder": "IONIQ5ECAN",
+      "profile": "ALLOW_DEBUG",
+      "arm_compiler": "13.2.1",
+      "tool_root": "/home/ave/catkin_ws_ioniq5/third_party/ecan_firmware",
+      "signed_app_sha256": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+      "bootstub_candidate_sha256": "644ef25f217ffd899ef008d7d876ba67a4666d1a311b411ef326b57c77dfc3e2",
+      "patch_sha256": {
+        "opendbc-hyundai-canfd-split-arm.patch": "e69f5a71f2a53ada43a38c1aefa759855b9915659d5ecb28682ad2311c910d54",
+        "opendbc-command-session.patch": "0f69b7e6506a642f56e11af645d952142141f0c0de6469eb150745780c4e8fa2",
+        "panda-ecan-only.patch": "ecfb1d51dee7d6f3c67b2ff724eaa7a60e1e46890750a1f4d0e03c2b49ce53a2",
+        "panda-builder-env.patch": "fce74b553321b384dc9a8c01813449bf5df04a0b81300e131d8f72faabb85135"
+      },
+      "tests": {
+        "command": "python -m unittest opendbc.safety.tests.test_hyundai_canfd opendbc.safety.tests.test_ioniq5_command_session",
+        "executed": 995,
+        "skipped": 117,
+        "passed": 878,
+        "failed": 0,
+        "command_session_cases": 9,
+        "command_session_passed": 9
+      }
+    },
+    "command_session_firmware_flash": {
+      "recorded_on": "2026-10-06",
+      "status": "completed_and_verified",
+      "script": "scripts/flash_panda.py",
+      "app_sha256": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "verification": "Installed app signature matched the signed candidate via Panda.up_to_date; post-reset 0xB7 magic 0x49355231 verified. Marker and packet ABI alone were not used as binary provenance.",
+      "bootstub_flashed": false,
+      "previous_app_exact_hash": "not_read",
+      "recovery_dfu_used": false,
+      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json"
+    },
+    "latest_user_connection_report": {
+      "reported_on": "2026-10-06",
+      "source": "Direct user message: 지금은 판다 연결했어.",
+      "detail": "User reports Panda reconnected; whether vehicle harness is connected was not independently measured. Previous USB-only preflight/flash snapshots are historical. Do not rerun USB-only bench/flash based on the earlier confirmation.",
+      "hardware_probed_for_documentation": false
     }
   },
   "vehicle_diagnostics": {
@@ -702,8 +1046,8 @@
     },
     {
       "id": "final_input_contract",
-      "status": "pending_upstream_team",
-      "detail": "Final lateral definition, units, message structure, and cadence remain unresolved."
+      "status": "units_and_message_agreed_integration_validation_pending",
+      "detail": "Upper team will target ActuationCommand steering-wheel angle rate deg/s and acceleration m/s^2. Confirm physical sign, actual 20 Hz recommended publication/jitter, source-plan freshness and vehicle tracking; no live upper-controller integration performed."
     },
     {
       "id": "adas_diagnostic_reachability",
@@ -719,9 +1063,14 @@
       "id": "hvac_dtc_923413_after_clear",
       "status": "present_on_immediate_re_read",
       "detail": "2026-10-06 HVAC accepted one DTC clear (54), then immediately returned raw 923413/status 09 again. Ioniq 5-specific component meaning and root cause remain unverified; the code cannot be treated as resolved by clearing."
+    },
+    {
+      "id": "command_gap_resume_vehicle_validation",
+      "status": "implementation_and_usb_verified_vehicle_test_pending",
+      "detail": "I5R1 firmware app installed/verified and offline/USB tests passed. Actual camera/radar endpoint ownership, positive restore and moving command return in the vehicle remain untested; no road-safety conclusion."
     }
   ],
-  "next_action": "On the vehicle computer, read AGENTS.md/state.json/docs/vehicle_computer_handoff.md, check out the delivered branch, build once with native Ubuntu 20.04/ROS Noetic, and perform read-only Panda preflight/passive reception. Confirm camera ownership endpoint identity before the first takeover; source and firmware revisions remain distinct.",
+  "next_action": "Finish doc/JSON/link/diff checks, verify device authorization account is kelvin926, commit scoped current ECAN implementation plus aligned documentation, push main without force, verify remote SHA, then revoke only this token and remove its task-local browser profile. Do not access reconnected Panda or start control/bench/flash for this documentation request.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -843,6 +1192,42 @@
       "type": "vehicle_computer_handoff_promoted_to_main",
       "summary": "User explicitly requested main. Source/handoff/evidence fast-forwarded to origin/main; clone/update instructions now use main and remote revision was verified.",
       "source": "git push origin main and git ls-remote at 249427e6da53716a9ed642101b804e49ffb90fbb"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "vehicle_computer_workspace_migration",
+      "summary": "Moved Ioniq5 package, Cabana, runtime and logs out of Ouster into catkin_ws_ioniq5. Fetched latest main 9aa0b8c, preserved Cabana local changes, rebuilt both hosts and passed 48 unique package tests. Old venv/settings and 13 Ioniq5-only Ouster output targets are recoverably backed up. No vehicle action or commit/push.",
+      "source": "Native Ubuntu command outputs and test XML; vehicle_computer_workspace records paths, hashes and verification scope."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "live_can_reception_and_cabana_shortcuts",
+      "summary": "User-requested Cabana launch confirmed live ECAN data: approximately 3 seconds, 8620 logged frames, LFA 100 Hz, SCC 50 Hz and selected CRC failures 0. Concurrent health sample had TX/overflow delta 0; accumulated overflow still causes strict preflight FAIL. Cabana was subsequently confirmed closed and validated application/Desktop shortcuts created.",
+      "source": "docs/evidence/2026-10-06/vehicle-computer-can-reception-20261006.json, desktop-file-validate and process/desktop metadata checks."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "i5r1_moving_command_gap_implementation",
+      "summary": "Implemented physical-intent preserving stock restore/fresh-command moving re-takeover; initial takeover/hard faults remain stationary/new approval. Native Release/67 host tests and full Hyundai firmware safety suite passed.",
+      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "i5r1_firmware_build",
+      "summary": "Pinned Panda/opendbc patches compiled with ARM DEBUG; signed app fbfcae2e and bootstub candidate 644ef25f built. Build is separate from installation.",
+      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "i5r1_usb_only_flash_and_bench",
+      "summary": "User approved firmware flash and disconnected harness. App flashed, signature/capability verified, original bootstub retained. USB-only preflight PASS and standby 3/3 TX rejection, physical TX delta 0. No vehicle or actual ROS integration test.",
+      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "concise_docs_and_one_time_delivery_requested",
+      "summary": "User asked to publish concise README ROS input/control/startup docs and current project changes using one-time kelvin926 auth without a shared-computer login. User reports Panda reconnected; no hardware access requested or performed.",
+      "source": "Direct user messages, updated README/docs and scoped device-auth process."
     }
   ],
   "ecu_recovery": {
@@ -1052,6 +1437,10 @@
       "document": "docs/vehicle_computer_handoff.md",
       "source_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
       "scope": "Transfer guide, latest post-fuse README summary, evidence index and portable observation references."
+    },
+    "command_session_update": {
+      "updated_on": "2026-10-06",
+      "scope": "Aligned README and topic/safety/architecture/upstream/firmware/validation/handoff docs with current I5R1 behavior and dated offline/USB proof; README reduced to concise input/control/startup guide. Preserve previous documentation-only checks above as historical."
     }
   },
   "adas_diagnostics": {
@@ -1610,5 +1999,86 @@
       "verified_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
       "verified_on": "2026-10-06"
     }
+  },
+  "command_gap_resume": {
+    "implemented_on": "2026-10-06",
+    "user_requested_moving_return": true,
+    "user_authorized_firmware_flash": true,
+    "user_confirmed_usb_only": true,
+    "active_profile": "safety.resume_on_command_return=true, I5R1 4096 opt-in, combined safety_param=7173 (lateral=7169)",
+    "lifecycle": "physical ON + fresh commands -> first stationary takeover/ACTIVE -> healthy publisher gap -> output off + stock restore/NO_OUTPUT retaining ON -> restoration complete + fresh input/CAN -> moving same-session re-takeover -> current angle/integral reset -> current command follow. OFF revokes resume eligibility.",
+    "interlocks": [
+      "Never force Panda controls_allowed",
+      "Initial takeover and hard-fault rearm remain stationary",
+      "No inherited ON across process/USB/Panda restart",
+      "CANCEL and CAN/USB/harness/ignition faults or failed restoration do not auto-resume",
+      "All required firmware RX messages must be newly seen, valid and fresh after mode change before actuator TX",
+      "Brake/ACC latches longitudinal OFF until SET; firmware B8 only reduces permission",
+      "Transitions discard old commands/dt and reject stale health snapshots via mode-change epoch"
+    ],
+    "usb_read_fix": "Retain nonzero transferred bytes on LIBUSB_ERROR_TIMEOUT instead of discarding partial packets; decode boundary/checksum regression tests passed.",
+    "capability": "USB B7 magic 0x49355231, flags lat=1/long=2/ready=4/blocked=8/session-active=16; B8 value 1 only clears longitudinal selection.",
+    "comparison": {
+      "repository": "https://github.com/ajouatom/openpilot",
+      "research_commit": "eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d",
+      "result": "Panda reconnection/Hyundai initialization can occur in motion; initialization/reconnection is distinct from control approval. This implementation covers healthy input-gap return, not unconditional control approval after reboot.",
+      "sources": [
+        "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/openpilot/selfdrive/pandad/pandad.py",
+        "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/opendbc_repo/opendbc/car/hyundai/interface.py",
+        "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/openpilot/selfdrive/selfdrived/state.py",
+        "https://libusb.sourceforge.io/api-1.0/group__libusb__syncio.html"
+      ]
+    },
+    "verification_record": "docs/evidence/2026-10-06/command-session-usb-20261006.json",
+    "vehicle_result": "Not executed. Endpoint identity and actual positive takeover/quiet/stock restoration/moving return require vehicle validation; offline success is not road-safety evidence."
+  },
+  "documentation_delivery": {
+    "requested_on": "2026-10-06",
+    "target": "https://github.com/kelvin926/Ioniq5_ECAN",
+    "branch": "main",
+    "account": "kelvin926",
+    "include_related_implementation": true,
+    "reason": "README describes the locally implemented I5R1 path; publish associated source/tests/patches/launcher too so remote code and docs agree. Preserve unrelated projects and Cabana changes outside package.",
+    "readme_scope": [
+      "ROS topic and full message structure; required fields and units",
+      "Control conversion, LDA/SET toggles, healthy input-gap recovery versus OFF/fault/restart",
+      "Installed one-line command and repository start_ecan.sh/--check",
+      "Verified tests/flash versus untested vehicle endpoints and moving outcome"
+    ],
+    "detailed_docs": [
+      "docs/input_contract.md",
+      "docs/architecture.md",
+      "docs/safety.md",
+      "docs/upstream.md",
+      "docs/panda_firmware.md",
+      "docs/validation.md",
+      "docs/vehicle_computer_handoff.md",
+      "docs/vehicle_handoff.md",
+      "docs/evidence/2026-10-06/README.md"
+    ],
+    "authentication": {
+      "policy": "GitHub CLI public OAuth device flow, temporary incognito profile within ignored project build/, access token only in process RAM, account verification before push, no global Git config/credential writes; revoke only this issued token and remove task browser profile on exit.",
+      "requested_scopes": [
+        "public_repo"
+      ],
+      "status": "kelvin926_verified_in_memory_only",
+      "token_or_device_code_recorded": false,
+      "verified_user_id": 52805466
+    },
+    "verification": {
+      "checked_on": "2026-10-06",
+      "status": "passed",
+      "markdown_files": 13,
+      "local_file_links": 28,
+      "link_errors": 0,
+      "checks": [
+        "Current README schema matches msg/ActuationCommand.msg; units/profile/button/watchdog behavior compared to current implementation and docs",
+        "Local Markdown file links resolve; code fences balanced; no prohibited/replacement characters",
+        "README 91 lines; AGENTS 167 lines within 200",
+        "state.json valid; git diff --check passed; startup/firmware Bash syntax passed"
+      ],
+      "scope": "Documentation/static checks only for this request. Previous Release/67 host and 9 custom firmware tests retained as dated evidence, no repeated build/test or Panda access."
+    },
+    "git_commit_or_push_status": "verified_authentication_ready_to_commit_and_push"
   }
 }

@@ -3,6 +3,45 @@
 2026-10-06 작성. 대상은 **Ubuntu 20.04 / ROS 1 Noetic / C++17**입니다.
 이 문서는 차량 컴퓨터에서 현재 작업을 이어가기 위한 시작 절차입니다.
 
+## 차량 컴퓨터의 설치 결과
+
+2026-10-06 사용자의 요청으로 Ouster 작업공간에서 아래 별도 작업공간으로 이전했습니다.
+Ioniq5 저장소는 최신 `main`의 `9aa0b8c86035a8888ab0c23c1feabc8874142a25`로
+fast-forward 갱신했습니다. Cabana의 기존 openpilot revision과 로컬 CAN-FD 설정은 보존했습니다.
+
+| 용도 | 실제 경로 |
+| --- | --- |
+| ROS 작업공간 | `/home/ave/catkin_ws_ioniq5` |
+| Ioniq5 패키지 | `/home/ave/catkin_ws_ioniq5/src/ioniq5_ecan` |
+| Cabana/openpilot | `/home/ave/catkin_ws_ioniq5/third_party/openpilot` |
+| Cabana 로그 | `/home/ave/catkin_ws_ioniq5/logs/cabana_live_stream` |
+| 이전 venv, 설정 및 Ouster의 Ioniq5 빌드 산출물 백업 | `/home/ave/catkin_ws_ioniq5/backups` |
+
+ROS 전체 Release 빌드와 package test 48개가 통과했습니다. Cabana는 새 Python 3.12 venv에서
+재빌드했고 `--help` 실행과 동적 라이브러리 경로를 확인했습니다. ROS의 시스템 Python 3.8은
+변경하지 않았습니다. 이번 이전 작업에서 ROS node, 실시간 CAN 수신/송신, firmware flash는
+실행하지 않았습니다.
+
+Cabana 실행과 재빌드 도우미는 다음과 같습니다. 인수 없는 실행은 저장된 Panda serial과
+Hyundai CAN-FD DBC를 사용합니다. ROS node 등 다른 Panda 점유 프로그램과 동시에 실행하지 않습니다.
+
+```bash
+~/catkin_ws_ioniq5/scripts/cabana.sh
+# 필요할 때만 재빌드
+~/catkin_ws_ioniq5/scripts/build_cabana.sh
+```
+
+이전 완료 후 같은 날 사용자 요청으로 Cabana를 켜 CAN 수신을 확인했습니다. 약 3초의
+live 로그에서 ECAN 8,620개, LFA 100 Hz/SCC 50 Hz와 주요 7종 CRC 오류 0을 확인했습니다.
+별도 health 관측 중 CAN TX와 RX overflow 증가도 0이었습니다. 누적 overflow는 남아 있어
+엄격한 preflight는 FAIL이며 PASS로 취급하지 않습니다. 결과는
+[차량 컴퓨터 수신 기록](evidence/2026-10-06/vehicle-computer-can-reception-20261006.json)에 있습니다.
+
+그 뒤 사용자가 종료를 요청하여 Cabana가 꺼진 상태를 확인했습니다. 앱 목록 또는
+`/home/ave/Desktop/ioniq5-cabana.desktop`의 **Cabana (Ioniq5 CAN)**으로 다시 실행할 수 있습니다.
+바로가기는 실행 권한과 desktop 신뢰 metadata를 설정했으며, 종료 상태 유지를 위해
+검증 과정에서 다시 실행하지 않았습니다.
+
 ## 가져올 브랜치와 읽을 파일
 
 - 저장소: `https://github.com/kelvin926/Ioniq5_ECAN`
@@ -60,10 +99,10 @@ bus-off/error-warning/error-passive는 모두 0입니다. 원시 fault 값과 ve
 새 clone의 예시입니다. ROS 1 Noetic이 설치된 Ubuntu 20.04를 전제로 합니다.
 
 ```bash
-mkdir -p "$HOME/catkin_ws/src"
+mkdir -p "$HOME/catkin_ws_ioniq5/src"
 git clone --branch main \
-  https://github.com/kelvin926/Ioniq5_ECAN.git "$HOME/catkin_ws/src/ioniq5_ecan"
-export ECAN_REPO="$HOME/catkin_ws/src/ioniq5_ecan"
+  https://github.com/kelvin926/Ioniq5_ECAN.git "$HOME/catkin_ws_ioniq5/src/ioniq5_ecan"
+export ECAN_REPO="$HOME/catkin_ws_ioniq5/src/ioniq5_ecan"
 cd "$ECAN_REPO"
 git log -2 --oneline
 git status --short
@@ -101,27 +140,29 @@ sudo usermod -aG plugdev "$USER"
 ```
 
 그룹 변경 후 다시 로그인하고 Panda USB를 재연결합니다. 새 터미널에서 `ECAN_REPO`를
-다시 지정합니다. 현재 연결된 Panda의 marker/ABI는 확인됐지만 설치 binary의 정확한 hash와
-split-brake patch revision은 미확인입니다. 빌드와 flash는 별도이며, firmware 작업이 필요하면
+다시 지정합니다. 이후 사용자 승인으로 USB-only I5R1 앱 flash와 서명/capability 검증을
+완료했습니다. [기록](evidence/2026-10-06/command-session-usb-20261006.json)을 참고합니다.
+차량 endpoint와 주행 중 재인계 결과는 미확인입니다. 빌드와 flash는 별도이며, firmware 작업이 필요하면
 [panda_firmware.md](panda_firmware.md)의 provenance 및 해당 절차를 따릅니다.
 
 ## 차량 컴퓨터에서 빌드
 
 ```bash
-export ECAN_REPO="$HOME/catkin_ws/src/ioniq5_ecan"
+export ECAN_REPO="$HOME/catkin_ws_ioniq5/src/ioniq5_ecan"
 source /opt/ros/noetic/setup.bash
 cd "$ECAN_REPO"
 ./scripts/check_environment.sh
-cd "$HOME/catkin_ws"
+cd "$HOME/catkin_ws_ioniq5"
 catkin_make -DCMAKE_BUILD_TYPE=Release
 source devel/setup.bash
 rospack find ioniq5_ecan
 ```
 
-이 checkout의 전체 ROS Noetic 빌드는 Windows에서 수행하지 못했습니다. 차량 컴퓨터의
-첫 native 빌드 결과를 `state.json`에 기록합니다. 기존 core smoke는 통과했으므로 문서
-확인만을 위해 반복할 필요는 없습니다. 변경/실패 원인에 관련된 package 검증이 필요하면
-`catkin_make run_tests_ioniq5_ecan`과 `catkin_test_results --verbose`를 한 번 수행합니다.
+2026-10-06 위 별도 작업공간에서 시스템 Python 3.8을 명시한 Release 빌드와
+`catkin_make -j4 -l4 run_tests_ioniq5_ecan`을 각각 한 번 수행해 통과했습니다.
+`rospack find`와 launch node 목록 해석도 새 경로에서
+확인했습니다. 상세 결과는 `state.json`의 `vehicle_computer_workspace`에 있습니다.
+문서 확인만을 위해 빌드와 test를 반복하지 않습니다.
 
 ## 첫 연결: read-only 확인과 passive ROS
 
@@ -147,7 +188,7 @@ bitrate/NO_OUTPUT 설정과 heartbeat를 수행하므로 위 read-only preflight
 
 ```bash
 source /opt/ros/noetic/setup.bash
-source "$HOME/catkin_ws/devel/setup.bash"
+source "$HOME/catkin_ws_ioniq5/devel/setup.bash"
 roslaunch ioniq5_ecan ioniq5_ecan.launch \
   config:="$ECAN_REPO/config/ioniq5_ecan_passive.yaml"
 ```
@@ -178,13 +219,14 @@ LKA steering 플랫폼의 ADAS Driving 후보입니다. 실차 ECU 식별은 아
 LFA/SCC 송신 소유권을 확인하는 작업이 남아 있습니다.** stock quiet 확인과 positive UDS
 응답은 각각 기록합니다. 송신 성공만으로 ECU의 실제 제어 수용을 판단하지 않습니다.
 
-상위 제어기의 입력 계약도 최종 확정 전입니다. 현재 계약은 다음과 같습니다.
+상위 제어기 팀은 목표 핸들 조향각속도(deg/s)와 목표 종방향 가속도(m/s²)를
+기존 ROS 메시지로 출력하도록 사용자와 합의했습니다. 현재 계약은 다음과 같습니다.
 
 | 항목 | 현재 값/동작 |
 | --- | --- |
 | 토픽 / 메시지 | `/ioniq5/actuation_command`, `ioniq5_ecan/ActuationCommand` |
 | 필수 값 | `lateral`, `acceleration`; 기본 `use_enable_field=false` |
-| 기본 lateral | `steering_rate_deg_s`, deg/s를 목표각으로 적분한 뒤 토크로 변환 |
+| 합의된 lateral | `steering_rate_deg_s`, 핸들 deg/s를 목표각으로 적분한 뒤 토크로 변환 |
 | 상위가 토크를 보내는 경우 | `input.lateral_mode=direct_torque`; 단위는 Panda count, Nm가 아님 |
 | acceleration | m/s², 0.01 m/s² CAN 양자화, 허용 범위 -3.5~2.0 |
 | 입력 shaping | 기본 `unfiltered_input=true`; host smoothing/clamp 생략, 토크/전송/채널 경계는 유지 |
@@ -194,16 +236,26 @@ LFA/SCC 송신 소유권을 확인하는 작업이 남아 있습니다.** stock 
 상위 토크를 기본 rate 모드로 보내지 않습니다. 단위/부호/주기를 확정한 뒤 실제 제어용
 설정을 사용합니다. 제어 프로파일 예시는 아래이며, launch 기본값도 이 활성 프로파일입니다.
 
+이 컴퓨터의 시작 단축 명령은 `/home/ave/catkin_ws_ioniq5/ecan`이며 작업공간에서는 `./ecan`입니다.
+`--check`는 경로 점검만 하고 ROS/Panda를 시작하지 않습니다. 전역 alias나 shell 설정은
+변경하지 않으며 ROS runtime 파일은 이 작업공간 `logs/ros`에 둡니다. Cabana 등 다른 Panda
+점유 프로그램을 임의로 종료하지 않고 시작을 거부합니다. 토픽 구독은 항상 유지하고,
+명령 없는 초기 상태는 순정 통신/NO_OUTPUT 대기입니다. I5R1 기본 프로파일은 정상
+ACTIVE 입력 단절에서도 버튼 선택을 유지한 순정 통신 복구 대기로 전환합니다.
+새 입력과 정상 CAN, 완료된 stock 복구를 확인해 같은 세션은 주행 중 재인계합니다.
+첫 takeover, 프로세스 재시작 또는 CAN/USB 고장 이후에는 이 예외를 적용하지 않습니다.
+
 ```bash
 roslaunch ioniq5_ecan ioniq5_ecan.launch \
   config:="$ECAN_REPO/config/ioniq5_ecan.yaml"
 ```
 
-최초 최신 command 수신으로 auto-arm/ECU takeover가 시작될 수 있습니다. 시작 command를
+최초 takeover는 최신 command와 물리 ON이 모두 있을 때 정차 상태에서 시작할 수 있습니다. 시작 command를
 보내기 전에 정차, EPS 정상, 종방향 구성의 D/recent stock SCC와 위 endpoint 확인을
 완료합니다. LDA는 lateral-only, SET을 눌렀다 놓으면 combined 선택/토글입니다.
 브레이크는 lateral을 유지하고 longitudinal을 래치 해제하며, release만으로 종방향이
 재개되지 않습니다. 기본 연구장 YAML의 host CANCEL/gas override는 false입니다.
+I5R1 firmware CANCEL은 host 설정과 독립적으로 세션을 취소합니다.
 명시적 해제 서비스는 다음과 같습니다.
 
 ```bash
@@ -223,7 +275,8 @@ rosservice call /ioniq5_ecan/set_armed "data: false"
 > Ubuntu 20.04 차량 컴퓨터에서 Ioniq5_ECAN 작업을 이어간다. `main`의
 > 최신 checkout에서 AGENTS.md, state.json, docs/vehicle_computer_handoff.md를 먼저 읽고
 > 현재 commit을 기록해라. 퓨즈 교체 뒤 Panda 정방향/ignition=1과 순정 LFA 100 Hz/SCC 50 Hz
-> 수신은 확인했지만 차량 컴퓨터 catkin 빌드, 설치 firmware patch revision과 camera 소유권
-> endpoint는 미확인이다. 환경/빌드와 read-only 및 passive 수신 확인부터 진행하고 결과를
-> state.json에 기록해라. 상위 토크와 가속도 계약을 확인하여 rate 모드와 혼동하지 말아라.
+> 수신은 확인했다. 차량 컴퓨터 Release 빌드/67개 호스트 test와 USB-only I5R1 앱 flash/서명
+> 검증도 완료했다. camera 소유권 endpoint와 실차 stock 복구/주행 중 입력 복귀는 미확인이다.
+> 차량 연결 후 read-only 및 passive 수신 확인부터 진행하고 결과를 state.json에 기록해라.
+> 합의된 핸들 조향각속도 deg/s와 가속도 m/s²를 사용하고 토크/목표각과 혼동하지 말아라.
 > 차량 컴퓨터로 옮기는 요청 자체는 실제 actuator/ECU disable/flash 실행 요청이 아니다.

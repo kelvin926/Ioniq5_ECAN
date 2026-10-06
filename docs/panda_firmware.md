@@ -4,7 +4,7 @@
 별도 사실이며 설치 image의 정확한 provenance는 [인수인계](vehicle_handoff.md)에 있습니다.
 
 종방향 Hyundai safety flag는 Panda의 `ALLOW_DEBUG` 빌드에서만 적용됩니다. release
-firmware에서 param `3077`을 설정하면 LONG bit가 무시됩니다. 드라이버는 시작 시 zero-accel
+firmware에서 param `3077` 또는 I5R1 `7173`을 설정하면 LONG bit가 무시됩니다. 드라이버는 시작 시 zero-accel
 비활성 SCC 프레임으로 이 능력을 검사하고, Panda가 차단하면 `NO_OUTPUT`으로 돌아가
 arm을 실패시킵니다.
 
@@ -36,6 +36,21 @@ revision이나 설치 binary가 같다는 보장은 없습니다. 실제 설치 
 
 ## 빌드
 
+### I5R1 command-session 확장
+
+`opendbc-command-session.patch`는 opt-in param `4096`을 추가합니다. 현재 active YAML의
+combined param은 `7173`입니다. 같은 param을 NO_OUTPUT와 ELM327에도 사용하여 정상
+입력 단절 동안 물리 버튼 선택과 brake latch를 RAM에만 유지합니다. 두 모드에서는
+actuator 프레임이 금지되고 stock 통신을 복구합니다. Hyundai 모드로 돌아갈 때는 모든
+필수 CAN의 새 checksum/counter/freshness 검증 전까지 actuator TX를 금지합니다.
+SILENT/일반 NO_OUTPUT/프로세스 시작, CAN 고장 및 heartbeat 불일치는 선택을 지웁니다.
+CANCEL도 세션을 취소합니다. USB `0xB7`은 magic `0x49355231`과 세션 상태를 읽기만 하며,
+`0xB8`은 종방향 허가를 지울 수만 있고 허가를 새로 만들 수 없습니다.
+
+firmware marker와 기존 health/CAN packet ABI는 그대로 유지되므로 marker만으로 I5R1
+설치를 판단하면 안 됩니다. host는 capability를 확인하고, flash helper는 signature와
+capability를 모두 재검증합니다. 실차 stock 복구/주행 중 재인계 결과는 오프라인 검사와 별개입니다.
+
 Ubuntu 20.04 기본 Python은 너무 오래되므로 `uv`가 관리하는 Python 3.11 환경을
 사용합니다. `uv` 설치 후:
 
@@ -43,11 +58,13 @@ Ubuntu 20.04 기본 Python은 너무 오래되므로 `uv`가 관리하는 Python
 ./scripts/build_panda_debug_firmware.sh
 ```
 
-스크립트는 사용자 cache에 두 저장소를 정확한 SHA로 checkout하고 저장소의 opendbc
-split-button/forwarding patch, Panda ECAN-only transceiver patch와 builder-marker patch를
+스크립트는 기본적으로 프로젝트 내부 `.firmware-build`에 두 저장소를 정확한 SHA로 checkout하고 저장소의 opendbc
+split-button/forwarding 및 I5R1 command-session patch, Panda ECAN-only patch와 builder-marker patch를
 idempotent하게 적용합니다. 그 뒤 `RELEASE`와 ambient `DEBUG` 환경 변수를 제거하고
 `PANDA_BUILDER=IONIQ5ECAN`으로 `ALLOW_DEBUG` bootstub과 firmware를 빌드합니다. 두 출력 및
-세 patch의 SHA-256을 시험 로그에 보관하십시오.
+네 patch의 SHA-256을 시험 로그에 보관하십시오. UV/Python/임시 cache도 빌드 폴더 안에 둡니다.
+이 컴퓨터의 빌드 경로는 `/home/ave/catkin_ws_ioniq5/third_party/ecan_firmware`이며 첫 인자로
+명시해 재사용할 수 있습니다. 시스템 Python/ROS 또는 다른 작업공간은 변경하지 않습니다.
 
 기존 RELEASE bootstub은 debug key로 서명된 앱을 거부할 수 있습니다. 플래시 후 Panda가
 `PID_DDEE` bootstub에 남으면 앱을 반복해서 쓰지 말고, 차량과 분리된 상태에서 공식 Panda
@@ -65,7 +82,7 @@ python3 scripts/recover_panda.py \
   --serial RED_PANDA_SERIAL \
   --dfu-serial STM32_DFU_SERIAL \
   --confirm STM32_DFU_SERIAL \
-  --bootstub ~/.cache/ioniq5_ecan/upstream/panda/board/obj/bootstub.panda_h7.bin
+  --bootstub /home/ave/catkin_ws_ioniq5/third_party/ecan_firmware/panda/board/obj/bootstub.panda_h7.bin
 ```
 
 ## 플래시
@@ -74,11 +91,11 @@ python3 scripts/recover_panda.py \
 USB 전원에서, serial을 두 번 입력해야만 helper가 실행됩니다.
 
 ```bash
-source ~/.cache/ioniq5_ecan/upstream/venv/bin/activate
+source /home/ave/catkin_ws_ioniq5/third_party/ecan_firmware/venv/bin/activate
 python3 scripts/flash_panda.py \
   --serial RED_PANDA_SERIAL \
   --confirm RED_PANDA_SERIAL \
-  --firmware ~/.cache/ioniq5_ecan/upstream/panda/board/obj/panda_h7.bin.signed
+  --firmware /home/ave/catkin_ws_ioniq5/third_party/ecan_firmware/panda/board/obj/panda_h7.bin.signed
 ```
 
 helper는 앱에서 bootstub으로 전환한 뒤 새로 USB interface를 claim하므로 Windows WinUSB에서도
@@ -95,7 +112,7 @@ launch 기본값은 actuation 연구장 YAML이므로 passive 설정을 명시�
 차량과 분리된 상태에서 다음 read-only 검사 결과가 `PREFLIGHT PASS`인지 먼저 확인합니다.
 
 ```bash
-python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only
+python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only --require-command-session
 ```
 
 이 검사는 application PID와 정확한 `IONIQ5ECAN-dd8a5b3d-DEBUG` 문자열, 두 packet hash,
@@ -122,5 +139,19 @@ Panda logical bus 0에 대응합니다.
   safety mode/param 0, controls/faults 0. 정확한 설치 binary hash는 읽지 않았고
   전체 preflight PASS 판정도 실행하지 않았습니다.
 
-위 USB snapshot으로 최신 split-brake 후보의 설치 여부를 확정할 수 없습니다.
-이번 host 복귀 구현 및 문서 갱신에서는 firmware 빌드/flash를 수행하지 않았습니다.
+위 초기 USB snapshot만으로 당시 split-brake 후보의 설치 여부를 확정할 수 없습니다.
+이후 사용자가 I5R1 firmware 수정/flash를 승인하고 차량 하네스를 분리했습니다.
+
+- 2026-10-06 I5R1 ARM DEBUG 빌드 signed 앱 SHA-256:
+  `fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b`.
+- 별도 앱 flash 완료: serial `PANDA_SERIAL`, 하네스/ignition 0 확인 후 앱 영역만
+  교체했고 `Panda.up_to_date` 서명 비교와 `0xB7` capability를 재검증했습니다.
+  이전 앱 binary의 정확한 hash는 확보하지 않았습니다.
+- bootstub 후보 SHA-256:
+  `644ef25f217ffd899ef008d7d876ba67a4666d1a311b411ef326b57c77dfc3e2`.
+  기존 호환 DEBUG bootstub을 그대로 사용했으며 이 후보는 flash하지 않았습니다.
+- 고정 Hyundai safety/custom test: 995개 실행, 117개 skip, 878개 통과. custom 9개 전부 통과.
+- USB-only preflight PASS, NO_OUTPUT 7173에서 3개 송신 시도 차단, 실제 CAN TX 증가 0.
+
+네 patch hash 및 관측 범위는 [USB-only 기록](evidence/2026-10-06/command-session-usb-20261006.json)에
+있습니다. 이후 실차 CAN 수신/ECU 복구/주행 중 재인계는 실행하지 않았습니다.

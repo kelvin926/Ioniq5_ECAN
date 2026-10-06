@@ -1,0 +1,170 @@
+{
+  "observed_on": "2026-10-06",
+  "timezone": "Asia/Seoul",
+  "scope": "User-authorized firmware implementation and USB-only app flash/negative-TX bench. Vehicle harness disconnected; no vehicle actuation or ECU takeover/restoration executed.",
+  "authorization": {
+    "firmware_modification_and_flash": true,
+    "moving_same_session_command_return": true,
+    "usb_only_confirmed_by_user": true,
+    "harness_and_ignition_verified_zero_before_flash": true
+  },
+  "runtime_pins": {
+    "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
+    "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b"
+  },
+  "build": {
+    "status": "passed",
+    "builder": "IONIQ5ECAN",
+    "profile": "ALLOW_DEBUG",
+    "arm_compiler": "13.2.1",
+    "tool_root": "/home/ave/catkin_ws_ioniq5/third_party/ecan_firmware",
+    "signed_app_sha256": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+    "bootstub_candidate_sha256": "644ef25f217ffd899ef008d7d876ba67a4666d1a311b411ef326b57c77dfc3e2",
+    "patch_sha256": {
+      "opendbc-hyundai-canfd-split-arm.patch": "e69f5a71f2a53ada43a38c1aefa759855b9915659d5ecb28682ad2311c910d54",
+      "opendbc-command-session.patch": "0f69b7e6506a642f56e11af645d952142141f0c0de6469eb150745780c4e8fa2",
+      "panda-ecan-only.patch": "ecfb1d51dee7d6f3c67b2ff724eaa7a60e1e46890750a1f4d0e03c2b49ce53a2",
+      "panda-builder-env.patch": "fce74b553321b384dc9a8c01813449bf5df04a0b81300e131d8f72faabb85135"
+    }
+  },
+  "flash": {
+    "status": "completed_and_verified",
+    "script": "scripts/flash_panda.py",
+    "app_sha256": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+    "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+    "verification": "Installed app signature matched the signed candidate via Panda.up_to_date; post-reset 0xB7 magic 0x49355231 verified. Marker and packet ABI alone were not used as binary provenance.",
+    "bootstub_flashed": false,
+    "previous_app_exact_hash": "not_read",
+    "recovery_dfu_used": false
+  },
+  "tests": {
+    "native_host": {
+      "core": 50,
+      "panda_protocol": 5,
+      "panda_usb_read": 4,
+      "preflight_unit": 8,
+      "unique_cases": 67,
+      "failed": 0,
+      "node_sha256": "be6f94ef3049545ceda0f2f23519fd1f8af488bb6df48f9f29489a2a9963206a",
+      "catkin_reporter_summary": "126 tests, 0 errors, 0 failures, 0 skipped; root and child gtest suites are double-counted."
+    },
+    "firmware": {
+      "command": "python -m unittest opendbc.safety.tests.test_hyundai_canfd opendbc.safety.tests.test_ioniq5_command_session",
+      "executed": 995,
+      "skipped": 117,
+      "passed": 878,
+      "failed": 0,
+      "command_session_cases": 9,
+      "command_session_passed": 9
+    }
+  },
+  "standby_negative_tx": {
+    "script": "scripts/validate_command_session_usb.py",
+    "safety_mode": 19,
+    "safety_param": 7173,
+    "vehicle_connected": false,
+    "capability_magic": "0x49355231",
+    "session_flags": 16,
+    "attempted_addresses": [
+      "0x12A",
+      "0x1A0",
+      "0x730"
+    ],
+    "blocked_delta": 3,
+    "physical_tx_delta": [
+      0,
+      0,
+      0
+    ],
+    "controls_allowed": 0,
+    "passed": true,
+    "method": "Panda Python USB control writes select NO_OUTPUT session; three bulk CAN TX attempts are rejected by firmware. No loopback or vehicle used; finally restores original SILENT mode/param."
+  },
+  "preflight": {
+    "observed_at": "2026-10-06T21:52:56+09:00",
+    "script": "scripts/panda_preflight.py",
+    "arguments": "--serial PANDA_SERIAL --sample-seconds 0.2 --ecan-only --require-command-session --json",
+    "read_only": true,
+    "passed": true,
+    "failures": [],
+    "application_mode": true,
+    "vid": "0x3801",
+    "pid": "0xDDCC",
+    "hardware_type": "0x07",
+    "firmware": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+    "packet_versions": {
+      "health": "0x290DAE03",
+      "can": "0x75ABF276",
+      "matches_pinned": true
+    },
+    "command_session": {
+      "supported": true,
+      "status_hex": "3152354900000000"
+    },
+    "health": {
+      "uptime_s": 195,
+      "voltage_mV": 5786,
+      "harness_status": 0,
+      "ignition_line": 0,
+      "ignition_can": 0,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "faults": 0,
+      "fault_status": 0,
+      "rx_buffer_overflow": 0,
+      "tx_buffer_overflow": 0,
+      "heartbeat_lost": 0,
+      "power_save_enabled": 1,
+      "safety_rx_checks_invalid": 0
+    },
+    "physical_controllers": {
+      "rx_count": [
+        0,
+        0,
+        0
+      ],
+      "tx_count": [
+        0,
+        0,
+        0
+      ],
+      "forwarded_count": [
+        0,
+        0,
+        0
+      ],
+      "rx_delta": [
+        0,
+        0,
+        0
+      ],
+      "tx_delta": [
+        0,
+        0,
+        0
+      ],
+      "bus_off": [
+        0,
+        0,
+        0
+      ],
+      "error_warning": [
+        0,
+        0,
+        0
+      ],
+      "error_passive": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "remaining_verification": [
+    "Actual camera ownership endpoint (current 0x730/0x738, pinned fwdCamera 0x7C4) and positive ECU responses/quiet stock traffic",
+    "ROS publisher physical sign/cadence and vehicle tracking",
+    "Stock restoration and moving same-session command return on the actual vehicle under its closed-course test plan"
+  ],
+  "non_goals": "Do not carry prior ON approval across process/USB/Panda restart, CAN/ignition/harness faults, CANCEL or failed ECU restoration. Initial takeover still stationary. This record does not establish safe road operation."
+}

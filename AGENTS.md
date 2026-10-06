@@ -6,6 +6,11 @@
 - Follow the user's current request and preserve earlier accepted decisions.
 - Infer intent and complete tasks with the smallest root-cause fix.
 - Preserve existing behavior and scope; avoid unrelated changes.
+- Do not modify this computer's unrelated files, directory structure, installed packages,
+  OS/ROS configuration, or personal settings. The allowed project boundary is in state.json.
+- Inside that boundary, change only files directly required by the current request.
+- Account for applications' incidental outside-boundary writes. If an outside change is
+  required, stop and request explicit new authorization; never infer it from a build/run request.
 - For research, prioritize peer-reviewed papers and primary sources.
 - Verify key research decisions and distinguish evidence from inference.
 - Pin upstream comparisons to a commit; keep research snapshots separate from runtime pins.
@@ -37,6 +42,10 @@
 - Open issues describe unfinished work; they do not authorize work outside the current request.
 - Keep README, topic contracts, configuration comments, and handoff aligned with material changes.
 - Documentation must label current source behavior, dated observations, and unverified paths separately.
+- Keep README short: ROS input/message/units, control and button flow, startup, verification limits;
+  route detailed setup, safety and firmware procedures to docs/.
+- On shared computers, use user-requested one-time Git authentication only. Do not save account
+  tokens, change global Git credentials, or reuse another user's login; verify the requested account.
 
 ## Project baseline
 - Vehicle: research Hyundai Ioniq 5, model year 2022, HDA1, EV, radar-SCC.
@@ -55,8 +64,11 @@
 ## Input and engagement behavior
 - Command topic: `/ioniq5/actuation_command`.
 - Required input values: `lateral` and `acceleration`.
-- Default lateral mode: `steering_rate_deg_s`; acceleration uses m/s^2.
-- The upstream team's final units, semantics, message structure, and cadence remain unresolved.
+- Agreed upstream contract: `lateral` is steering-wheel angle rate in deg/s (not yaw rate
+  or target angle), and `acceleration` is longitudinal acceleration in m/s^2.
+- Keep the existing ActuationCommand message and `steering_rate_deg_s` active profile.
+- Upstream owns command generation/shaping. Vehicle sign validation and publisher cadence
+  verification remain pending; recommend non-latched publication at 20 Hz.
 - Supported modes: `steering_rate_deg_s`, `steering_rate_rad_s`,
   `curvature_1pm`, and `direct_torque`.
 - `unfiltered_input: true` skips host target/acceleration clamps and input smoothing.
@@ -68,6 +80,21 @@
 - Default `use_enable_field: false` makes the enable field optional.
 - LDA selects/toggles lateral-only control.
 - SET selects/toggles combined lateral and longitudinal control.
+- The user confirmed press-again ON/OFF toggles, not hold-to-run buttons.
+- Keep ROS subscription alive while waiting, OFF, disconnected, and recovering. No received
+  command means stock communication/NO_OUTPUT; numeric zero is a valid command, not absence.
+- With resume_on_command_return/I5R1 enabled, fresh commands plus physical ON may prepare
+  the first stationary ECU takeover. Panda is authoritative for volatile button selection.
+- Healthy publisher loss restores stock communication/NO_OUTPUT while retaining button intent.
+  Fresh input may retake ownership while moving only after prior verified ACTIVE control in the
+  same uninterrupted session and completed stock restoration. OFF revokes this eligibility.
+- CAN/USB/harness/ignition faults, restoration failures, CANCEL and expired EPS recovery do not
+  auto-resume. Process/USB/Panda restart clears selection. Never replay old targets.
+- The user authorized scoped firmware modification/flash and moving command-gap re-takeover.
+  The earlier USB-only confirmation applied to that flash, not later sessions. Recheck physical
+  connection before any firmware bench/flash; the user has since reported reconnecting Panda.
+- Use the workspace-local `ecan` entry point; do not install a global alias or edit shell config.
+- Keep ROS runtime files under this workspace by setting ROS_HOME and ROS_LOG_DIR.
 - Brake preserves lateral control and latches longitudinal control off.
 - Releasing the brake does not resume longitudinal control; SET must be operated again.
 

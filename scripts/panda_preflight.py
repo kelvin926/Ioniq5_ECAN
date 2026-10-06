@@ -147,7 +147,7 @@ def load_usb1():
     return usb1
 
 
-def probe(serial: Optional[str], sample_seconds: float) -> Dict[str, Any]:
+def probe(serial: Optional[str], sample_seconds: float, require_command_session: bool = False) -> Dict[str, Any]:
     usb1 = load_usb1()
     request_in = usb1.ENDPOINT_IN | usb1.TYPE_VENDOR | usb1.RECIPIENT_DEVICE
 
@@ -191,6 +191,15 @@ def probe(serial: Optional[str], sample_seconds: float) -> Dict[str, Any]:
             result["hardware_type"] = f"0x{hardware[0]:02X}" if hardware else "missing"
             result["is_red_panda"] = bool(hardware and hardware[0] == RED_PANDA_TYPE)
             result["packet_versions"] = parse_packet_versions(control_read(handle, 0xDD, 8))
+            if require_command_session:
+                try:
+                    session = control_read(handle, 0xB7, 8)
+                except usb1.USBError:
+                    session = b""
+                result["command_session"] = {
+                    "supported": len(session) == 8 and struct.unpack("<II", session)[0] == 0x49355231,
+                    "status_hex": session.hex(),
+                }
 
             health_before_raw = control_read(handle, 0xD2, HEALTH_STRUCT.size)
             result["health_packet_length"] = len(health_before_raw)
@@ -233,6 +242,8 @@ def evaluate(
         failures.append("Panda is in bootstub mode, not application mode")
     if not result.get("is_red_panda"):
         failures.append("connected hardware is not a Red Panda")
+    if "command_session" in result and not result["command_session"]["supported"]:
+        failures.append("Panda lacks the tested I5R1 command-session extension")
     if not allow_unpinned:
         if not result.get("packet_versions", {}).get("matches_pinned"):
             failures.append("Panda packet ABI does not match the pinned firmware")
@@ -292,6 +303,8 @@ def print_human(result: Dict[str, Any], failures: List[str]) -> None:
         f"{result.get('hardware_type')} firmware={result.get('firmware')}"
     )
     packet_versions = result.get("packet_versions", {})
+    if "command_session" in result:
+        print(f"[{'ok' if result['command_session']['supported'] else 'fail'}] I5R1 command-session extension")
     print(
         f"[{'ok' if packet_versions.get('matches_pinned') else 'fail'}] "
         f"packet_versions={packet_versions}"
@@ -336,12 +349,13 @@ def main() -> int:
         help="validate the ECAN-only firmware profile and physical controller 0 only",
     )
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--require-command-session", action="store_true")
     args = parser.parse_args()
     if args.sample_seconds < 0.0 or args.sample_seconds > 30.0:
         parser.error("--sample-seconds must be within [0,30]")
 
     try:
-        result = probe(args.serial, args.sample_seconds)
+        result = probe(args.serial, args.sample_seconds, args.require_command_session)
         failures = evaluate(result, args.allow_unpinned, args.require_harness, args.ecan_only)
     except (PreflightError, OSError) as error:
         if args.json:

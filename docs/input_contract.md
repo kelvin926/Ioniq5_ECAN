@@ -1,7 +1,9 @@
-# 임시 ROS 입력 계약
+# ROS 입력 계약
 
-2026-10-06 현재 코드와 기본 연구장 YAML 기준입니다. 상위 제어기 팀의 최종 물리량,
-단위, 부호, 메시지 구조와 송신 주기는 아직 확정되지 않았습니다.
+2026-10-06 사용자와 합의한 입력은 **목표 핸들 조향각속도(deg/s)**와
+**목표 종방향 가속도(m/s²)**입니다. 동료가 별도 상위 제어기를 만들어 이 형태로 출력합니다.
+모델 action, 목표 조향각, 앞바퀴 각속도, 차량 yaw rate 또는 페달 비율을 직접 보내지 않습니다.
+기본 연구장 YAML의 `input.lateral_mode=steering_rate_deg_s`, scale=1, offset=0을 유지합니다.
 
 명령 토픽은 `/ioniq5/actuation_command`이며 메시지는
 [`ActuationCommand.msg`](../msg/ActuationCommand.msg)입니다.
@@ -11,12 +13,44 @@
 | `stamp` | source timestamp, 지연 분석용. watchdog에는 사용하지 않음 |
 | `sequence` | 선택적 순서 검사. 0은 검사 생략, wraparound 및 timeout 후 publisher 재시작 허용 |
 | `enable` | `input.use_enable_field=true`일 때 매 메시지 deadman |
-| `lateral` | `input.lateral_mode`가 정하는 값, scale/offset 적용 전 |
-| `acceleration` | scale/offset 적용 전 가속도, 기본 단위 m/s² |
+| `lateral` | 합의된 활성 프로파일에서 목표 핸들 조향각속도, deg/s |
+| `acceleration` | 목표 종방향 가속도, m/s², 양수 가속 / 음수 감속 |
 
 기본 `use_enable_field=false`에서는 `lateral`과 `acceleration` 두 값만 필요합니다.
 유한한 최신 값을 계속 보내야 하며, 기본 command watchdog은 호스트 수신 시각 기준
 250 ms입니다. source timestamp와 호스트 steady clock은 별도 clock domain입니다.
+
+송신 권장은 20 Hz, non-latched publisher입니다. 같은 메시지에 두 값을 함께 넣습니다.
+`stamp`는 현재 수신 유효성 검사에 쓰이지 않으므로 상위 출력 노드가 오래된 모델 계획이나
+명령을 새 값처럼 반복 발행하지 않아야 합니다. `sequence=0`도 허용하지만 순서 번호를
+증가시켜 보내는 것을 권장합니다. 조향 부호는 차량의 실제 `steering_angle_deg` 증가 방향과
+대조하여 검증해야 합니다. 가속도 허용 범위는 -3.5~2.0 m/s²입니다.
+
+## 상시 구독과 차량 버튼
+
+차량 컴퓨터에서는 `/home/ave/catkin_ws_ioniq5/ecan` 한 줄로 시작합니다.
+노드는 publisher가 없거나 Panda가 연결되지 않아도 명령 토픽 구독을 유지합니다.
+버튼은 hold-to-run이 아닌 ON/OFF 토글입니다.
+
+| 입력 / 버튼 | 동작 |
+| --- | --- |
+| 최신 명령 없음 | 순정 ECU 통신을 유지하는 무출력 대기 |
+| 최신 명령 있음, 버튼 선택 없음 | 초기 순정 통신 유지, actuator 출력 없음 |
+| LDA 한 번 누름 | 조향 전용 ON, 다시 누르면 OFF |
+| SET 누르고 놓음 | 조향+종방향 ON, 다시 누르고 놓으면 OFF |
+
+버튼 OFF 중에도 구독은 유지하고 조향 목표각을 실측각으로 초기화합니다.
+OFF 중 수신된 조향각속도를 미리 적분하거나 다음 ON에 과거 목표를 이어 붙이지 않습니다.
+최신 값이 계속 있으면 OFF 중에도 ECU 소유권 및 비활성 CAN 프레임은 유지되며,
+순정 ADAS 통신 복귀와는 구분됩니다. 기본 I5R1 프로파일에서 값이 250 ms 끊기면
+소유권을 해제하고 순정 ECU 통신 복구 후 대기로 돌아가되 버튼 ON/OFF 선택을 유지합니다.
+입력만 끊긴 이전 ACTIVE 세션은 새 값과 정상 CAN, 복구 완료를 확인하여 주행 중 재인계할
+수 있습니다. 대기 중 OFF, 브레이크의 종방향 latch-off, CANCEL과 CAN/USB 고장을 무시하지 않습니다.
+이전 목표 조향각과 적분 상태는 버립니다. 첫 takeover 및 고장 후 재arm은 여전히 정차가 필요합니다.
+복구 실패 시 구독은 계속하지만 제어는 금지합니다. 실제 ECU 복구는 실차 확인이 필요합니다.
+
+`lateral=0`은 누적 목표 조향각 유지이며 중앙 복귀가 아닙니다.
+두 필드가 모두 0이어도 유효한 명령입니다. 값이 없다는 뜻은 토픽의 최신 수신이 없다는 뜻입니다.
 
 ## 횡방향 모드
 
@@ -68,6 +102,6 @@ Panda `controls_allowed`는 firmware 전역 허가이므로 각 채널의 active
 않았습니다. CAN 송신이나 software active 상태 자체가 ECU 실행 응답 또는 실제 구동력
 확인을 의미하지는 않습니다.
 
-최종 계약에서는 물리량/좌표계/부호, 가속도 경사 보상, 송신 주기와 jitter,
-source clock domain, sequence 재시작 규칙, deadman 소유 주체를 확정해야 합니다.
+물리량/단위/메시지는 위 계약을 사용합니다. 좌우 부호와 차량 추종 결과, 가속도 경사 보상,
+실제 송신 주기와 jitter, source clock domain, 상위 deadman 소유 주체는 통합 시 검증해야 합니다.
 설정으로 수용할 수 없는 변경은 메시지와 adapter 경계에서 반영합니다.
