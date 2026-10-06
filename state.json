@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "User requests publishing current fixes and evidence to main. Ignition cycling is deferred because it also shuts down this computer; the ignition-cycle hypothesis remains unverified. Preserve recurrent ECU/ACC fault and unverified ACTIVE outcome. Git delivery only with fresh one-time kelvin926 authentication; no vehicle actions or unrelated changes.",
+  "update_reason": "Current scoped recovery fixes, firmware patch source, docs and three dated evidence files pushed to main as e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce; remote SHA verified with kelvin926 one-time public_repo auth. This state-only receipt follows that verified source commit. Ignition-cycle hypothesis/vehicle fault/ACTIVE remain unverified, tests stopped. No vehicle or unrelated changes for delivery.",
   "current_request": {
     "description": "Commit and push the current ECAN startup/recovery fixes, firmware patch source, aligned documentation and dated evidence to kelvin926/Ioniq5_ECAN main. Keep actual tracking/fault resolution unverified and all vehicle tests stopped.",
-    "status": "main_delivery_authenticated_commit_and_push_pending",
+    "status": "source_fixes_and_evidence_pushed_main_remote_verified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -104,7 +104,8 @@
     "usb_checks": "Preflight PASS, standby 3/3 requests rejected, physical TX delta [0,0,0], controls0.",
     "actual_tracking": "Not executed after fix. Reconnected vehicle/P: CAN valid, session ready, NO_OUTPUT/7173 controls0 and raw TX0. ACCEnable3 remains. One approved 0x730 clear briefly removed records, then three same failures recurred in 2 s; stopped.",
     "post_fix_vehicle_record": "docs/evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json",
-    "git_commit_or_push": false
+    "git_commit_or_push": true,
+    "delivery_commit": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce"
   },
   "controller_startup": {
     "implemented_on": "2026-10-06",
@@ -252,28 +253,28 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "f2b6f0f6387471379fb146bd825585749f9025ab",
-    "head_subject": "Record verified I5R1 main documentation delivery",
+    "head": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
+    "head_subject": "Fix ECAN startup readiness and stock communication recovery",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
-      "origin_main": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
+      "origin_main": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
       "origin_feature": "e47a886e9a091d797d65b2c03ece2a503eef905d",
-      "update_result": "Fetched origin/main and fast-forwarded the relocated checkout from 0787351b67c3620495765b8307d0401003ffa958 to 9aa0b8c86035a8888ab0c23c1feabc8874142a25. No commit or push for the migration.",
-      "scope": "Latest origin/main observed during migration; subsequent local documentation/state edits are uncommitted."
+      "update_result": "Normal fast-forward push of scoped recovery fixes/evidence to main succeeded and git ls-remote matched e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce. Pre-delivery local/remote main were f2b6f0f6387471379fb146bd825585749f9025ab; no force push.",
+      "scope": "Verified current source-delivery main snapshot. origin_feature remains a historical migration observation, not a current feature-branch query. A state-only child receipt may follow."
     },
     "working_tree": {
       "observed_on": "2026-10-06",
       "preexisting_modified_tracked_files": 4,
       "preexisting_changes": "README, validation, vehicle-computer handoff and state retained uncommitted workspace-migration records. Cabana's three existing modified files are preserved separately.",
-      "changes_in_this_request": "36 scoped package files published, including prior local ECAN/I5R1 source/tests/patches/launcher and aligned documentation/evidence. Auth helper/profile under ignored build/ is not committed. Cabana and unrelated workspace files preserved.",
+      "changes_in_this_request": "23 scoped package files committed/pushed: startup/RX readiness/listener/dual-ECU restore fixes and tests, reproducible firmware patch source, aligned docs/AGENTS/state and three dated JSON observations. This state-only delivery receipt follows. Auth helper/profile and binaries not committed; Cabana/unrelated projects preserved.",
       "existing_work_preserved": true,
       "commit_or_push_performed": true,
-      "push_status": "current_ecan_source_and_documentation_delivered_to_main"
+      "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
     },
-    "head_scope": "Pre-recovery-fix delivery baseline: local HEAD and live remote main both f2b6f0f6387471379fb146bd825585749f9025ab. Current fixes/docs/evidence are being prepared for a new scoped push; git HEAD/origin main is authoritative. Dated binary/test provenance is retained separately.",
+    "head_scope": "Verified source-delivery commit e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce. This state-only child receipt does not change source/docs/evidence; git HEAD and live origin main are authoritative for the final receipt commit. Dated binary/test provenance is retained separately.",
     "delivery_snapshot": {
-      "observed_at": "2026-10-06T22:03:25+09:00",
-      "origin_main": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
+      "observed_at": "2026-10-06T23:04:51+09:00",
+      "origin_main": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
       "account": "kelvin926",
       "authentication": "one-time device flow, no credential/token persistence",
       "source": "git push exit 0 and git ls-remote"
@@ -1255,7 +1256,7 @@
     {
       "id": "local_ros_and_firmware_changes",
       "status": "published_main_vehicle_validation_pending",
-      "detail": "Current dual-ECU/I5R1 source and patches published in main delivery 70310fb01ad9d9ea708325c01b7feeaaa099afeb. USB-only app flash separately verified; later stationary test observed ECU communication disable/restoration, but readiness failed before ACTIVE and moving return remains untested."
+      "detail": "Current startup/RX/listener/restoration fixes, tests, firmware patch source/docs/evidence published in main e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce. New app USB-only flash separately verified and post-reconnect standby ready observed; recurrent ECU/ACC fault remains. Actual ACTIVE/moving return not validated."
     },
     {
       "id": "automatic_deceleration",
@@ -1303,7 +1304,7 @@
       "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
     }
   ],
-  "next_action": "Publish only current scoped fixes/docs/evidence to main with verified one-time kelvin926 authentication and normal fast-forward push. Verify remote main and revoke only the new token. Vehicle diagnostics/clear/reset/cycle/actuation remain stopped; do not claim tracking works or ignition cycling is proven necessary. Preserve other projects/global ROS/configuration.",
+  "next_action": "Report verified main delivery and close the one-time auth session after pushing this state-only receipt. No further vehicle work requested. Diagnostics/clear/reset/cycle/actuation remain stopped; await new user direction and do not claim tracking works or ignition cycling is proven necessary. Preserve other projects/global ROS/configuration.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -1491,6 +1492,12 @@
       "type": "post_fix_reconnection_and_single_730_clear_recurrence_stop",
       "summary": "Reconnected startup/session ready/stock RX normal with no actuator TX. ACC fault persisted; preserved ECU records and user authorized one 0x730 clear. Positive54/immediate empty list followed by same three status89 records in 2 s, ACCEnable3 unchanged. Default session/Panda restored, stopped further clear/diagnostics/actuation. Actual tracking and vehicle root cause unverified.",
       "source": "docs/evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "recovery_fix_main_delivery_verified",
+      "summary": "User deferred ignition cycling because it powers this computer off and requested push only. Published 23 scoped fix/docs/evidence files in e8be380, normal fast-forward main and remote SHA verified with fresh kelvin926 public_repo device auth. Git 2.25 auth compatibility fixed after two failed attempts; both prior tokens revoked. No vehicle access, unrelated changes or repeated implementation tests/builds.",
+      "source": "Git commit/push/ls-remote outputs; recovery_fix_delivery receipt"
     }
   ],
   "ecu_recovery": {
@@ -2301,16 +2308,25 @@
     "target": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
     "account": "kelvin926",
-    "status": "kelvin926_authenticated_commit_and_push_pending",
+    "status": "source_commit_pushed_remote_verified",
+    "source_commit": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
+    "remote_verification": {
+      "observed_at": "2026-10-06T23:04:51+09:00",
+      "method": "git push succeeded; git ls-remote refs/heads/main matched source commit",
+      "push_exit_code": 0,
+      "forced": false
+    },
+    "receipt_scope": "This state-only child records the verified source delivery; no source/docs/evidence changes. Final child remote SHA and token revocation are checked at session close, not pre-claimed by this receipt.",
     "scope": "Current startup/initial-RX/listener/dual-ECU restoration fixes, reproducible firmware patch source, targeted regression tests, aligned docs/AGENTS/state and three dated evidence JSON files. No built binaries or diagnostic/auth scratch scripts.",
     "verification": "Prior 18 targeted host and 14 custom firmware tests/builds/USB flash checks retained. Current four JSON parsers, Bash syntax, staged diff whitespace, explicit 23-file staging and credential-pattern check passed. No repeated build or vehicle access.",
     "authentication": {
-      "status": "fresh_one_time_identity_and_permission_verified",
+      "status": "fresh_one_time_identity_permission_and_source_push_verified",
       "verified_account": "kelvin926",
       "verified_user_id": 52805466,
       "granted_scope": "public_repo",
       "token_or_device_code_recorded": false,
-      "cleanup": "New token currently only in auth worker memory, pending scoped delivery and revocation. Task-local browser launch exited; temporary profile remains solely under ignored build until worker cleanup."
+      "compatibility": "Git 2.25 ignores GIT_CONFIG_COUNT and requires every legacy GIT_CONFIG_PARAMETERS pair to be quoted. Two failed push attempts changed no remote refs; both issued tokens revoked (204 and subsequent 401 verified). Complete legacy parameter format tested before the final authentication, source push succeeded.",
+      "cleanup_policy": "Token is never saved. Revoke only the final issued token on worker finish after receipt push; close owned browser and remove task profile. Final cleanup result is reported at session close, not pre-claimed here."
     },
     "authentication_policy": "Fresh GitHub CLI public OAuth device flow, request public_repo, verify kelvin926 before writes; new token only in process memory/child Git environment. Temporary incognito profile under ignored package build, browser filesystem sandbox read-only outside workspace. No saved Git credentials/global config changes; revoke only this issued token and remove task profile at completion.",
     "unresolved": "ACCEnable3 and three 0x730 status89 records recur after one clear; actual tracking and moving re-engagement remain unverified. Ignition-cycle hypothesis is not established."
