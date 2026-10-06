@@ -1,5 +1,8 @@
 # Pinned Panda firmware
 
+2026-10-06 기준의 build/ABI 요구사항입니다. 빌드 결과, 플래시 이력과 현재 USB 관측은
+별도 사실이며 설치 image의 정확한 provenance는 [인수인계](vehicle_handoff.md)에 있습니다.
+
 종방향 Hyundai safety flag는 Panda의 `ALLOW_DEBUG` 빌드에서만 적용됩니다. release
 firmware에서 param `3077`을 설정하면 LONG bit가 무시됩니다. 드라이버는 시작 시 zero-accel
 비활성 SCC 프레임으로 이 능력을 검사하고, Panda가 차단하면 `NO_OUTPUT`으로 돌아가
@@ -11,9 +14,9 @@ HDA1 종방향 실차 시험은 카메라 ECU `0x730`의 통신을 끊어 순정
 각각 tester-present를 보내며, 종료 시 레이더와 카메라 순서로 통신을 복구합니다.
 
 이 저장소는 고정 opendbc에 opt-in safety param bit `1024`와 ECAN-only bit `2048`을
-추가합니다. `1024`가 있을 때
-차선유지(LDA) 버튼의 상승 에지도 Panda의 전역 `controls_allowed`를 허용하며, host가 LDA의
-조향 전용 모드와 SET의 조향+종방향 모드를 게이트합니다.
+추가합니다. `1024`가 있을 때 firmware가 횡/종방향 허가를 별도로 추적합니다. LDA는
+조향 전용 모드, SET release는 조향+종방향 모드를 토글하며 brake는 종방향 허가만
+래치 해제합니다. 따라서 brake 중에도 LFA용 전역 `controls_allowed`가 유지됩니다.
 `2048`은 Panda forwarding을 양방향 차단하고 firmware가 physical CAN1(논리 ECAN 0)을
 제외한 transceiver를 끕니다. 활성 safety mode는 정확히 `harness_status=1`일 때만 허용됩니다.
 따라서 upstream stock image가 아니라 아래 스크립트가 만든
@@ -26,8 +29,10 @@ HDA1 종방향 실차 시험은 카메라 ECU `0x730`의 통신을 끊어 순정
 - expected health packet hash: `0x290DAE03`
 - expected CAN packet hash: `0x75ABF276`
 
-다른 firmware는 USB 연결 단계에서 거부됩니다. 이 고정은 ABI와 safety semantics가
-조용히 바뀌는 것을 막기 위한 의도적인 제한입니다.
+USB 연결 단계에서 firmware marker와 packet ABI를 검사합니다. marker가 같더라도 패치
+revision이나 설치 binary가 같다는 보장은 없습니다. 실제 설치 hash는 플래시 및 signature
+기록으로 별도 확인해야 합니다. 로컬 host의 3초 일시 EPS 복귀는 firmware 변경 없이
+구현했지만 채널 분리 동작에는 대응하는 split-brake firmware가 필요합니다.
 
 ## 빌드
 
@@ -83,8 +88,9 @@ bootstub만 진입점으로 허용하고, 앱 image에는 반드시 `IONIQ5ECAN-
 있어야 합니다. 플래시 후 version과 signature를 다시
 검증하며 RELEASE 또는 다른 commit의 bootstub이면 앱 영역을 지우기 전에 중단합니다.
 
-플래시 후 노드를 `allow_actuation: false`로 시작해 protocol hash, hardware type,
-harness 상태와 CAN RX만 먼저 확인합니다.
+플래시 후 read-only preflight로 ABI를 확인하고, 차량 연결 시
+`config/ioniq5_ecan_passive.yaml`로 시작해 hardware/harness와 RX를 확인합니다.
+launch 기본값은 actuation 연구장 YAML이므로 passive 설정을 명시해야 합니다.
 
 차량과 분리된 상태에서 다음 read-only 검사 결과가 `PREFLIGHT PASS`인지 먼저 확인합니다.
 
@@ -93,10 +99,28 @@ python3 scripts/panda_preflight.py --serial RED_PANDA_SERIAL --ecan-only
 ```
 
 이 검사는 application PID와 정확한 `IONIQ5ECAN-dd8a5b3d-DEBUG` 문자열, 두 packet hash,
-Red Panda hardware type, health ABI, fault/overflow 및 ECAN physical controller 0 상태를
+Red Panda hardware type, health ABI, fault/overflow 및 ECAN controller index 0 상태를
 확인합니다. Panda에 control write나 CAN frame을 보내지 않습니다. 차량 하네스 연결 후에는
 `--require-harness`를 추가해 `harness_status=1`과 ECAN RX 증가까지 확인합니다.
+여기서 controller index 0은 0부터 세는 firmware index이며 차량 physical CAN1 및
+Panda logical bus 0에 대응합니다.
 
-2026-08-21 Windows ARM GCC 빌드 및 실제 Red Panda 앱 플래시에서 확인한 최신 signed app
-SHA-256은 `1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae`입니다.
-부트스텁은 플래시하지 않았습니다.
+## 날짜별 firmware 기록
+
+- 2026-08-21 마지막 기록된 앱 flash SHA-256:
+  `1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae`.
+  당시 bootstub은 플래시하지 않았습니다.
+- 같은 날짜의 split-brake signed 후보:
+  `ffe0428536394ee7743a37f10338b4a19668f343f742e1b5de25c43df43f6986`.
+  ARM GCC `-Werror` 빌드는 통과했지만 후보 flash는 기록되지 않았습니다.
+- 당시 bootstub 후보:
+  `b420ab8d7d10d85a4b6883e37f6e4cbf38b724776afde823e7a9f4d5e1463a08`.
+- split patch SHA-256:
+  `e69f5a71f2a53ada43a38c1aefa759855b9915659d5ecb28682ad2311c910d54`.
+- 2026-10-06 USB read snapshot: Red Panda application mode,
+  `IONIQ5ECAN-dd8a5b3d-DEBUG`, 위 packet hashes, harness/ignition 0,
+  safety mode/param 0, controls/faults 0. 정확한 설치 binary hash는 읽지 않았고
+  전체 preflight PASS 판정도 실행하지 않았습니다.
+
+위 USB snapshot으로 최신 split-brake 후보의 설치 여부를 확정할 수 없습니다.
+이번 host 복귀 구현 및 문서 갱신에서는 firmware 빌드/flash를 수행하지 않았습니다.

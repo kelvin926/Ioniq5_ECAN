@@ -235,7 +235,7 @@ VehicleStateData VehicleStateParser::snapshot(TimePoint now,
   copy.valid = recent(steering_time_, now, critical_timeout) &&
                recent(mdps_time_, now, critical_timeout) &&
                recent(wheel_time_, now, critical_timeout) &&
-               recent(tcs_time_, now, critical_timeout) && !copy.eps_fault;
+               recent(tcs_time_, now, critical_timeout);
   return copy;
 }
 

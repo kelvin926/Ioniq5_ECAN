@@ -5,6 +5,14 @@
 #include <utility>
 
 namespace ioniq5_ecan {
+namespace {
+// Match Carrotpilot's soft-disable recovery window, without extending it on each update.
+constexpr auto kSoftDisableTime = std::chrono::seconds(3);
+
+bool is_engaged(ControlState state) {
+  return state == ControlState::Active || state == ControlState::SoftDisabling;
+}
+}  // namespace
 
 SafetySupervisor::SafetySupervisor(SafetyConfig config) : config_(config) {
   if (!std::isfinite(config_.max_active_speed_mps) ||
@@ -39,6 +47,10 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
                                         const PandaHealth& panda, const CommandSample& command) {
   const auto decision = [&](bool lateral_allowed, bool longitudinal_allowed,
                             bool use_vehicle_safety_mode, bool heartbeat_engaged) {
+    const auto remaining = state_ == ControlState::SoftDisabling && now < soft_disable_deadline_
+                             ? std::chrono::duration_cast<std::chrono::milliseconds>(
+                                 soft_disable_deadline_ - now).count()
+                             : 0;
     return SafetyDecision{state_,
                           lateral_allowed,
                           longitudinal_allowed,
@@ -46,7 +58,8 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
                           config_.allow_longitudinal && longitudinal_enabled_,
                           use_vehicle_safety_mode,
                           heartbeat_engaged,
-                          reason_};
+                          reason_,
+                          static_cast<uint32_t>(remaining)};
   };
 
   const bool panda_fresh = panda.connected && panda.updated_at.time_since_epoch().count() != 0 &&
@@ -95,14 +108,42 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   const bool cancel_event = vehicle.cancel_button_events != last_cancel_button_events_;
   last_cancel_button_events_ = vehicle.cancel_button_events;
 
+  bool longitudinal_disengaged_by_brake = false;
+  bool longitudinal_disengaged_by_acc_fault = false;
+  if (vehicle.brake_pressed) {
+    if (config_.lateral_disengage_on_brake) {
+      lateral_enabled_ = false;
+    }
+    if (config_.longitudinal_disengage_on_brake && longitudinal_enabled_) {
+      longitudinal_enabled_ = false;
+      longitudinal_disengaged_by_brake = true;
+    }
+  }
+  if (vehicle.acc_fault && config_.allow_longitudinal && longitudinal_enabled_) {
+    longitudinal_enabled_ = false;
+    longitudinal_disengaged_by_acc_fault = true;
+  }
+
   const uint32_t effective_faults = panda.faults & ~panda.ignored_faults;
   const bool ignored_fault_is_only_fault =
     panda.faults != 0U && effective_faults == 0U && panda.ignored_faults != 0U;
+  bool longitudinal_tx_rejected = false;
   if (panda.heartbeat_lost || panda.safety_rx_checks_invalid || panda.bus_off ||
       effective_faults != 0U || (panda.fault_status != 0U && !ignored_fault_is_only_fault)) {
     fault("Panda safety or CAN health fault");
-  } else if (state_ == ControlState::Active && panda.safety_tx_blocked > last_tx_blocked_) {
-    fault("Panda rejected an active control frame");
+  } else if (is_engaged(state_) && panda.safety_tx_blocked > last_tx_blocked_) {
+    const bool longitudinal_address =
+      panda.last_rejected_address == 0x1A0U || panda.last_rejected_address == 0x160U;
+    // A returned rejected frame can arrive one USB read after the health counter. When brake and
+    // the counter rise in the same update, the one in-flight SCC/FCA rejection belongs to the
+    // longitudinal channel even if its address has not been observed yet.
+    const bool pending_brake_rejection = longitudinal_disengaged_by_brake;
+    if ((longitudinal_address || pending_brake_rejection) && lateral_enabled_) {
+      longitudinal_enabled_ = false;
+      longitudinal_tx_rejected = true;
+    } else {
+      fault("Panda rejected an active lateral or unknown control frame");
+    }
   }
   last_tx_blocked_ = panda.safety_tx_blocked;
 
@@ -124,7 +165,7 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
 
   if (panda.safety_mode != config_.required_safety_mode ||
       panda.safety_param != config_.required_safety_param) {
-    if (state_ == ControlState::Active) {
+    if (is_engaged(state_)) {
       fault("Panda safety mode changed while active");
     } else {
       transition(ControlState::Armed, "waiting for configured Panda safety mode");
@@ -133,11 +174,7 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
   }
 
   if (!vehicle.valid) {
-    fault("critical vehicle state timeout or EPS fault");
-    return decision(false, false, false, false);
-  }
-  if (vehicle.acc_fault && config_.allow_longitudinal && longitudinal_enabled_) {
-    fault("ACC fault");
+    fault("critical vehicle state timeout");
     return decision(false, false, false, false);
   }
   if (config_.max_active_speed_mps > 0.0 && vehicle.speed_mps > config_.max_active_speed_mps) {
@@ -149,10 +186,6 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     fault("steering angle safety limit exceeded");
     return decision(false, false, false, false);
   }
-  if (config_.disengage_on_brake && vehicle.brake_pressed) {
-    disarm("brake pressed");
-    return decision(false, false, false, false);
-  }
   if (config_.disengage_on_cancel && cancel_event) {
     disarm("cancel button pressed");
     return decision(false, false, false, false);
@@ -162,7 +195,7 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
                              now >= command.received_at &&
                              now - command.received_at <= config_.command_timeout;
   if (!command_fresh) {
-    if (state_ == ControlState::Active) {
+    if (is_engaged(state_)) {
       fault("control command timeout");
     } else {
       transition(ControlState::Armed, "waiting for fresh command");
@@ -184,6 +217,31 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     transition(ControlState::Armed, "waiting for LDA lateral-only or SET combined arm");
     return decision(false, false, true, false);
   }
+
+  if (vehicle.eps_fault && state_ != ControlState::SoftDisabling) {
+    if (state_ != ControlState::Active) {
+      transition(ControlState::Armed, "waiting for temporary EPS fault to clear");
+      return decision(false, false, true, false);
+    }
+    soft_disable_deadline_ = now + kSoftDisableTime;
+    transition(ControlState::SoftDisabling, "temporary EPS fault; lateral paused");
+  }
+  if (state_ == ControlState::SoftDisabling) {
+    // Even a late fault-clear sample cannot resume a pause whose window has expired.
+    if (now >= soft_disable_deadline_) {
+      fault("temporary EPS fault recovery timed out");
+      return decision(false, false, false, false);
+    }
+    if (vehicle.eps_fault || !panda.controls_allowed) {
+      const bool longitudinal = longitudinal_requested && panda.controls_allowed &&
+                                !(config_.longitudinal_override_on_gas && vehicle.gas_pressed);
+      transition(ControlState::SoftDisabling,
+                 vehicle.eps_fault ? "temporary EPS fault; lateral paused"
+                                   : "EPS fault cleared; waiting for Panda controls_allowed");
+      // Retain channel selection, CAN ownership and heartbeat. Never force Panda permission.
+      return decision(false, longitudinal, true, true);
+    }
+  }
   if (!panda.controls_allowed) {
     transition(ControlState::Armed, "Panda controls_allowed is false");
     return decision(false, false, true, false);
@@ -197,12 +255,21 @@ SafetyDecision SafetySupervisor::update(TimePoint now, const VehicleStateData& v
     return decision(false, false, true, false);
   }
 
-  transition(ControlState::Active,
-             lateral && longitudinal ? "active: lateral + longitudinal" : "active: lateral");
+  transition(
+    ControlState::Active,
+    lateral && longitudinal
+      ? "active: lateral + longitudinal"
+      : (longitudinal_disengaged_by_brake
+           ? "active: lateral; longitudinal disengaged by brake"
+           : (longitudinal_disengaged_by_acc_fault
+                ? "active: lateral; longitudinal disengaged by ACC fault"
+                : (longitudinal_tx_rejected ? "active: lateral; longitudinal frame rejected"
+                                            : "active: lateral"))));
   return decision(lateral, longitudinal, true, true);
 }
 
 void SafetySupervisor::transition(ControlState next, std::string reason) {
+  if (next != ControlState::SoftDisabling) soft_disable_deadline_ = TimePoint{};
   state_ = next;
   reason_ = std::move(reason);
 }

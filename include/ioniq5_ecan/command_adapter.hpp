@@ -19,6 +19,9 @@ LateralInputMode lateral_mode_from_string(const std::string& value);
 
 struct CommandAdapterConfig {
   LateralInputMode lateral_mode{LateralInputMode::SteeringRateDegPerSec};
+  // Preserve the upstream command exactly through the host adapter. The Hyundai LFA interface
+  // still requires rate-to-torque conversion and Panda-enforced torque limits/slew.
+  bool unfiltered_input{true};
   double lateral_scale{1.0};
   double lateral_offset{0.0};
   double acceleration_scale{1.0};
@@ -59,7 +62,7 @@ class CommandAdapter {
   explicit CommandAdapter(CommandAdapterConfig config = {});
 
   ControlOutput update(const CommandSample& command, const VehicleStateData& vehicle,
-                       double dt_seconds, bool active, bool longitudinal_allowed);
+                       double dt_seconds, bool lateral_allowed, bool longitudinal_allowed);
   void reset(const VehicleStateData& vehicle);
   const CommandAdapterConfig& config() const;
   double target_angle_deg() const;

@@ -5,7 +5,8 @@ hardware:
   data_bitrate_kbps: 2000
   usb_read_timeout_ms: 20
   usb_write_timeout_ms: 10
-  # Initial HDA1/Hyundai K hypothesis. Confirm from the passive trace.
+  # Hyundai K: physical CAN1 -> logical ECAN 0; camera bus 2 is unused.
+  # Match alternate_buttons to the actual passive fingerprint.
   ecan_bus: 0
   camera_bus: 2
   ecan_only: true
@@ -25,12 +26,15 @@ raw_can:
 
 safety:
   # This profile cannot enter the Hyundai actuation safety model.
+  # The ROS node still configures Panda NO_OUTPUT/bitrates; for control reads only,
+  # use scripts/panda_preflight.py instead.
   allow_actuation: false
   allow_longitudinal: false
   auto_arm_on_command: false
   lateral_button_toggle: true
   longitudinal_button_toggle: true
-  disengage_on_brake: true
+  lateral_disengage_on_brake: false
+  longitudinal_disengage_on_brake: true
   disengage_on_cancel: true
   longitudinal_override_on_gas: true
   max_active_speed_mps: 0.0

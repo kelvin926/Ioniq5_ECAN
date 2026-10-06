@@ -1,4 +1,5 @@
 <launch>
+  <!-- Default is the active research profile. Pass ioniq5_ecan_passive.yaml for RX observation. -->
   <arg name="config" default="$(find ioniq5_ecan)/config/ioniq5_ecan.yaml" />
 
   <node pkg="ioniq5_ecan" type="ioniq5_ecan_node" name="ioniq5_ecan_node" output="screen">

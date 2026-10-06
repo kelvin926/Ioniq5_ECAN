@@ -26,8 +26,10 @@ struct PandaUsbConfig {
 class PandaUsb {
  public:
   static constexpr uint16_t kSafetySilent = 0;
+  static constexpr uint16_t kSafetyElm327 = 3;
   static constexpr uint16_t kSafetyNoOutput = 19;
   static constexpr uint16_t kSafetyHyundaiCanFd = 28;
+  static constexpr uint16_t kElm327EcanParam = 1;
   static constexpr uint16_t kHyundaiEv = 1;
   static constexpr uint16_t kHyundaiLongitudinal = 4;
   static constexpr uint16_t kHyundaiCameraScc = 8;

@@ -1,39 +1,49 @@
 # Raw CAN ROS 1 interface
 
-이 패키지는 Red Panda USB를 C++ 노드 하나가 단독 소유합니다. `pandad`, Cabana `--panda`,
-다른 Panda Python 프로세스를 동시에 실행하면 USB interface claim이 충돌합니다. Cabana가
-필요하면 ROS raw topic을 rosbag으로 기록한 뒤 변환하거나, 별도 실행에서 Cabana를 사용합니다.
+2026-10-06 현재 노드와 YAML 기준입니다. Red Panda USB는 C++ 노드 하나가 단독 소유합니다.
+`pandad`, Cabana `--panda`, 다른 Panda 프로세스와 동시에 열면 interface claim이 충돌합니다.
+Cabana 분석에는 ROS 기록을 변환하거나 별도 실행에서 Panda를 사용합니다.
 
 ## RX
 
 - `/ioniq5/can_rx`: bus 0/1/2 통합 stream
 - `/ioniq5/can0/rx`, `/ioniq5/can1/rx`, `/ioniq5/can2/rx`: bus별 stream
 
-`RawCanFrame`은 29-bit address, Panda bus, classic/CAN-FD 구분, returned/rejected 표시와
-0~64 byte payload를 보존합니다. RX publisher queue는 256입니다.
+[`RawCanFrame.msg`](../msg/RawCanFrame.msg)는 address, bus, CAN-FD/IDE,
+returned/rejected와 최대 64 byte payload를 보존합니다. publisher queue는 256입니다.
+ECAN-only firmware에서는 실제 차량 RX가 bus 0에만 들어옵니다. returned/rejected 프레임은
+Panda 송신 결과 metadata이며 순정 ECU 메시지 재개 증거로 사용하지 않습니다.
+`stamp`는 ROS publish 시각으로, 하드웨어 CAN 수신 timestamp가 아닙니다.
 
 ```bash
 rostopic echo /ioniq5/can0/rx
-rosbag record /ioniq5/can_rx /ioniq5/vehicle_state /ioniq5/actuation_command
+rosbag record /ioniq5/can_rx /ioniq5/vehicle_state /ioniq5/actuation_command /diagnostics
 ```
 
 ## TX
 
-`/ioniq5/can_tx`도 같은 `RawCanFrame`을 사용합니다. `returned`와 `rejected`는 TX에서 항상
-false여야 하며, classic CAN은 최대 8 byte, CAN-FD는 표준 DLC 길이
-`0..8, 12, 16, 20, 24, 32, 48, 64`만 받습니다.
+`/ioniq5/can_tx`는 같은 메시지와 subscriber queue 256을 사용합니다.
+`returned`와 `rejected`는 false여야 합니다. classic CAN은 최대 8 byte, CAN-FD는
+표준 DLC 길이 `0..8, 12, 16, 20, 24, 32, 48, 64`만 받습니다. `extended`는 address와
+별개인 CAN IDE 비트입니다. ROS 배열은 크기 제한이 없으므로 callback이 크기와 형식을
+검사합니다. 형식은 `rosmsg show ioniq5_ecan/RawCanFrame`으로 확인할 수 있습니다.
 
-메시지 구조는 `rosmsg show ioniq5_ecan/RawCanFrame`으로 확인하십시오. ROS 1 메시지 배열은
-길이 제한을 표현하지 못하므로 노드가 수신 시 64 byte 상한을 검사합니다. 실제 TX에는
-수동 분석으로 검증한 address, bus, FD 여부, payload를 입력해야 합니다. 고수준 제어 노드가 이미
-소유하는 LFA/SCC/FCA ID를 raw TX로 동시에 보내면 counter와 주기가 충돌하므로 한 경로만
-사용합니다. `extended`는 address 숫자와 별개인 CAN IDE 비트이며 그대로 Panda에 전달됩니다.
+실제 송신은 다음 조건을 모두 요구합니다.
 
-실제 송신 조건은 다음 세 가지입니다.
+1. `raw_can.allow_tx=true`
+2. 연결된 Panda가 노드의 Hyundai safety mode에 있고 최신 supervisor 결정이 종방향을 허가
+3. `0x12A` LFA는 추가로 횡방향 출력 허가
+4. Panda `HYUNDAI_CANFD`의 address/bus/content 검사 통과
 
-1. `raw_can.allow_tx: true`
-2. 최신 명령과 차량 상태가 유효하고 `SET` 조향+종방향 통합 모드가 active
-3. Panda `HYUNDAI_CANFD` safety hook의 address/bus/content 검사 통과
+정상 상태에서는 SET 통합 모드가 이 gate를 엽니다. brake/ACC 오류로 종방향이 래치
+해제되면 raw TX도 차단됩니다. `SOFT_DISABLING`에서 정상 종방향 허가가 유지되면
+그 gate는 남지만 raw LFA는 차단합니다. PASSIVE, ECU 복구 중, 연결 단절 시에는 송신하지
+않습니다. 모든 raw ID의 개별 허용 여부는 Panda hook이 결정합니다.
 
-임의 CAN ID를 무제한 송신하도록 `SAFETY_ALLOUTPUT`을 사용하지 않습니다. 허용되지 않은
-프레임은 Panda가 차단하고 returned stream에 `rejected: true`로 나타납니다.
+고수준 경로가 소유하는 LFA/SCC/FCA를 raw로 동시에 송신하면 counter와 주기가 충돌합니다.
+해당 ID는 송신 주체를 하나로 유지해야 합니다. Panda가 거부한 프레임은 returned stream의
+`rejected=true`로 관찰하며 호스트의 채널 해제/fault 처리에도 반영합니다.
+
+기본 연구장 YAML은 raw TX를 켜며 passive YAML은 끕니다. passive ROS 노드는 Panda 설정과
+`NO_OUTPUT` 전환을 수행합니다. USB control read만 수행하는 별도
+[`panda_preflight.py`](../scripts/panda_preflight.py)와 동작이 다릅니다.

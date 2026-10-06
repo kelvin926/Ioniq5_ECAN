@@ -6,7 +6,8 @@ hardware:
   data_bitrate_kbps: 2000
   usb_read_timeout_ms: 20
   usb_write_timeout_ms: 10
-  # Hyundai K + Ioniq 5 HDA1: ECAN=0, camera=2.
+  # Hyundai K + Ioniq 5 HDA1: physical CAN1 -> logical ECAN 0.
+  # camera_bus=2 is unused in this ECAN-only profile.
   ecan_bus: 0
   camera_bus: 2
   # Custom firmware keeps only ECAN enabled; harness_status must be 1.
@@ -26,13 +27,17 @@ topics:
 raw_can:
   publish_rx: true
   publish_bus_topics: true
-  # TX still passes through the active Panda HYUNDAI_CANFD safety hook.
+  # Raw TX requires longitudinal permission; LFA also requires lateral permission.
+  # Panda HYUNDAI_CANFD whitelist/content checks still apply.
   allow_tx: true
 
 input:
   # Placeholder contract until the Alpamayo team freezes its message definition.
   # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
   lateral_mode: "steering_rate_deg_s"
+  # Do not clamp/slew the ROS steering-rate or acceleration input in the host adapter.
+  # Torque conversion/count limits, CAN quantization, engagement and watchdogs remain.
+  unfiltered_input: true
   lateral_scale: 1.0
   lateral_offset: 0.0
   acceleration_scale: 1.0
@@ -61,10 +66,10 @@ lateral:
   integrator_freeze_speed_mps: 5.0
   low_speed_factor_bp_mps: [0.0, 10.0, 20.0, 30.0]
   low_speed_factor_v: [15.0, 13.0, 10.0, 5.0]
-  # Wide host-side target bounds; change these without rebuilding.
+  # Host target bounds apply only when input.unfiltered_input is false.
   max_target_angle_deg: 175.0
   max_target_rate_deg_s: 500.0
-  # Ioniq 5 CAN-FD/Panda limits used by Carrotpilot.
+  # Command-path count limits at 100 Hz, not verified maximum MDPS motor torque.
   max_torque: 270
   torque_rate_up: 2
   torque_rate_down: 3
@@ -82,20 +87,23 @@ longitudinal:
   # cannot pass the pinned Panda firmware's -3.5/+2.0 checks.
   accel_min_mps2: -3.5
   accel_max_mps2: 2.0
+  # SCC_CONTROL JerkLowerLimit metadata only; this does not slew the ROS acceleration command.
   jerk_limit_mps3: 5.0
   set_speed_kph: 30.0
 
 safety:
-  # Research-site profile: the first fresh two-value command arms automatically.
+  # Research-site profile: a fresh command may auto-arm after stationary/EPS/CAN
+  # preflight and ECU quiet verification. Longitudinal also needs D and stock SCC.
   # LDA selects lateral-only; SET release selects lateral + longitudinal.
   allow_actuation: true
   allow_longitudinal: true
   auto_arm_on_command: true
   lateral_button_toggle: true
   longitudinal_button_toggle: true
-  # Optional host reactions are disabled for the closed research-site profile.
-  # Panda firmware behavior and the command/Panda watchdog remain in force.
-  disengage_on_brake: false
+  # The LDA steering channel ignores brake. Brake latches only longitudinal off until SET is
+  # pressed again; releasing the brake alone never resumes acceleration.
+  lateral_disengage_on_brake: false
+  longitudinal_disengage_on_brake: true
   disengage_on_cancel: false
   longitudinal_override_on_gas: false
   # Zero disables these optional host-side limits. Panda firmware limits remain.
@@ -104,6 +112,9 @@ safety:
   command_timeout_ms: 250
   panda_timeout_ms: 500
   vehicle_state_timeout_ms: 250
+
+  # Temporary active EPS pause: fixed 3-second return window (not a YAML parameter).
+  # Hard-fault ECU restore retries are separate: 1..30 s backoff and explicit rearm.
 
 runtime:
   control_rate_hz: 100

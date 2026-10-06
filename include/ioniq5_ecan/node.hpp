@@ -7,10 +7,12 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "ioniq5_ecan/ActuationCommand.h"
 #include "ioniq5_ecan/RawCanFrame.h"
@@ -18,6 +20,7 @@
 #include "ioniq5_ecan/command_adapter.hpp"
 #include "ioniq5_ecan/hyundai_canfd_codec.hpp"
 #include "ioniq5_ecan/panda_usb.hpp"
+#include "ioniq5_ecan/recovery_retry.hpp"
 #include "ioniq5_ecan/safety_supervisor.hpp"
 #include "ioniq5_ecan/vehicle_state_parser.hpp"
 
@@ -47,10 +50,24 @@ class Ioniq5EcanNode {
                            const SafetyDecision& decision);
   void apply_realtime_settings(const char* name, int priority, int cpu);
   void load_configuration();
-  void request_internal_disarm();
-  void enter_vehicle_safety_mode();
+  uint64_t request_internal_disarm();
+  void enter_vehicle_safety_mode(const VehicleStateData& vehicle);
   void enter_no_output_mode();
+  void retry_no_output_recovery(TimePoint now);
   void verify_longitudinal_firmware();
+  void observe_control_frame(const CanFrame& frame);
+  std::vector<uint8_t> uds_request(uint32_t request_address, uint32_t response_address,
+                                   const std::vector<uint8_t>& payload,
+                                   const std::vector<uint8_t>& expected_prefix);
+  void send_uds(uint32_t request_address, const std::vector<uint8_t>& payload);
+  void send_tester_present(uint32_t request_address, TimePoint& last_sent);
+  void disable_ecu(const char* label, uint32_t request_address, uint32_t response_address,
+                   uint32_t owned_address, std::atomic<uint64_t>& owned_count, bool& disabled,
+                   TimePoint& last_tester_present);
+  void restore_ecu(const char* label, uint32_t request_address, uint32_t response_address,
+                   uint32_t owned_address, std::atomic<uint64_t>& owned_count, bool& disabled);
+  void maintain_disabled_ecus(TimePoint now);
+  bool copy_recent_scc_template(TimePoint now, CanFrame& frame) const;
 
   ros::NodeHandle node_handle_;
   ros::NodeHandle private_node_handle_;
@@ -89,14 +106,23 @@ class Ioniq5EcanNode {
   std::atomic<bool> requested_arm_{false};
   std::atomic<bool> applied_arm_{false};
   std::atomic<bool> auto_arm_inhibited_{false};
+  std::atomic<bool> recovery_pending_{false};
+  std::atomic<bool> recovery_rearm_required_{false};
+  std::atomic<uint64_t> recovery_attempts_{0};
   std::atomic<uint64_t> arm_request_generation_{0};
   std::atomic<bool> vehicle_safety_mode_{false};
   std::atomic<uint64_t> raw_can_rx_count_{0};
   std::atomic<uint64_t> raw_can_tx_count_{0};
   std::atomic<uint64_t> raw_can_tx_drop_count_{0};
+  std::atomic<uint64_t> stock_lfa_count_{0};
+  std::atomic<uint64_t> stock_scc_count_{0};
+  std::atomic<uint32_t> last_rejected_address_{0};
   std::thread receive_thread_;
   std::thread control_thread_;
 
+  // Serializes safety-mode transitions and all host CAN transmission. The receive thread remains
+  // free to deliver UDS replies while a transition is waiting for an ECU response.
+  mutable std::mutex actuation_mutex_;
   mutable std::mutex command_mutex_;
   CommandSample latest_command_;
   uint32_t last_sequence_{0};
@@ -104,6 +130,20 @@ class Ioniq5EcanNode {
   PandaHealth latest_health_;
   mutable std::mutex decision_mutex_;
   SafetyDecision latest_decision_;
+  mutable std::mutex stock_scc_mutex_;
+  CanFrame latest_stock_scc_;
+  bool have_stock_scc_{false};
+  mutable std::mutex uds_mutex_;
+  std::condition_variable uds_condition_;
+  bool uds_waiting_{false};
+  uint32_t uds_response_address_{0};
+  std::vector<uint8_t> uds_response_;
+  bool camera_disabled_{false};
+  bool radar_disabled_{false};
+  // Protected by actuation_mutex_; receive and service callbacks only set the atomic request.
+  RecoveryRetry recovery_retry_;
+  TimePoint last_camera_tester_present_{};
+  TimePoint last_radar_tester_present_{};
 
   ros::Subscriber command_subscription_;
   ros::Subscriber raw_can_tx_subscription_;

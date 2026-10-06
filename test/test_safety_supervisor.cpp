@@ -35,7 +35,7 @@ void arm_lateral(ioniq5_ecan::SafetySupervisor& supervisor, FixtureData& data) {
             ioniq5_ecan::ControlState::Active);
 }
 
-TEST(SafetySupervisor, RequiresArmCommandAndLaneButtonForLateral) {
+TEST(SafetySupervisor, BrakeDoesNotDisengageLateral) {
   using namespace ioniq5_ecan;
   FixtureData data;
   SafetyConfig config;
@@ -46,9 +46,10 @@ TEST(SafetySupervisor, RequiresArmCommandAndLaneButtonForLateral) {
   data.vehicle.brake_pressed = true;
   const SafetyDecision decision =
     supervisor.update(data.now, data.vehicle, data.panda, data.command);
-  EXPECT_EQ(decision.state, ControlState::Passive);
-  EXPECT_FALSE(decision.lateral_allowed);
-  EXPECT_FALSE(supervisor.arm_requested());
+  EXPECT_EQ(decision.state, ControlState::Active);
+  EXPECT_TRUE(decision.lateral_allowed);
+  EXPECT_FALSE(decision.longitudinal_allowed);
+  EXPECT_TRUE(supervisor.arm_requested());
 }
 
 TEST(SafetySupervisor, FaultsOnModeDriftAndCanBeExplicitlyCleared) {
@@ -186,7 +187,6 @@ TEST(SafetySupervisor, SetPressReenablesCombinedModeAfterPandaDisengagement) {
   config.allow_longitudinal = true;
   config.required_safety_param = 3077;
   data.panda.safety_param = 3077;
-  config.disengage_on_brake = false;
   SafetySupervisor supervisor(config);
   ASSERT_TRUE(supervisor.request_arm(true));
   ++data.vehicle.set_button_events;
@@ -211,6 +211,42 @@ TEST(SafetySupervisor, SetPressReenablesCombinedModeAfterPandaDisengagement) {
   EXPECT_TRUE(resumed.longitudinal_allowed);
 }
 
+TEST(SafetySupervisor, BrakeLatchesOffLongitudinalAndKeepsLateral) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  config.allow_longitudinal = true;
+  config.required_safety_param = 3077;
+  data.panda.safety_param = 3077;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+
+  ++data.vehicle.set_button_events;
+  SafetyDecision both = supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  ASSERT_TRUE(both.lateral_allowed);
+  ASSERT_TRUE(both.longitudinal_allowed);
+
+  data.vehicle.brake_pressed = true;
+  SafetyDecision braking = supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(braking.state, ControlState::Active);
+  EXPECT_TRUE(braking.lateral_allowed);
+  EXPECT_FALSE(braking.longitudinal_allowed);
+  EXPECT_TRUE(braking.lateral_armed);
+  EXPECT_FALSE(braking.longitudinal_armed);
+  EXPECT_TRUE(supervisor.arm_requested());
+
+  data.vehicle.brake_pressed = false;
+  SafetyDecision released = supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_TRUE(released.lateral_allowed);
+  EXPECT_FALSE(released.longitudinal_allowed);
+
+  ++data.vehicle.set_button_events;
+  SafetyDecision reenabled = supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_TRUE(reenabled.lateral_allowed);
+  EXPECT_TRUE(reenabled.longitudinal_allowed);
+}
+
 TEST(SafetySupervisor, AccFaultOnlyBlocksLongitudinalChannel) {
   using namespace ioniq5_ecan;
   FixtureData data;
@@ -229,8 +265,62 @@ TEST(SafetySupervisor, AccFaultOnlyBlocksLongitudinalChannel) {
   EXPECT_TRUE(lateral.lateral_allowed);
 
   ++data.vehicle.set_button_events;
-  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
-            ControlState::Fault);
+  const SafetyDecision combined_attempt =
+    supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(combined_attempt.state, ControlState::Active);
+  EXPECT_TRUE(combined_attempt.lateral_allowed);
+  EXPECT_FALSE(combined_attempt.longitudinal_allowed);
+  EXPECT_TRUE(supervisor.arm_requested());
+}
+
+TEST(SafetySupervisor, LongitudinalTxRejectionKeepsLateralActive) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  config.allow_longitudinal = true;
+  config.required_safety_param = 3077;
+  data.panda.safety_param = 3077;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+  ++data.vehicle.set_button_events;
+  ASSERT_TRUE(
+    supervisor.update(data.now, data.vehicle, data.panda, data.command).longitudinal_allowed);
+
+  data.panda.last_rejected_address = 0x1A0U;
+  ++data.panda.safety_tx_blocked;
+  const SafetyDecision rejected =
+    supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(rejected.state, ControlState::Active);
+  EXPECT_TRUE(rejected.lateral_allowed);
+  EXPECT_FALSE(rejected.longitudinal_allowed);
+  EXPECT_TRUE(supervisor.arm_requested());
+}
+
+TEST(SafetySupervisor, BrakeAndDelayedRejectedAddressKeepLateralActive) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  config.allow_longitudinal = true;
+  config.required_safety_param = 3077;
+  data.panda.safety_param = 3077;
+  SafetySupervisor supervisor(config);
+  ASSERT_TRUE(supervisor.request_arm(true));
+  ++data.vehicle.set_button_events;
+  ASSERT_TRUE(
+    supervisor.update(data.now, data.vehicle, data.panda, data.command).longitudinal_allowed);
+
+  data.vehicle.brake_pressed = true;
+  // The last observed address can still be stale when the health counter arrives first.
+  data.panda.last_rejected_address = 0x12AU;
+  ++data.panda.safety_tx_blocked;
+  const SafetyDecision braking =
+    supervisor.update(data.now, data.vehicle, data.panda, data.command);
+  EXPECT_EQ(braking.state, ControlState::Active);
+  EXPECT_TRUE(braking.lateral_allowed);
+  EXPECT_FALSE(braking.longitudinal_allowed);
+  EXPECT_TRUE(supervisor.arm_requested());
 }
 
 TEST(SafetySupervisor, ZeroDisablesOptionalHostSpeedAndAngleLimits) {

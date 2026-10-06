@@ -33,6 +33,10 @@ class HyundaiCanFdCodec {
   CanFrame make_lfa_cluster(bool enabled, uint8_t bus = 0);
   CanFrame make_fca_warning(uint8_t bus = 0);
 
+  void set_scc_control_template(const CanFrame& frame);
+  void clear_scc_control_template();
+  bool has_scc_control_template() const;
+
   void reset_counters(uint8_t lfa = 0, uint8_t scc = 0, uint8_t cluster = 0,
                       uint8_t fca_warning = 0);
 
@@ -41,6 +45,8 @@ class HyundaiCanFdCodec {
   uint8_t scc_counter_{0};
   uint8_t cluster_counter_{0};
   uint8_t fca_warning_counter_{0};
+  std::array<uint8_t, 32> scc_template_{};
+  bool has_scc_template_{false};
 };
 
 }  // namespace ioniq5_ecan

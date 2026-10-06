@@ -11,17 +11,19 @@ index bf08fb17..22222222 100644
  #define HYUNDAI_CANFD_SCC_CONTROL_COMMON_TX_MSGS(e_can, longitudinal) \
    {0x1A0, e_can, 32, .check_relay = (longitudinal)},  /* SCC_CONTROL */ \
  
-@@ -47,6 +50,9 @@
+@@ -47,6 +50,11 @@
  
  static bool hyundai_canfd_alt_buttons = false;
  static bool hyundai_canfd_lka_steer_msg_alt = false;
 +static bool hyundai_canfd_split_button_arm = false;
 +static bool hyundai_canfd_lda_button_prev = false;
 +static bool hyundai_canfd_ecan_only = false;
++static bool hyundai_canfd_lateral_controls_allowed = false;
++static bool hyundai_canfd_longitudinal_controls_allowed = false;
  
  static unsigned int hyundai_canfd_get_lka_addr(void) {
    return hyundai_canfd_lka_steer_msg_alt ? 0x110U : 0x50U;
-@@ -84,15 +90,25 @@ static void hyundai_canfd_rx_hook(const CANPacket_t *msg) {
+@@ -84,30 +92,61 @@ static void hyundai_canfd_rx_hook(const CANPacket_t *msg) {
      const unsigned int button_addr = hyundai_canfd_alt_buttons ? 0x1aaU : 0x1cfU;
      if (msg->addr == button_addr) {
        bool main_button = false;
@@ -36,18 +38,58 @@ index bf08fb17..22222222 100644
          main_button = GET_BIT(msg, 34U);
 +        lda_button = GET_BIT(msg, 39U);
        }
++      const bool set_released =
++        (cruise_button != HYUNDAI_BTN_SET) && (cruise_button_prev == HYUNDAI_BTN_SET);
        hyundai_common_cruise_buttons_check(cruise_button, main_button);
 +
-+      // Repository-local opt-in: allow an LDA rising edge to establish Panda's global
-+      // controls_allowed. Host software selects lateral-only or combined control.
-+      if (hyundai_canfd_split_button_arm && lda_button && !hyundai_canfd_lda_button_prev) {
-+        controls_allowed = true;
++      // Repository-local opt-in: mirror the host's LDA lateral-only and SET combined toggles.
++      // Brake handling below drops only longitudinal, so global controls remain available for LFA.
++      if (hyundai_canfd_split_button_arm) {
++        if (lda_button && !hyundai_canfd_lda_button_prev) {
++          const bool lateral_only = hyundai_canfd_lateral_controls_allowed &&
++                                    !hyundai_canfd_longitudinal_controls_allowed;
++          hyundai_canfd_lateral_controls_allowed = !lateral_only;
++          hyundai_canfd_longitudinal_controls_allowed = false;
++        }
++        if (hyundai_longitudinal && set_released) {
++          const bool combined = hyundai_canfd_lateral_controls_allowed &&
++                                hyundai_canfd_longitudinal_controls_allowed;
++          hyundai_canfd_lateral_controls_allowed = !combined;
++          hyundai_canfd_longitudinal_controls_allowed = !combined;
++        }
++        controls_allowed = hyundai_canfd_lateral_controls_allowed ||
++                           hyundai_canfd_longitudinal_controls_allowed;
 +      }
 +      hyundai_canfd_lda_button_prev = lda_button;
      }
  
      // gas press, different for EV, hybrid, and ICE models
-@@ -179,7 +195,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+     if ((msg->addr == 0x35U) && hyundai_ev_gas_signal) {
+-      gas_pressed = msg->data[5] != 0U;
++      gas_pressed = hyundai_canfd_split_button_arm ? false : (msg->data[5] != 0U);
+     } else if ((msg->addr == 0x105U) && hyundai_hybrid_gas_signal) {
+-      gas_pressed = GET_BIT(msg, 103U) || (msg->data[13] != 0U) || GET_BIT(msg, 112U);
++      const bool pressed = GET_BIT(msg, 103U) || (msg->data[13] != 0U) || GET_BIT(msg, 112U);
++      gas_pressed = hyundai_canfd_split_button_arm ? false : pressed;
+     } else if ((msg->addr == 0x100U) && !hyundai_ev_gas_signal && !hyundai_hybrid_gas_signal) {
+-      gas_pressed = GET_BIT(msg, 176U);
++      gas_pressed = hyundai_canfd_split_button_arm ? false : GET_BIT(msg, 176U);
+     } else {
+     }
+ 
+     // brake press
+     if (msg->addr == 0x175U) {
+-      brake_pressed = GET_BIT(msg, 81U);
++      const bool pressed = GET_BIT(msg, 81U);
++      brake_pressed = hyundai_canfd_split_button_arm ? false : pressed;
++      if (hyundai_canfd_split_button_arm && pressed) {
++        hyundai_canfd_longitudinal_controls_allowed = false;
++        controls_allowed = hyundai_canfd_lateral_controls_allowed;
++      }
+     }
+ 
+     // vehicle moving
+@@ -179,7 +218,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
    }
  
    // UDS: only tester present ("\x02\x3E\x80\x00\x00\x00\x00\x00") allowed on diagnostics address
@@ -57,7 +99,19 @@ index bf08fb17..22222222 100644
      if ((GET_BYTES(msg, 0, 4) != 0x00803E02U) || (GET_BYTES(msg, 4, 4) != 0x0U)) {
        tx = false;
      }
-@@ -218,6 +235,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+@@ -195,6 +235,11 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+     if (hyundai_longitudinal) {
+       violation |= longitudinal_accel_checks(desired_accel_raw, HYUNDAI_LONG_LIMITS);
+       violation |= longitudinal_accel_checks(desired_accel_val, HYUNDAI_LONG_LIMITS);
++      const int acc_mode = (msg->data[8] >> 4) & 0x7U;
++      if (hyundai_canfd_split_button_arm && !hyundai_canfd_longitudinal_controls_allowed &&
++          ((desired_accel_raw != 0) || (desired_accel_val != 0) || (acc_mode != 0))) {
++        violation = true;
++      }
+     } else {
+       // only used to cancel on here
+       const int acc_mode = (msg->data[8] >> 4) & 0x7U;
+@@ -218,6 +263,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
  static safety_config hyundai_canfd_init(uint16_t param) {
    const uint16_t HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT = 128;
    const uint16_t HYUNDAI_PARAM_CANFD_ALT_BUTTONS = 32;
@@ -66,7 +120,7 @@ index bf08fb17..22222222 100644
  
    static const CanMsg HYUNDAI_CANFD_LKA_STEER_MSG_TX_MSGS[] = {
      HYUNDAI_CANFD_LKA_STEER_MSG_COMMON_TX_MSGS(0, 1)
-@@ -255,6 +274,22 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -255,6 +302,22 @@ static safety_config hyundai_canfd_init(uint16_t param) {
      {0x7D0, 0, 8, .check_relay = false},  // tester present for radar ECU disable
    };
  
@@ -89,17 +143,19 @@ index bf08fb17..22222222 100644
    // ADRV_0x160 is checked for relay malfunction
  #define HYUNDAI_CANFD_LFA_STEERING_CAMERA_SCC_TX_MSGS(longitudinal) \
      HYUNDAI_CANFD_CRUISE_BUTTON_TX_MSGS(2) \
-@@ -267,6 +302,9 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -267,6 +330,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
    gen_crc_lookup_table_16(0x1021, hyundai_canfd_crc_lut);
    hyundai_canfd_alt_buttons = GET_FLAG(param, HYUNDAI_PARAM_CANFD_ALT_BUTTONS);
    hyundai_canfd_lka_steer_msg_alt = GET_FLAG(param, HYUNDAI_PARAM_CANFD_LKA_STEER_MSG_ALT);
 +  hyundai_canfd_split_button_arm = GET_FLAG(param, HYUNDAI_PARAM_CANFD_SPLIT_BUTTON_ARM);
 +  hyundai_canfd_lda_button_prev = false;
 +  hyundai_canfd_ecan_only = GET_FLAG(param, HYUNDAI_PARAM_CANFD_ECAN_ONLY);
++  hyundai_canfd_lateral_controls_allowed = false;
++  hyundai_canfd_longitudinal_controls_allowed = false;
  
    safety_config ret;
    if (hyundai_longitudinal) {
-@@ -300,7 +338,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -300,7 +368,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
        if (hyundai_camera_scc) {
          SET_TX_MSGS(hyundai_canfd_lfa_steering_camera_scc_tx_msgs, ret);
        } else {
@@ -112,7 +168,7 @@ index bf08fb17..22222222 100644
        }
      }
  
-@@ -333,7 +375,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -333,7 +405,11 @@ static safety_config hyundai_canfd_init(uint16_t param) {
          HYUNDAI_CANFD_SCC_ADDR_CHECK(0)
        };
  
@@ -125,7 +181,7 @@ index bf08fb17..22222222 100644
  
        if (hyundai_canfd_alt_buttons) {
          SET_RX_CHECKS(hyundai_canfd_alt_buttons_radar_scc_rx_checks, ret);
-@@ -369,6 +415,7 @@ static safety_config hyundai_canfd_init(uint16_t param) {
+@@ -369,6 +445,7 @@ static safety_config hyundai_canfd_init(uint16_t param) {
      }
    }
  
@@ -137,7 +193,7 @@ diff --git a/opendbc/safety/tests/test_hyundai_canfd.py b/opendbc/safety/tests/t
 index 6cec7376..33333333 100755
 --- a/opendbc/safety/tests/test_hyundai_canfd.py
 +++ b/opendbc/safety/tests/test_hyundai_canfd.py
-@@ -284,5 +284,87 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
+@@ -284,5 +284,142 @@ class TestHyundaiCanfdLFASteeringLongAltButtons(TestHyundaiCanfdLFASteeringLongB
      pass
  
  
@@ -164,6 +220,24 @@ index 6cec7376..33333333 100755
 +    values = {"LDA_BTN": pressed}
 +    return self.packer.make_can_msg_safety(name, 0, values)
 +
++  def _button_msg(self, button):
++    return self.packer.make_can_msg_safety(
++      "CRUISE_BUTTONS", 0, {"CRUISE_BUTTONS": button})
++
++  def _brake_msg(self, pressed):
++    return self.packer.make_can_msg_safety("TCS", 0, {"DriverBraking": pressed})
++
++  def _gas_msg(self, pressed):
++    return self.packer.make_can_msg_safety(
++      "ACCELERATOR", 0, {"ACCELERATOR_PEDAL": 1 if pressed else 0})
++
++  def _scc_msg(self, accel, enabled):
++    return self.packer.make_can_msg_safety("SCC_CONTROL", 0, {
++      "ACCMode": 1 if enabled else 0,
++      "aReqRaw": accel,
++      "aReqValue": accel,
++    })
++
 +  def test_lda_rising_edge_is_opt_in(self):
 +    for alternate in (False, True):
 +      with self.subTest(alternate=alternate):
@@ -177,12 +251,12 @@ index 6cec7376..33333333 100755
 +        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
 +        self.assertTrue(self.safety.get_controls_allowed())
 +
-+        self.safety.set_controls_allowed(False)
-+        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
-+        self.assertFalse(self.safety.get_controls_allowed())
-+        self.safety.safety_rx_hook(self._lda_button_msg(alternate, False))
++        # Holding LDA does not create a second edge. The next release/press toggles lateral off.
 +        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
 +        self.assertTrue(self.safety.get_controls_allowed())
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, False))
++        self.safety.safety_rx_hook(self._lda_button_msg(alternate, True))
++        self.assertFalse(self.safety.get_controls_allowed())
 +
 +  def test_ecan_only_blocks_both_forwarding_directions(self):
 +    param = HyundaiSafetyFlags.EV_GAS | self.SPLIT_BUTTON_ARM | self.ECAN_ONLY
@@ -221,6 +295,43 @@ index 6cec7376..33333333 100755
 +      libsafety_py.make_CANPacket(0x730, 0, tester_present)))
 +    self.assertFalse(self.safety.safety_tx_hook(
 +      libsafety_py.make_CANPacket(0x7D0, 0, tester_present)))
++
++  def test_brake_disables_only_longitudinal(self):
++    param = (HyundaiSafetyFlags.EV_GAS | HyundaiSafetyFlags.LONG |
++             self.SPLIT_BUTTON_ARM | self.ECAN_ONLY)
++    self.safety.set_safety_hooks(CarParams.SafetyModel.hyundaiCanfd, param)
++    self.safety.init_tests()
++
++    # SET release selects combined lateral and longitudinal control.
++    self.safety.safety_rx_hook(self._button_msg(2))
++    self.safety.safety_rx_hook(self._button_msg(0))
++    self.assertTrue(self.safety.get_controls_allowed())
++    self.assertTrue(self.safety.safety_tx_hook(self._scc_msg(0.1, True)))
++
++    self.safety.safety_rx_hook(self._brake_msg(True))
++    self.assertTrue(self.safety.get_controls_allowed())
++    self.assertFalse(self.safety.safety_tx_hook(self._scc_msg(0.1, True)))
++    self.assertFalse(self.safety.safety_tx_hook(self._scc_msg(0.0, True)))
++    self.assertTrue(self.safety.safety_tx_hook(self._scc_msg(0.0, False)))
++    self.assertTrue(self.safety.safety_tx_hook(
++      self.packer.make_can_msg_safety("LFA", 0, {"StrTqReqVal": 1, "ActToiSta": 1})))
++
++    # Releasing brake does not re-arm longitudinal; the next SET release does.
++    self.safety.safety_rx_hook(self._brake_msg(False))
++    self.assertFalse(self.safety.safety_tx_hook(self._scc_msg(0.1, True)))
++    self.safety.safety_rx_hook(self._button_msg(2))
++    self.safety.safety_rx_hook(self._button_msg(0))
++    self.assertTrue(self.safety.safety_tx_hook(self._scc_msg(0.1, True)))
++
++  def test_split_mode_does_not_filter_longitudinal_on_gas(self):
++    param = (HyundaiSafetyFlags.EV_GAS | HyundaiSafetyFlags.LONG |
++             self.SPLIT_BUTTON_ARM | self.ECAN_ONLY)
++    self.safety.set_safety_hooks(CarParams.SafetyModel.hyundaiCanfd, param)
++    self.safety.init_tests()
++    self.safety.safety_rx_hook(self._button_msg(2))
++    self.safety.safety_rx_hook(self._button_msg(0))
++    self.safety.safety_rx_hook(self._gas_msg(True))
++    self.assertTrue(self.safety.safety_tx_hook(self._scc_msg(0.1, True)))
 +
 +
  if __name__ == "__main__":

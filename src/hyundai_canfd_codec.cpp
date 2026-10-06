@@ -102,11 +102,21 @@ CanFrame HyundaiCanFdCodec::make_lfa(int torque, bool enabled, bool torque_reque
 CanFrame HyundaiCanFdCodec::make_scc_control(double accel_raw_mps2, double accel_value_mps2,
                                              bool enabled, bool stopping, bool gas_override,
                                              double set_speed_kph, double jerk_mps3, uint8_t bus) {
-  std::array<uint8_t, 32> data{};
-  accel_raw_mps2 = std::clamp(accel_raw_mps2, -3.5, 2.0);
-  accel_value_mps2 = std::clamp(accel_value_mps2, -3.5, 2.0);
-  jerk_mps3 = std::clamp(jerk_mps3, 0.0, 12.7);
-  set_speed_kph = std::clamp(set_speed_kph, 0.0, 255.0);
+  if (!std::isfinite(accel_raw_mps2) || !std::isfinite(accel_value_mps2) ||
+      !std::isfinite(set_speed_kph) || !std::isfinite(jerk_mps3)) {
+    throw std::invalid_argument("SCC_CONTROL contains a non-finite value");
+  }
+  if (accel_raw_mps2 < -3.5 || accel_raw_mps2 > 2.0 || accel_value_mps2 < -3.5 ||
+      accel_value_mps2 > 2.0) {
+    throw std::out_of_range("SCC_CONTROL acceleration exceeds Panda range [-3.5,2.0]");
+  }
+  if (jerk_mps3 < 0.0 || jerk_mps3 > 12.7 || set_speed_kph < 0.0 || set_speed_kph > 255.0) {
+    throw std::out_of_range("SCC_CONTROL metadata is outside its CAN representation");
+  }
+
+  // HDA1 radar SCC_CONTROL contains vehicle-specific fields that are not owned by this bridge.
+  // Begin with the last stock frame and overwrite only the fields this node intentionally owns.
+  std::array<uint8_t, 32> data = has_scc_template_ ? scc_template_ : std::array<uint8_t, 32>{};
 
   set_signal(data, 16, 8, scc_counter_++, ByteOrder::LittleEndian);
   set_signal(data, 24, 11, 10, ByteOrder::LittleEndian);  // 1.0 m object distance
@@ -170,6 +180,22 @@ CanFrame HyundaiCanFdCodec::make_fca_warning(uint8_t bus) {
   finish_frame(frame, data);
   return frame;
 }
+
+void HyundaiCanFdCodec::set_scc_control_template(const CanFrame& frame) {
+  if (frame.address != kSccControlAddress || frame.size != scc_template_.size() || frame.extended) {
+    throw std::invalid_argument("invalid stock SCC_CONTROL template");
+  }
+  std::copy_n(frame.data.begin(), scc_template_.size(), scc_template_.begin());
+  has_scc_template_ = true;
+  scc_counter_ = static_cast<uint8_t>(frame.data[2] + 1U);
+}
+
+void HyundaiCanFdCodec::clear_scc_control_template() {
+  scc_template_.fill(0U);
+  has_scc_template_ = false;
+}
+
+bool HyundaiCanFdCodec::has_scc_control_template() const { return has_scc_template_; }
 
 void HyundaiCanFdCodec::reset_counters(uint8_t lfa, uint8_t scc, uint8_t cluster,
                                        uint8_t fca_warning) {

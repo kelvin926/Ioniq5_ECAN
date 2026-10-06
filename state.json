@@ -1,0 +1,1535 @@
+{
+  "schema_version": 1,
+  "updated_on": "2026-10-06",
+  "timezone": "Asia/Seoul",
+  "update_reason": "User is moving work to the vehicle computer and explicitly requested a vehicle-computer handoff document and Git push. Bundle the previously authorized local implementation/documentation so the transferred guide matches its source.",
+  "current_request": {
+    "description": "Prepare and push the vehicle-computer handoff and current project source/context for Ubuntu 20.04 / ROS 1 Noetic.",
+    "status": "preparing_vehicle_computer_transfer",
+    "user_facing_language": "Korean",
+    "artifact_language": "English",
+    "further_implementation_requested": false,
+    "vehicle_actuation_decision": {
+      "recorded_on": "2026-10-06",
+      "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
+      "user_mitigation": "User said they would hold the brake and confirmed a supervised research setting. The latest checksum-valid TCS frame reports brake_pressed=true.",
+      "decision": "Retain existing torque/angle/time and engagement requirements. Do not issue actuation while the existing initial ignition_line=1 requirement is unmet.",
+      "reason": "Fresh Panda health reports ignition_line=0 and ignition_can=0 despite user-confirmed READY; scripts/steering_sweep.py rejects this before CAN configuration and ECU takeover. Root cause of missing Panda ignition detection remains unresolved.",
+      "bounded_alternative": "Existing maximum steering torque is 270 counts; no limit or activation-gate changes were made. A right-only bounded procedure was not executed.",
+      "observations": {
+        "sample_seconds": 2,
+        "panda_uptime_s": 511,
+        "harness_status": 1,
+        "ignition_line": 0,
+        "ignition_can": 0,
+        "safety_mode": 0,
+        "controls_allowed": 0,
+        "wheel_speeds_kph": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "brake_pressed": true,
+        "gear": "D / raw 5",
+        "accelerator_pedal": 0,
+        "steering_angle_deg": -1.3,
+        "driver_torque_counts": -10,
+        "eps_fault": false,
+        "ecan_rx_delta": 4815,
+        "tx_delta_all_controllers": [
+          0,
+          0,
+          0
+        ],
+        "selected_can_crc_failures": 0,
+        "source": "build/steering-readiness-20261006.json, read-only USB/CAN capture decoded with current pinned parser/checksum semantics.",
+        "freshness": "Initial USB backlog can predate the sample. Latest frames after draining and increasing hardware RX counters establish ongoing reception; this is a dated observation, not continuing monitoring."
+      },
+      "actions": "Vendor control reads, bulk CAN IN and persistent-state update only. No control writes, heartbeat, CAN transmission, ECU diagnostics, steering, runtime/firmware/configuration changes, implementation tests or builds.",
+      "later_prerequisite_observation": {
+        "observed_on": "2026-10-06",
+        "source": "build/panda-post-fuse-20261006.json",
+        "detail": "After user-reported fuse replacement ignition_line is 1 and LFA/SCC traffic is present. The prior ignition blocker was a pre-replacement observation. No steering executed or newly authorized by this confirmation request."
+      }
+    }
+  },
+  "maintenance": {
+    "instructions_file": "AGENTS.md",
+    "state_file": "state.json",
+    "update_state_on": [
+      "material_goal_change",
+      "material_constraint_change",
+      "material_decision_change",
+      "material_blocker_change",
+      "material_active_work_change",
+      "material_environment_change",
+      "material_verified_result"
+    ],
+    "update_instructions_on": [
+      "material_change_affecting_durable_guidance"
+    ],
+    "instructions_max_lines": 200,
+    "observation_rule": "Record date and source; distinguish observed facts, historical results, proposals, and unknowns.",
+    "history_rule": "Keep recent events concise; move lasting facts into structured fields.",
+    "user_workflow": "Infer intent, complete the smallest root-cause fix, and preserve behavior and scope. Verify key research decisions; keep implementation QA minimal and avoid slow, broad, or repeated tests/builds unless failures or significant risk justify them.",
+    "research_source_priority": [
+      "peer-reviewed papers",
+      "primary sources"
+    ],
+    "communication_rule": "Communicate with the user in Korean. Repository files may be English. Never use the middle-dot character (U+00B7).",
+    "routine_update_policy": "Do not update context files for non-material status or cosmetic changes.",
+    "documentation_rule": "On material behavior or verification changes, align README, relevant docs, message/config comments and current handoff. Preserve dates and distinguish current code, historical results, observed hardware, and unverified paths."
+  },
+  "repository": {
+    "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
+    "branch": "feat/initial-implementation",
+    "head": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
+    "head_subject": "Fix HDA1 longitudinal ownership and add vehicle handoff",
+    "remote_snapshot": {
+      "observed_on": "2026-10-06",
+      "origin_main": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
+      "origin_feature": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
+      "update_result": "Fetched origin; fast-forward update reported Already up to date."
+    },
+    "working_tree": {
+      "observed_on": "2026-10-06",
+      "preexisting_modified_tracked_files": 24,
+      "preexisting_changes": "Local ROS integration, unfiltered-input behavior, SCC template handling, and split-brake firmware changes.",
+      "changes_in_this_request": [
+        "Previously authorized local ECAN controller/recovery, firmware patch and documentation changes",
+        "AGENTS.md",
+        "state.json",
+        "Vehicle-computer handoff document and preserved diagnostic evidence"
+      ],
+      "existing_work_preserved": true,
+      "commit_or_push_performed": false
+    }
+  },
+  "project": {
+    "objective": "Deliver the upstream controller's lateral and acceleration commands to the research vehicle through Red Panda ECAN, with a low-latency C++ runtime and YAML tuning.",
+    "vehicle": "2022 Hyundai Ioniq 5 HDA1 EV, radar-SCC",
+    "target_os": "Ubuntu 20.04",
+    "target_ros": "ROS 1 Noetic / catkin / roscpp",
+    "language": "C++17",
+    "hardware": "Hyundai K camera harness + Red Panda USB",
+    "control_bus": {
+      "physical": "CAN1",
+      "logical": 0,
+      "name": "ECAN",
+      "nominal_kbps": 500,
+      "data_kbps": 2000
+    },
+    "ecan_only": true,
+    "control_harness_orientation": 1
+  },
+  "input_contract": {
+    "topic": "/ioniq5/actuation_command",
+    "message": "ioniq5_ecan/ActuationCommand",
+    "required_fields": [
+      "lateral",
+      "acceleration"
+    ],
+    "default_lateral_mode": "steering_rate_deg_s",
+    "acceleration_unit": "m/s^2",
+    "supported_lateral_modes": [
+      "steering_rate_deg_s",
+      "steering_rate_rad_s",
+      "curvature_1pm",
+      "direct_torque"
+    ],
+    "unfiltered_input": true,
+    "use_enable_field": false,
+    "final_upstream_contract": "Unresolved: units, semantics, structure, sign conventions, and publication cadence.",
+    "source": [
+      "config/ioniq5_ecan.yaml",
+      "msg/ActuationCommand.msg",
+      "include/ioniq5_ecan/command_adapter.hpp"
+    ],
+    "bridge_assessment": {
+      "observed_on": "2026-10-06",
+      "requested_architecture": "Upper ROS controller -> command adapter/CAN bridge -> Panda ECAN -> lateral and longitudinal vehicle ECUs.",
+      "both_paths_implemented": true,
+      "input_semantics_and_units": "Still require the upstream contract; do not assume angle, angle-rate, torque, curvature, target speed, or acceleration are interchangeable.",
+      "longitudinal": "With current scale=1/offset=0 and unfiltered_input=true, valid acceleration in m/s^2 is copied into both SCC acceleration-request fields, quantized to 0.01 m/s^2, without host jerk slew. Host accepts -3.5..2.0 m/s^2; out-of-range input throws and currently disarms both channels. Actual ECU acceleration tracking is not guaranteed by command delivery.",
+      "lateral_default": "steering_rate_deg_s -> integrated target angle -> feedback torque controller -> LFA at 100 Hz; this is not numeric pass-through.",
+      "lateral_direct_torque": "Supported in Panda integer-count units; rounding, amplitude limits, driver-torque limits, and torque slew still apply. Nm input would require an explicit unit conversion.",
+      "lateral_angle": "Direct-angle ROS input is absent. Software angle tracking can be added; native MDPS angle command support on this vehicle remains unresolved.",
+      "cadence": "Latest command is sampled at 100 Hz for steering and 50 Hz for SCC, not one CAN transmission per ROS message.",
+      "activation": "Both channels can be selected with SET; existing engagement, ECU ownership, freshness, and firmware conditions still apply.",
+      "vehicle_verification": "Prior low-speed steering and one approximately 15 km/h acceleration succeeded; intermittent longitudinal failure remains unresolved and the latest dual-ECU revision has no recorded successful full outcome.",
+      "implementation_or_actuation_performed": false,
+      "source": [
+        "msg/ActuationCommand.msg",
+        "config/ioniq5_ecan.yaml:32-45,71-95",
+        "src/node.cpp:293-318,523-560",
+        "src/command_adapter.cpp:124-228",
+        "src/hyundai_canfd_codec.cpp:80-147",
+        "Existing dated historical_results and longitudinal.vehicle_outcome in state.json"
+      ]
+    },
+    "downstream_filter_preference": {
+      "recorded_on": "2026-10-06",
+      "user_statement": "Upstream filters commands once; Panda or bridge constraints should not unexpectedly change the actuation requested by that controller.",
+      "upstream_filter_validation": "User assertion recorded; upstream implementation, contract, and independently verified guarantees are not available in this repository.",
+      "durable_goal": "Preserve upstream command semantics and avoid redundant downstream shaping; clearly disclose the actual actuator interface and remaining constraints.",
+      "verified_current_configuration": [
+        "unfiltered_input=true",
+        "Input scale=1 and offset=0 for both quantities",
+        "Host steering-rate target clipping and acceleration jerk slew disabled",
+        "Optional host active-speed and absolute-angle restrictions disabled"
+      ],
+      "remaining_behavior": [
+        "Host and Panda torque amplitude/rate checks",
+        "Driver torque and engagement behavior",
+        "Finite-value checks, command/state/USB freshness checks, and device fault handling",
+        "Acceleration outside current firmware policy range throws; node currently disarms both channels",
+        "CAN quantization and vehicle ECU acceptance remain separate from upper-controller filtering"
+      ],
+      "response_boundary": "Blanket removal of essential real-vehicle steering/braking interlocks and communication-loss protection was declined; no bypass instructions or changes were made.",
+      "proposed_followup": "Agree on the supported actuator command contract and expose requested/encoded/limited/rejected command feedback to the upper controller. Proposed only, not implemented.",
+      "existing_observability": "VehicleState includes eps_torque_nm and control reasons; RawCanFrame includes rejected and raw TX is published. Paired per-command requested/applied/limited/rejected feedback remains absent, and a TX publication does not prove physical ECU execution.",
+      "code_or_firmware_modified": false,
+      "source": [
+        "User message in this chat on 2026-10-06",
+        "config/ioniq5_ecan.yaml",
+        "src/command_adapter.cpp:124-228",
+        "src/node.cpp:523-534",
+        "src/safety_supervisor.cpp",
+        "msg/VehicleState.msg",
+        "msg/RawCanFrame.msg",
+        "https://docs.comma.ai/concepts/safety/"
+      ]
+    }
+  },
+  "control_behavior": {
+    "LDA": "Toggle/select lateral-only control.",
+    "SET": "Toggle/select combined lateral and longitudinal control.",
+    "brake": "Keep lateral control; latch longitudinal control off.",
+    "brake_release": "No automatic longitudinal resumption; SET must be operated again.",
+    "source": [
+      "config/ioniq5_ecan.yaml",
+      "src/safety_supervisor.cpp",
+      "patches/opendbc-hyundai-canfd-split-arm.patch"
+    ],
+    "temporary_eps_fault": "ACTIVE enters SOFT_DISABLING with a fixed 3-second deadline. Lateral output is zero/inactive; existing channel arm, CAN ownership and heartbeat remain. Resume ACTIVE within the deadline only with cleared EPS status, fresh valid CAN/command and Panda permission. Healthy longitudinal commands may continue.",
+    "temporary_recovery_exclusions": "Recovery timeout and CAN/Panda/command hard faults use existing shutdown, stock-ECU restoration and explicit operator rearm. Brake/ACC-latched longitudinal disable and configured operator cancellation retain priority."
+  },
+  "steering": {
+    "inspected_on": "2026-10-06",
+    "current_can_interface": "Torque",
+    "can_message": "0x12A LFA",
+    "command_signal": "StrTqReqVal",
+    "rate_hz": 100,
+    "current_ros_path": "steering rate -> integrated target angle -> actual-angle feedback -> torque",
+    "direct_angle_ros_input": "Not implemented.",
+    "software_angle_tracking": "Already used by steering_sweep.py; a direct angle input mode can be added to the ROS adapter.",
+    "native_mdps_angle_control": {
+      "status": "Vehicle support unresolved.",
+      "dbc_candidates": [
+        {
+          "id": "0xCB",
+          "message": "LFA_ALT",
+          "signal": "ADAS_StrAnglReqVal"
+        },
+        {
+          "id": "0x110",
+          "message": "LKAS_ALT",
+          "signal": "ADAS_StrAnglReqVal"
+        }
+      ],
+      "distinction": "DBC definitions do not establish acceptance by this 2022 HDA1 ECU; target-angle tracking over torque is not native ECU angle control."
+    },
+    "implementation_requested": false,
+    "source": [
+      "src/command_adapter.cpp",
+      "src/hyundai_canfd_codec.cpp",
+      "scripts/steering_sweep.py",
+      "pinned opendbc Hyundai CAN-FD DBC"
+    ],
+    "force_assessment": {
+      "observed_on": "2026-10-06",
+      "scope": "Read-only repository and primary-source research; no CAN transmission, firmware change, vehicle measurement, or controller change.",
+      "host_and_pinned_firmware_limit_counts": 270,
+      "limit_interpretation": "Verified host/pinned-firmware command cap, not an established ECU maximum or total MDPS output torque. The exact installed firmware binary remains unverified.",
+      "torque_overlay_scaling": {
+        "nm_per_count": 0.0078125,
+        "cap_requested_overlay_nm": 2.109375,
+        "method": "Derived from the opendbc comment recording original DBC scaling: host torque is encoded with a +1024 offset, so requested overlay is host_count / 128.",
+        "caveat": "Requested additional torque at the overlay interface; actual MDPS output, acceptance, and motor maximum were not measured."
+      },
+      "maximum_vehicle_force": "Not established from available evidence.",
+      "standstill_analysis": {
+        "checked_on": "2026-10-06",
+        "source": "Current src/command_adapter.cpp, safety_supervisor.cpp and active YAML; pinned opendbc Hyundai CAN-FD steering limits and DBC.",
+        "host_permission": "The current lateral path has no minimum-moving-speed requirement; stationary takeover and normal lateral/Panda permission are still required.",
+        "feedback_path_at_zero_speed": "low_speed_factor_v[0]=15 produces nonzero proportional error through factor squared. Desired/actual lateral acceleration and acceleration-based friction/feedforward are zero at v=0. Integral accumulation freezes below 5 m/s by default, so increasing friction or ki alone does not add standstill torque in the current formula.",
+        "tuning_scope": "Increasing low-speed proportional weighting or kp can increase a below-cap torque request; it cannot increase the final +/-270-count ceiling. Steering ratio is a model parameter; slew changes the rise time, not the ceiling.",
+        "direct_torque_path": "An upstream torque controller should supply Panda counts in direct_torque mode; local ratio/PID/friction/low-speed generation is bypassed, while existing count/slew/driver/engagement gates remain. Current default YAML remains steering_rate_deg_s.",
+        "vehicle_capability": "No stronger standstill steering guarantee or supported native parking/angle interface established for this MDPS. Software saturation does not establish ECU acceptance or physical output.",
+        "actions": "Explanation and persistent-state record only. No parameter/controller/firmware change, tests, CAN transmission, Panda queries or ECU diagnostics."
+      },
+      "native_alternatives": "PA/RSPA and ACI are interfaces to investigate, not verified stronger-force methods on this vehicle; an angle interface alone does not guarantee more torque.",
+      "parking_interface_research": {
+        "checked_on": "2026-10-06",
+        "stock_rspa_equipped": false,
+        "equipment_source": "Direct user reply in this chat on 2026-10-06: stock RSPA was not equipped.",
+        "pinned_dbc_evidence": "MDPS 0xEA defines MDPS_PaPlugInSta, MDPS_PaModeSta, MDPS_PaCanfltSta and MDPS_PaStrAnglVal. Its generic PA mode enumeration includes ready/waiting for a PA command, standby and two activation steps. These are status/feedback definitions, not proof of support or a complete command protocol for this vehicle.",
+        "spas_scope": "Pinned DBC defines SPAS1 0x165 with unidentified NEW_SIGNAL fields and SPAS2 0x16A with BLINKER_CONTROL. Inspected Carrotpilot create_spas_messages sends an empty SPAS1 payload and blinker control in SPAS2; it does not implement parking target-angle steering.",
+        "aci_distinction": "ADAS ACI/LFA_ALT native angle control in the researched fork is separate from PA parking cooperation. Its existence does not establish either interface on this 2022 HDA1 MDPS.",
+        "current_repository": "Current codec and selected ECAN-only Panda profile implement LFA torque steering; a usable PA command path is not implemented. Existing MDPS reception does not establish that PA commands reach the MDPS on the same bus. A configuration-only switch is insufficient.",
+        "feasibility": "Conditional and unresolved. RSPA absence neither proves latent PA support nor proves that the MDPS hardware/firmware cannot support it. Required missing evidence: exact MDPS hardware/software and PA capability, command/activation/timeout protocol, and vehicle CAN routing. No separate connector, coding-only enable, ECU replacement requirement, or higher torque authority is established.",
+        "sources": [
+          "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+          "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/opendbc_repo/opendbc/car/hyundai/hyundaicanfd.py",
+          "src/hyundai_canfd_codec.cpp",
+          "patches/opendbc-hyundai-canfd-split-arm.patch"
+        ],
+        "actions": "Source research and documentation/state updates only. No builds, implementation tests, Panda USB access, CAN transmission, ECU diagnostics, firmware flash, wiring change or runtime/configuration change."
+      },
+      "proposed_read_only_observations": [
+        "Actual transmitted LFA torque and request state",
+        "MDPS_OutTqVal and actual steering angle",
+        "MDPS_PaPlugInSta / MDPS_PaModeSta",
+        "MDPS_ADASAciPluginSta / MDPS_ADASAciActvSta",
+        "MDPS fault/unavailable states"
+      ],
+      "saturation_reasoning": "Increasing angle error, PID gains, or slew does not raise the cap once torque has saturated; slew affects the time to reach it. The host also periodically cuts steering request at high angles.",
+      "source": [
+        "src/hyundai_canfd_codec.cpp:80-90",
+        "src/command_adapter.cpp:74-79,202-213,263-273",
+        "config/ioniq5_ecan.yaml:71-81",
+        "Pinned opendbc safety/modes/hyundai_canfd.h:178-182",
+        "https://github.com/commaai/opendbc/blob/master/opendbc/car/hyundai/values.py",
+        "https://github.com/commaai/opendbc/blob/master/opendbc/safety/modes/hyundai_canfd.h",
+        "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+      ]
+    }
+  },
+  "longitudinal": {
+    "messages": [
+      "0x1A0 SCC_CONTROL",
+      "0x160"
+    ],
+    "rate_hz": 50,
+    "camera": {
+      "request": "0x730",
+      "response": "0x738",
+      "stock_message": "0x12A"
+    },
+    "radar": {
+      "request": "0x7D0",
+      "response": "0x7D8",
+      "stock_message": "0x1A0"
+    },
+    "local_implementation": [
+      "Disable stock camera/radar communication before replacing their control messages.",
+      "Maintain tester-present during control; restore radar then camera on exit.",
+      "Preserve unknown stock SCC payload bits using the last 0x1A0 frame as template.",
+      "Split brake handling between lateral and longitudinal channels."
+    ],
+    "removed_attempts": [
+      "Temporary ACAN 0x51 dependency",
+      "HDA2 auxiliary frame set"
+    ],
+    "vehicle_outcome": "Intermittent acceleration failure remains unresolved in the record; no later success is recorded for the dual-ECU revision."
+  },
+  "calibration": {
+    "wheelbase_m": 2.97,
+    "steering_ratio": 14.26,
+    "steer_actuator_delay_s": 0.1,
+    "torque_pid": {
+      "kp": 1,
+      "ki": 0.1,
+      "kd": 0,
+      "kf": 1
+    },
+    "lat_accel_factor": 3.172929,
+    "friction": 0.096019,
+    "parameter_recommendation": {
+      "checked_on": "2026-10-06",
+      "status": "recommendation_only_existing_yaml_matches",
+      "scope": "Recommend retaining the upstream Ioniq 5 baseline in this project's steering-rate/curvature feedback-to-torque controller; not a live vehicle-specific calibration or an accepted runtime change.",
+      "values": {
+        "wheelbase_m": 2.97,
+        "steering_ratio": 14.26,
+        "steer_actuator_delay_s": 0.1,
+        "lat_accel_factor": 3.172929,
+        "friction": 0.096019,
+        "torque_pid_kp_ki_kd_kf": [
+          1.0,
+          0.1,
+          0.0,
+          1.0
+        ],
+        "steering_angle_deadzone_deg": 0.0,
+        "low_speed_factor_bp_mps": [
+          0.0,
+          10.0,
+          20.0,
+          30.0
+        ],
+        "low_speed_factor_v": [
+          15.0,
+          13.0,
+          10.0,
+          5.0
+        ]
+      },
+      "verification": "Read pinned official opendbc Ioniq 5 specs, Hyundai delay/default torque tuning and torque_data params/override; reconfirmed Carrot PID defaults and low-speed table at eb5bbf2. Ioniq 5 has no override entry in the inspected snapshots. Compared with current YAML; no test/build, hardware action or configuration change.",
+      "sources": [
+        "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/values.py",
+        "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/interface.py",
+        "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/torque_data/params.toml",
+        "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/opendbc_repo/opendbc/car/interfaces.py",
+        "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/openpilot/selfdrive/controls/lib/latcontrol_torque.py"
+      ],
+      "direct_torque_relevance": "Direct torque bypasses local steering-ratio, feedback PID, friction and low-speed torque generation. Upstream controllers may use these model/tuning values if they implement an equivalent controller; Panda count conversion/limits and engagement remain separate."
+    }
+  },
+  "existing_implementation_limits": {
+    "note": "Describes current code/configuration; no limits were changed in this session.",
+    "max_torque_count": 270,
+    "torque_rate_count_per_10ms": {
+      "up": 2,
+      "down": 3
+    },
+    "acceleration_mps2": {
+      "min": -3.5,
+      "max": 2
+    }
+  },
+  "panda": {
+    "latest_observation": {
+      "observed_on": "2026-10-06",
+      "method": "Read-only USB health and 3-second passive CAN sample after one-second queue drain.",
+      "source": "build/panda-post-fuse-20261006.json",
+      "hardware_type": "0x07 / Red Panda",
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "panda_uptime_s": 245,
+      "voltage_mV": 14102,
+      "harness_status": 1,
+      "ignition_line": 1,
+      "ignition_can": 0,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "power_save_enabled": 1,
+      "faults": 24,
+      "fault_status": 1,
+      "heartbeat_lost": 0,
+      "interpretation": "NORMAL harness matches ECAN-only orientation. Ignition line now 1; stock LFA 100 Hz/SCC 50 Hz resumed. Raw faults=24 is within the existing ignored non-ECAN mask; ECAN has no bus-off/error-warning/error-passive. This does not establish DTC clearance or verified actuation/ownership endpoints.",
+      "exact_installed_binary_hash": "Not read; marker and packet ABI do not establish the exact installed binary.",
+      "actions": "Vendor control reads and CAN bulk IN only. No USB control writes, heartbeat, CAN/UDS transmission, ECU reset or firmware change.",
+      "rx_delta_by_physical_controller": [
+        8636,
+        0,
+        0
+      ],
+      "tx_delta_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "sample_seconds": 3.0,
+      "harness_direction": "NORMAL",
+      "selected_crc_valid_counts": {
+        "0x125": 299,
+        "0xa0": 300,
+        "0x12a": 300,
+        "0x1a0": 150,
+        "0xea": 300,
+        "0x35": 300,
+        "0x175": 150
+      },
+      "selected_crc_invalid_counts": {},
+      "rx_buffer_overflow_delta": 0,
+      "decoded_values": {
+        "steering_angle_deg": 0.30000000000000004,
+        "wheel_speeds_kph": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "MDPS_LkaFailSta": 0,
+        "MDPS_LkaToiFltSta": 0,
+        "MDPS_WrngLmpSta": 0,
+        "ACCMode": 0
+      },
+      "ecan_health": {
+        "bus_off": 0,
+        "bus_off_count": 0,
+        "error_warning": 0,
+        "error_passive": 0,
+        "last_error": 7,
+        "last_stored_error": 0,
+        "last_data_error": 0,
+        "last_data_stored_error": 0,
+        "receive_error_count": 0,
+        "transmit_error_count": 0,
+        "total_error_count": 0,
+        "total_tx_lost_count": 0,
+        "total_rx_lost_count": 1,
+        "total_tx_count": 0,
+        "total_rx_count": 702821,
+        "total_forwarded_count": 0,
+        "total_tx_checksum_error_count": 0,
+        "can_speed_kbps": 500,
+        "can_data_speed_kbps": 2000,
+        "canfd_enabled": 1,
+        "brs_enabled": 1,
+        "canfd_non_iso": 0,
+        "irq0_call_rate": 2878,
+        "irq1_call_rate": 0,
+        "irq2_call_rate": 0,
+        "can_core_reset_count": 0
+      }
+    },
+    "passive_mdps_observation": {
+      "observed_on": "2026-10-06",
+      "method": "Read-only USB vendor control reads through panda_preflight.probe and raw EP 0x81 CAN reads. USB packet XOR and MDPS Hyundai CAN-FD CRC verified; no preflight validation routine was run.",
+      "hardware_type": "0x07 / Red Panda",
+      "application_mode": true,
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "packet_hashes": {
+        "health": "0x290DAE03",
+        "can": "0x75ABF276"
+      },
+      "harness_status": 1,
+      "ignition_line": 0,
+      "ignition_can": 0,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "faults": 16,
+      "heartbeat_lost": 0,
+      "fault_status": 1,
+      "power_save_enabled": 1,
+      "user_confirmed_vehicle_ready": true,
+      "interpretation": "User confirmed READY. Harness initially reported FLIPPED(2), then NORMAL(1) after the user changed its direction. Ongoing ECAN reception is verified, while Panda ignition_line and ignition_can still report zero. This is not a full preflight PASS or permission to activate controls.",
+      "ecan_observation": {
+        "sample_seconds": 2,
+        "physical_controller": 0,
+        "logical_bus": 0,
+        "rx_delta": 4854,
+        "tx_delta_all_controllers": [
+          0,
+          0,
+          0
+        ],
+        "usb_frames_read": 8947,
+        "mdps_crc_valid_frames": 368,
+        "mdps_crc_invalid_frames": 0,
+        "rx_buffer_overflow_total": 220434,
+        "rx_buffer_overflow_delta": 2,
+        "freshness": "Initial queued frames can predate the sample. Increasing hardware RX counters and the latest MDPS after draining establish ongoing reception. No command acceptance or loss-free capture established.",
+        "raw_fault_interpretation": "faults=16 is within the existing ECAN-only ignored non-ECAN mask (bits 3/4), yielding effective faults zero; raw fault_status and RX overflow are retained as observations.",
+        "observation_file": "build/vehicle-observation-20261006-mdps.json"
+      },
+      "mdps_observation": {
+        "address": "0xEA",
+        "length": 24,
+        "last_crc_valid_payload_hex": "a9da2410010100000008091000000001f1ff000000000000",
+        "counter": 36,
+        "MDPS_PaPlugInSta": 0,
+        "MDPS_PaModeSta": 1,
+        "MDPS_PaCanfltSta": 0,
+        "MDPS_ADASAciPluginSta": 0,
+        "MDPS_ADASAciActvSta": 1,
+        "MDPS_ADAS_AciFltSig": 0,
+        "MDPS_TpaPlugInSta": 0,
+        "MDPS_LkaFailSta": 0,
+        "consistency": "All 368 CRC-valid logical-bus-0 MDPS frames in the capture had the same listed PA/ACI status values.",
+        "interpretation": "Pinned DBC meanings: PA not plugged in, PA initialization state, ACI not plugged in and inactive, no PA/ACI fault. These are current cooperation states; they do not prove that the MDPS firmware lacks latent PA/ACI capability. Native parking/angle command acceptance and higher standstill authority remain unresolved."
+      },
+      "exact_installed_binary_hash": "Not read. The marker alone cannot identify the split-brake revision.",
+      "actions": "Vendor control reads and bulk CAN reception only. User physically changed the harness direction. No control writes, heartbeat, ECU diagnostics, CAN transmission, safety-mode/bitrate change, firmware flash, controller/configuration change or vehicle actuation."
+    },
+    "historical_firmware": {
+      "recorded_on": "2026-08-21",
+      "last_recorded_flashed_sha256": "1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae",
+      "split_brake_candidate_sha256": "ffe0428536394ee7743a37f10338b4a19668f343f742e1b5de25c43df43f6986",
+      "candidate_status": "Built but not flashed in the historical record; no flash performed in this session."
+    }
+  },
+  "vehicle_diagnostics": {
+    "observed_on": "2026-10-06",
+    "scope": "Logical bus 0 through the current ECAN-only Panda/Hyundai K connection. Ten known/candidate diagnostic addresses, not a complete vehicle-network scan.",
+    "protocol": "UDS ReadDTCInformation 19 02 FF in the existing default ECU session. 19 01 FF was also attempted on responding HVAC to obtain count/format, but received NRC 0x12 (sub-function not supported). ISO-TP via the pinned opendbc UdsClient.",
+    "successful_ecu": {
+      "label": "HVAC / climate controller",
+      "request_address": "0x7B3",
+      "response_address": "0x7BB",
+      "response_body_hex": "0992341309",
+      "status_availability_mask": "0x09",
+      "records": [
+        {
+          "dtc_raw_hex": "923413",
+          "conventional_sae_display_candidate": "B1234-13",
+          "display_caveat": "First two bytes 0x9234 conventionally encode B1234; the third byte is retained as 13. ECU DTC format identifier was not obtained, so retain the raw value as authoritative.",
+          "status_hex": "0x09",
+          "status_flags": [
+            "TEST_FAILED",
+            "CONFIRMED_DTC"
+          ],
+          "manufacturer_specific_meaning": "Not confirmed from Ioniq 5-specific primary service documentation. Do not infer component failure, repair or instrument-warning cause from the code alone."
+        }
+      ]
+    },
+    "unreadable_candidate_addresses": [
+      "0x7D4 MDPS/EPS",
+      "0x7D1 ABS/ESC",
+      "0x7D0 forward radar",
+      "0x7C4 forward camera",
+      "0x730 ADAS/project ownership address",
+      "0x7C6 instrument cluster",
+      "0x7B1 parking ADAS",
+      "0x7E0 OBD powertrain",
+      "0x7E1 OBD transmission"
+    ],
+    "unreadable_interpretation": "Each timed out in the final stable diagnostic-mode pass. This does not prove ECU absence, zero DTCs or inaccessible diagnostics by every route. Candidate labels/addresses do not establish ECU presence on this specific car.",
+    "execution_evidence": {
+      "final_diagnostic_mode": "3/1",
+      "controls_allowed_during_queries": 0,
+      "safety_tx_blocked_at_query_end": 0,
+      "physical_controller_tx_deltas": [
+        11,
+        0,
+        0
+      ],
+      "requests_logged": 11,
+      "positive_dtc_list_responses": 1,
+      "restoration_errors": [],
+      "restored_mode_param_power_save": [
+        0,
+        0,
+        1
+      ],
+      "output_file": "build/vehicle-dtcs-20261006.json",
+      "scratch_query_script": "build/dtc_query_20261006.py"
+    },
+    "transport_repairs": "Initial attempts encountered USB packet checksum failures and an ignition-off heartbeat timeout that reverted ELM327 to SILENT. The scratch adapter now uses bounded 512-byte reads, retains partial bytes exposed by USBErrorTimeout.received, resets Panda USB packet tails once before querying, and sends inactive heartbeat during the diagnostic session. This is not an ECU reset or a heartbeat-policy bypass. Prior failed attempts are archived under build/vehicle-dtcs-20261006-attempt*.json; no production transport changes made.",
+    "sources": [
+      "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/uds.py",
+      "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/fingerprints.py",
+      "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/values.py",
+      "Pinned Panda board/main.c, board/main_comms.h and board/can_comms.h; local libusb1 timeout behavior; actual USB/UDS query output"
+    ],
+    "actions": "Diagnostic requests and inactive heartbeat, temporary Panda settings and their verified restoration only. No DTC clearing, ECU session change/reset, communication-control requests, steering/longitudinal actuation, firmware flash, production code/configuration changes, builds or broad tests."
+  },
+  "historical_results": [
+    {
+      "period": "2026-08-21",
+      "result": "Low-speed torque-based steering and left/right target-angle tracking succeeded."
+    },
+    {
+      "period": "2026-08-21",
+      "result": "One straight acceleration to approximately 15 km/h succeeded; subsequent attempts often plateaued around creep speed."
+    },
+    {
+      "period": "2026-08-21",
+      "result": "HVAC UI, LEDs, and cooling recovered after the OBD-C cable was replaced."
+    },
+    {
+      "period": "2026-08-21",
+      "result": "Yaw rate, lateral/longitudinal acceleration, and all four wheel speeds were added to vehicle state."
+    }
+  ],
+  "accepted_corrections": [
+    {
+      "date": "2026-08-24",
+      "fact": "brake=True in failed-acceleration logs resulted from the user intervening after acceleration failed; it was not the established cause."
+    },
+    {
+      "date": "2026-08-24",
+      "fact": "P-CAN/gateway work was deferred; the latest discussion prioritized ECAN 0x1A0 acceleration failure."
+    },
+    {
+      "date": "2026-10-06",
+      "fact": "The current output is torque; software target-angle tracking is distinct from native MDPS angle control."
+    }
+  ],
+  "superseded_approaches": [
+    "ROS 2 Humble/Foxy baseline replaced by ROS 1 Noetic.",
+    "SET controlling longitudinal only replaced by SET selecting combined control.",
+    "Brake disengaging both channels replaced by brake disengaging longitudinal only.",
+    "ACAN 0x51 and HDA2 auxiliary frames removed from the final HDA1 ECAN-only path.",
+    "Earlier physical-controller health numbers must not be treated as logical CAN bus numbers."
+  ],
+  "open_issues": [
+    {
+      "id": "intermittent_acceleration",
+      "status": "unresolved",
+      "detail": "Determine why SCC commands intermittently fail; keep the user's brake-after-failure correction."
+    },
+    {
+      "id": "native_angle_interface",
+      "status": "unresolved",
+      "detail": "Determine whether this vehicle accepts a native MDPS ACI/PA angle interface; USB-only Panda status does not establish ECU support."
+    },
+    {
+      "id": "direct_angle_ros_input",
+      "status": "not_implemented",
+      "detail": "Software angle input is feasible, but the user has requested confirmation only."
+    },
+    {
+      "id": "strong_mdps_hold",
+      "status": "unresolved",
+      "detail": "Earlier OEM gateway was removed; its wiring and protocol are unknown. Angle input alone does not increase steering force."
+    },
+    {
+      "id": "fallback_command_policy",
+      "status": "proposal_only",
+      "detail": "The user objected to full-frame rejection/disarm of upstream fallback commands. Requested/applied/saturated/rejected feedback was proposed but not implemented."
+    },
+    {
+      "id": "local_ros_and_firmware_changes",
+      "status": "local_uncommitted",
+      "detail": "ROS dual-ECU and split-brake changes remain local; candidate flash status must be kept separate from source changes."
+    },
+    {
+      "id": "automatic_deceleration",
+      "status": "outcome_not_recorded",
+      "detail": "No successful complete stop is recorded for the final acceleration/deceleration revision."
+    },
+    {
+      "id": "final_input_contract",
+      "status": "pending_upstream_team",
+      "detail": "Final lateral definition, units, message structure, and cadence remain unresolved."
+    },
+    {
+      "id": "adas_diagnostic_reachability",
+      "status": "stock_broadcast_restored_uds_not_retested",
+      "detail": "User reports fuse replacement resolved the issue; post-replacement passive capture independently confirms ignition detection and stock LFA/SCC reception. Earlier ADAS UDS timeouts remain a pre-replacement result; diagnostic reachability was not re-tested."
+    },
+    {
+      "id": "camera_ownership_endpoint_identity",
+      "status": "unverified",
+      "detail": "Current implementation uses 0x730 for camera ownership; pinned upstream Ioniq 5 firmware database identifies fwdCamera at 0x7C4 and classifies 0x730 as ADAS Driving on LKA steering platforms. Neither responded in the 2026-10-06 read. Verify endpoint identity before changing runtime ownership or claiming it confirmed."
+    },
+    {
+      "id": "hvac_dtc_923413_after_clear",
+      "status": "present_on_immediate_re_read",
+      "detail": "2026-10-06 HVAC accepted one DTC clear (54), then immediately returned raw 923413/status 09 again. Ioniq 5-specific component meaning and root cause remain unverified; the code cannot be treated as resolved by clearing."
+    }
+  ],
+  "next_action": "On the vehicle computer, read AGENTS.md/state.json/docs/vehicle_computer_handoff.md, check out the delivered branch, build once with native Ubuntu 20.04/ROS Noetic, and perform read-only Panda preflight/passive reception. Confirm camera ownership endpoint identity before the first takeover; source and firmware revisions remain distinct.",
+  "upstream_pins": {
+    "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
+    "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
+    "carrotpilot": "7fae709b39ec060a0bdd8cc141877eefecb72163"
+  },
+  "context_sources": {
+    "development_period": "2026-08-12 through 2026-08-24",
+    "portable_repository_references": [
+      "README.md",
+      "docs/vehicle_handoff.md",
+      "docs/input_contract.md",
+      "docs/upstream.md"
+    ]
+  },
+  "recent_events": [
+    {
+      "date": "2026-10-06",
+      "type": "context_recovery",
+      "summary": "Fetched origin and recovered earlier development context; preserved 24 preexisting modified files."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "steering_inspection",
+      "summary": "Confirmed torque CAN output and target-angle tracking architecture; ROS direct-angle mode absent, native vehicle support unresolved."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "hardware_observation",
+      "summary": "Read-only Panda USB query identified Red Panda and its firmware marker; no harness/ignition detected."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "persistent_context",
+      "summary": "Created AGENTS.md and State.json with significant-event maintenance instructions and Korean user communication."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "material_constraint_change",
+      "summary": "Replaced prior agent workflow instructions and renamed State.json to state.json while retaining project context. The former blanket QA/validation prohibition is superseded by minimal necessary implementation QA and verification of key research decisions."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "codex_configuration_change",
+      "summary": "Applied the referenced chat's final four user-level Codex settings on this computer with a backup. Local configuration parsing succeeded and both feature flags reported true; current-session behavior remains unverified."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "material_constraint_change",
+      "summary": "Applied the latest replacement AGENTS instructions: added material environment changes to context maintenance and refined minimal QA exceptions to failures or significant risk. Existing project decisions and configuration results preserved."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "steering_force_research",
+      "summary": "Verified the 270-count host/pinned-firmware cap and derived approximately 2.11 Nm requested torque overlay from DBC scaling. ECU maximum, installed-binary limit, actual output, and stronger PA/ACI support remain unverified.",
+      "source": "Local source and pinned/current official opendbc DBC and safety implementation."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "upstream_bridge_confirmation",
+      "summary": "Confirmed both ROS-to-CAN paths. Acceleration requests preserve valid input apart from CAN quantization; default lateral input is converted to torque and direct_torque still has limits/slew. Direct-angle support and stable longitudinal vehicle operation are not established.",
+      "source": "Current local ROS callback, command adapter, CAN codec, YAML, and dated project results."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "downstream_filter_preference",
+      "summary": "Recorded upstream-owned command shaping and reviewed existing no-smoothing configuration. Blanket essential-protection removal was declined; command feedback remains a proposal and no code/firmware changes were made.",
+      "source": "User request, current local bridge/configuration/messages, and official Panda/openpilot safety documentation."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "ecu_recovery_implementation",
+      "summary": "Added persistent stock-ECU/NO_OUTPUT restoration retries with capped backoff, valid-traffic confirmation, operator-rearm gating, and diagnostics. Targeted core build/tests passed; ROS node build and actual ECU recovery are unverified.",
+      "source": "Current source, core_smoke execution, and local build-environment inspection."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "carrotpilot_pipeline_recovery_research",
+      "summary": "Verified model targets, feedback controllers, Hyundai CAN shaping, temporary-fault state recovery, Panda reconnect loop and startup-only ECU diagnostic retries at carrot-wip eb5bbf2. Latest angle support does not establish support on this HDA1 vehicle; existing runtime pins preserved.",
+      "source": "Pinned GitHub primary source and authenticated local source snapshot."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "temporary_steering_active_return",
+      "summary": "Added the fixed 3-second SOFT_DISABLING recovery window, separated CAN validity from EPS assistance status, retained healthy longitudinal commands, and gated raw LFA during lateral pauses. Final native core build/test passed with an isolated Zig cache; ROS/vehicle validation remains outstanding.",
+      "source": "Current source and docs, pinned Carrotpilot state.py and opendbc DBC/lateral.h, final build/soft_disable_smoke.exe execution."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "documentation_synchronization",
+      "summary": "Aligned README and all docs/comments with current input, channel/recovery behavior, firmware provenance and dated verification; preserved implementation, runtime pins, configuration values and message fields.",
+      "source": "Current local source/configuration plus dated state and previously verified primary-source comparison."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "target_compatibility_correction",
+      "summary": "User reconfirmed Ubuntu 20.04. Corrected CTest invocation in docs and CI to avoid a CMake 3.20-only option; retained Ubuntu 20.04/ROS Noetic baseline and documented target-tool compatibility.",
+      "source": "User instruction, local files, official CMake 3.16/3.20 documentation."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "parameter_baseline_recommendation",
+      "summary": "Recommended the existing Ioniq 5 geometry, torque-model and Carrot PID/low-speed baseline after checking pinned primary sources; distinguished direct-torque mode. Advisory only, no configuration changes or tests.",
+      "source": "Official pinned opendbc Hyundai values/interface/torque data and Carrot interfaces/latcontrol_torque."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "post_fuse_passive_recovery_confirmed",
+      "summary": "User-reported fuse replacement followed by NORMAL harness/ignition=1, LFA 100 Hz/SCC 50 Hz and valid CRC/counter reception. No transmission or settings changes; no DTC re-read.",
+      "source": "Direct user report and build/panda-post-fuse-20261006.json"
+    }
+  ],
+  "ecu_recovery": {
+    "implemented_on": "2026-10-06",
+    "scope": "Recover communication and restore stock camera/radar ownership while retaining output shutdown during an outage; does not automatically resume actuator output or reset an ECU during driving.",
+    "root_causes_fixed": [
+      "Failed enter_no_output_mode cleanup had no persistent retry path",
+      "restore_ecu cleared disabled state before confirming resumed stock traffic",
+      "An armed failure could leave the automatic-arm path enabled"
+    ],
+    "retry_policy": "First cleanup is immediate; failed attempts wait 1, 2, 4, 8, 16, then at most 30 seconds. Retrying continues while the process is running; disconnected Panda waits for the existing USB reconnect loop.",
+    "restoration": "Restore radar then camera; on retry first observe valid stock CAN traffic to tolerate a lost acknowledgement, otherwise re-enter the diagnostic session and restore communication. Retain pending flags until stock traffic returns. Verify Panda NO_OUTPUT/mode/param/controls state before reporting completion.",
+    "stock_frame_validation": "Only correct-size, checksum-valid 0x12A/0x1A0 received frames confirm stock traffic; returned/rejected frames do not count.",
+    "output_and_rearm": "Hard faults and expired temporary-steering windows still stop all actuator output, inhibit automatic rearm, and use the existing pending stock-ECU restoration path. Pending restoration rejects rearm. Explicit acknowledgement/rearm and stationary physical activation conditions remain. A temporary EPS pause keeps the existing ECU ownership and may resume within its separate 3-second window.",
+    "diagnostics": [
+      "ecu_recovery_pending",
+      "ecu_recovery_attempts",
+      "recovery_rearm_required"
+    ],
+    "observed_vehicle_recovery": "Not tested. Communication restoration cannot guarantee recovery from ECU hardware faults or a physically broken CAN/USB path.",
+    "hardware_actions": "None: no CAN transmission, USB control writes, ECU diagnostic requests, or firmware flash executed in this request.",
+    "files": [
+      "include/ioniq5_ecan/recovery_retry.hpp",
+      "include/ioniq5_ecan/node.hpp",
+      "src/node.cpp",
+      "test/core_smoke.cpp",
+      "README.md",
+      "docs/safety.md"
+    ],
+    "verification": {
+      "checked_on": "2026-10-06",
+      "core_build": "Passed native Zig C++17 compilation of the platform-independent core and core_smoke with -Wall -Wextra -Wpedantic -Werror.",
+      "core_test": "build/ecu_recovery_smoke.exe passed. Checks cover retry deadlines/backoff cap, repeated notifications, successful cleanup/new outages, fault remaining latched after health recovers, and explicit operator/channel reactivation.",
+      "diff_check": "git diff --check passed for changed tracked implementation/documentation files.",
+      "ros_node_build": "Not performed: catkin_make/rosversion are unavailable in the current Windows shell. Production ROS node integration is unverified.",
+      "earlier_build_attempt": "Existing build/core-zig2 CMake build failed because CMakeFiles/rules.ninja was missing; the targeted native compilation above completed successfully instead."
+    },
+    "source": [
+      "Current source modifications and targeted build/test outputs in this chat",
+      "Existing ECU UDS and stock-frame ownership implementation in src/node.cpp"
+    ]
+  },
+  "carrotpilot_comparison": {
+    "observed_on": "2026-10-06",
+    "repository": "https://github.com/ajouatom/openpilot",
+    "branch": "carrot-wip",
+    "commit": "eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d",
+    "scope": "Read-only source research of the current default branch snapshot; no runtime-pin, control-code, firmware, or vehicle changes.",
+    "model_to_can": [
+      "modeld publishes modelV2.action desiredCurvature, desiredAcceleration, desiredVelocity, and shouldStop; targets may be derived from the predicted plan or a model action head.",
+      "Lateral path selects model action or lane-based lateralPlan, applies smoothing/curvature limiting, and uses a feedback controller to compute torque or angle according to vehicle configuration.",
+      "Longitudinal planner combines model trajectory/action, radar and cruise/MPC targets. ACC mode uses MPC; the other path takes the lower model/MPC acceleration and velocity targets.",
+      "LongControl combines target feedforward with measured speed or acceleration feedback, stop/start states and acceleration limits; controlsd publishes carControl at 100 Hz.",
+      "card calls CarInterface.apply, Hyundai CarController applies platform-specific conversion and limits, and the CAN packer constructs frames. sendcan passes through native pandad to Panda and vehicle CAN.",
+      "CAN-FD torque steering uses LFA TORQUE_REQUEST (the corresponding local pinned DBC signal is StrTqReqVal); SCC_CONTROL carries aReqRaw and aReqValue, with additional jerk shaping of aReqValue."
+    ],
+    "feedback": "carOutput.actuatorsOutput reports software CarController outputs. The requested-versus-returned steering comparison detects controller limiting; it is not ECU acknowledgement or physical torque measurement. CAN-FD CarState separately decodes MDPS steering/output torque and fault bits.",
+    "angle_control": "Current upstream includes ANGLE_CONTROL/LFA_ALT detection and LKAS_ANGLE_CMD plus an authority ceiling. This does not establish native angle-command support on this project vehicle (2022 Ioniq 5 HDA1); local output remains torque.",
+    "recovery": {
+      "temporary_steering_fault": "Temporary MDPS fault blocks latActive. The general SOFT_DISABLE state has a 3-second timer; disappearance of soft-disable conditions before expiry returns to enabled. Silent temporary steering events have different alert classification.",
+      "can_loss": "canTimeout becomes canBusMissing, invalid CAN becomes canError. Both events are IMMEDIATE_DISABLE and NO_ENTRY. After disabled, state-machine engagement requires a new ENABLE event with NO_ENTRY absent; signal recovery alone is not the transition.",
+      "always_lateral_caveat": "This fork has AlwaysLateral and independent lateral gates. Do not equate a global disabled state with every lateral-path condition; steerFaultTemporary/Permanent directly prohibit lateral activation.",
+      "panda_transport": "Native pandad exits when a Panda disconnects; its Python wrapper loops and re-enumerates/reconnects and relaunches the native process. This does not confirm ECU recovery. Native sender discards messages older than one second.",
+      "startup_ecu_session": "Hyundai init calls disable_ecu for configured longitudinal ownership. disable_ecu retries initial setup up to 10 times; periodic suppressed-response tester-present maintains the diagnostic session. This is not a continuous positive ECU response check.",
+      "steering_override": "recovering_from_override and SteeringHandover recover steering authority after driver intervention, especially in the angle path; these are unrelated to reconnecting an unresponsive ECU.",
+      "ecu_restore_scope": "No general in-motion ECU reset or stock-camera/radar restoration-and-rearm state machine was found in the inspected Hyundai runtime path. CarInterfaceBase.deinit is a stub and Hyundai does not override it in this snapshot.",
+      "local_comparison": "The local pending camera/radar communication-restoration retries, valid-stock-traffic and Panda NO_OUTPUT confirmation, and explicit rearm gating are this project implementation, not functionality established by the inspected Carrotpilot runtime path."
+    },
+    "panda_policy": "The bundled Hyundai CAN-FD safety source has part of torque-rejection behavior commented out, while acceleration violation rejection remains. Python controller and CAN encoding limits still remain; no blanket unfiltered model-to-CAN pass-through exists.",
+    "verified_sources": [
+      "openpilot/selfdrive/modeld/modeld.py",
+      "openpilot/selfdrive/controls/lib/longitudinal_planner.py",
+      "openpilot/selfdrive/controls/lib/longcontrol.py",
+      "openpilot/selfdrive/controls/lib/latcontrol_torque.py",
+      "openpilot/selfdrive/controls/controlsd.py",
+      "openpilot/selfdrive/car/card.py",
+      "openpilot/selfdrive/car/car_specific.py",
+      "opendbc_repo/opendbc/car/hyundai/interface.py",
+      "opendbc_repo/opendbc/car/hyundai/carcontroller.py",
+      "opendbc_repo/opendbc/car/hyundai/carstate.py",
+      "opendbc_repo/opendbc/car/hyundai/hyundaicanfd.py",
+      "opendbc_repo/opendbc/car/hyundai/steering_handover.py",
+      "opendbc_repo/opendbc/car/disable_ecu.py",
+      "opendbc_repo/opendbc/car/interfaces.py",
+      "opendbc_repo/opendbc/safety/safety/safety_hyundai_canfd.h",
+      "openpilot/selfdrive/selfdrived/state.py",
+      "openpilot/selfdrive/selfdrived/events.py",
+      "openpilot/selfdrive/selfdrived/selfdrived.py",
+      "openpilot/selfdrive/pandad/pandad.cc",
+      "openpilot/selfdrive/pandad/pandad.py"
+    ],
+    "source_cache": "build/upstream-research/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d",
+    "verification": "Read pinned primary sources and verified Git blob hashes for controlsd.py, state.py and Hyundai carcontroller.py against the GitHub commit tree. No implementation tests/builds or hardware interaction required for this research."
+  },
+  "temporary_steering_recovery": {
+    "implemented_on": "2026-10-06",
+    "reference_commit": "eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d",
+    "reference_url": "https://github.com/ajouatom/openpilot/blob/eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d/openpilot/selfdrive/selfdrived/state.py",
+    "scope": "Port the bounded temporary-fault ACTIVE return, not unrestricted recovery from CAN loss, Panda faults, or ECU hardware failure. No firmware change or safety-hook bypass.",
+    "root_cause": "VehicleStateParser previously marked fresh critical CAN invalid when the decoded MDPS assistance fault was nonzero, so SafetySupervisor treated a recoverable EPS assistance condition as immediate global FAULT and stock-ECU restoration.",
+    "decoded_signal": "Existing eps_fault decoding is preserved: MDPS 0xEA bit 54 length 2 (MDPS_LkaFailSta in the pinned DBC). This is a bounded assistance-fault recovery policy, not proof that every reported ECU fault is temporary.",
+    "states": "ACTIVE -> SOFT_DISABLING -> ACTIVE before a fixed 3-second deadline. At or after the deadline, FAULT remains latched even if the next received sample reports no EPS fault. Existing numeric states 0..4 are preserved; SOFT_DISABLING is 5.",
+    "recovery_prerequisites": "Existing arm and selected channels, fresh valid finite enabled command, fresh checksum-valid critical CAN, healthy Panda with correct mode/param/harness, cleared EPS assistance fault, and Panda controls_allowed. Never force Panda permission or retake ECU ownership during driving.",
+    "paused_output": "Zero torque and inactive LFA request, controller integral reset and target angle reset to the current measured angle. A separately allowed longitudinal command remains active with unchanged conversion/range behavior. Raw 0x12A LFA is blocked when lateral is not allowed.",
+    "ownership": "Retain the existing vehicle safety mode, channel selection, heartbeat and disabled-ECU tester-present sessions during the temporary window. Do not invoke enter_no_output_mode or stock restoration just for a temporary EPS pause.",
+    "intervention_priority": "Brake and ACC errors retain longitudinal latching; configured CANCEL and explicit disarm cancel the pause. CAN loss, Panda hardware/health faults, mode drift, rejected lateral frames, stale/invalid commands and recovery timeout keep the existing hard-fault path.",
+    "initial_engagement": "EPS assistance faults prevent initial takeover/engagement; no 3-second window starts from inactive ARMED state.",
+    "telemetry": "VehicleState.valid now describes fresh critical CAN reception independent of eps_fault. Existing ROS message fields and numeric state values are preserved. Diagnostics add eps_fault and soft_disable_remaining_ms and warn during SOFT_DISABLING.",
+    "files": [
+      "include/ioniq5_ecan/types.hpp",
+      "include/ioniq5_ecan/safety_supervisor.hpp",
+      "include/ioniq5_ecan/command_adapter.hpp",
+      "src/vehicle_state_parser.cpp",
+      "src/safety_supervisor.cpp",
+      "src/command_adapter.cpp",
+      "src/node.cpp",
+      "msg/VehicleState.msg",
+      "test/core_smoke.cpp",
+      "README.md",
+      "docs/safety.md",
+      "AGENTS.md"
+    ],
+    "verification": {
+      "checked_on": "2026-10-06",
+      "core_build": "Passed native C++17 compilation with Zig 0.16.0 and -Wall -Wextra -Wpedantic -Werror.",
+      "core_execution": "Final build/soft_disable_smoke.exe completed successfully: core smoke tests passed.",
+      "regression_coverage": "Automatic return at 2999 ms, non-extending deadline, new independent outage window, failure at 3000 ms including a late clear sample, preserved healthy longitudinal output, reset/current steering target, Panda permission gating, brake-latched longitudinal disable, CANCEL/manual disarm, CAN/Panda/mode/command/rejected-frame hard faults, initial EPS-fault no-entry, checksum-invalid versus valid EPS-clear frames, and stale critical CAN.",
+      "firmware_source_check": "Read pinned opendbc lateral.h driver/real-time torque checks: the allowed ranges include zero during a torque-driver-limited pause. Existing request/tolerance and torque limits were not changed.",
+      "diff_check": "git diff --check passed for changed tracked implementation and documentation files.",
+      "compiler_environment": "Shared Zig cache read failed during a repeat build. Final verification succeeded with a task-local ZIG_GLOBAL_CACHE_DIR under build/soft-disable-zig-global-cache. Zig emitted its own libc++ nullability warnings while rebuilding runtime libraries; the project compiled and the test exited successfully.",
+      "ros_node_build": "Not performed: catkin_make and rosversion are unavailable in this Windows shell. The production ROS integration and raw-CAN callback were reviewed but not compiled or exercised here.",
+      "vehicle_test": "Not performed. No Panda USB control writes, CAN transmission, diagnostic requests, firmware flash or actual fault injection."
+    }
+  },
+  "documentation_sync": {
+    "updated_on": "2026-10-06",
+    "scope": "Repository documentation and comments only; no implementation, dependency, runtime pin, YAML value or ROS message schema changes.",
+    "source": [
+      "Current ROS node, command adapter, supervisor, parser, codec and CMake/CI source",
+      "Current active/passive YAML and ROS message definitions",
+      "Existing state.json and dated vehicle/firmware records",
+      "Previously verified primary-source Carrotpilot comparison at eb5bbf2720286f17fc55d6eab8a2f7aacecf1f3d"
+    ],
+    "files": [
+      "README.md",
+      "docs/architecture.md",
+      "docs/input_contract.md",
+      "docs/latency.md",
+      "docs/panda_firmware.md",
+      "docs/raw_can.md",
+      "docs/safety.md",
+      "docs/upstream.md",
+      "docs/validation.md",
+      "docs/vehicle_handoff.md",
+      "config/ioniq5_ecan.yaml",
+      "config/ioniq5_ecan_passive.yaml",
+      "msg/ActuationCommand.msg",
+      "msg/VehicleState.msg",
+      "msg/RawCanFrame.msg",
+      "launch/ioniq5_ecan.launch",
+      "AGENTS.md",
+      "state.json",
+      ".github/workflows/ci.yml"
+    ],
+    "corrected": [
+      "Default unfiltered input versus filtered rate/target/acceleration clamps, torque conversion/count envelope and CAN quantization",
+      "Native angle input absence and unresolved MDPS support/maximum force",
+      "Initial stationary ownership takeover and exact research/passive CANCEL/gas/watchdog settings",
+      "Separate temporary EPS ACTIVE return, hard-fault stock restoration and raw per-channel TX permission",
+      "Firmware marker versus installed binary provenance and historical build versus flash",
+      "CAN validity independent of EPS assistance status, state values and timing limitations",
+      "Completed core tests versus unverified ROS/bench/vehicle paths",
+      "Historical acceleration failure, brake-after-failure correction and unproven ownership-fix outcome",
+      "Separate runtime pins and Carrotpilot research snapshot"
+    ],
+    "verification": {
+      "status": "passed",
+      "runtime_values_and_message_fields": "Comment-stripped active/passive YAML and message lines matched the pre-edit baseline.",
+      "prior_tests": "Prior native core verification remains recorded in ecu_recovery and temporary_steering_recovery; no builds or implementation tests rerun for documentation.",
+      "hardware_actions": "None: no Panda queries/control writes, CAN transmission, ECU diagnostics or firmware flash during documentation synchronization.",
+      "checked_on": "2026-10-06",
+      "checks": [
+        "All local Markdown file links resolve; code fences are balanced.",
+        "state.json parses and launch XML parses.",
+        "AGENTS.md is 129 lines, within the 200-line limit.",
+        "No U+00B7 or Unicode replacement characters in the 18 reviewed files.",
+        "Comment-stripped active/passive YAML values and all ROS message fields match the pre-edit baseline.",
+        "git diff --check passed.",
+        "Runtime/build pins and dated firmware provenance preserved; no build/test or hardware action performed for this documentation request."
+      ],
+      "reviewed_files": 18
+    },
+    "target_compatibility": {
+      "checked_on": "2026-10-06",
+      "source": "User explicitly reconfirmed Ubuntu 20.04; repository baseline/configuration/CI inspection and official CMake 3.16/3.20 documentation.",
+      "runtime_target": "Ubuntu 20.04 / ROS 1 Noetic",
+      "correction": "Replaced ctest --test-dir in docs/validation.md and the core CI job with cmake -E chdir build/core ctest. The former option was introduced in CMake 3.20; chdir is documented in CMake 3.16.",
+      "references": [
+        "https://cmake.org/cmake/help/v3.20/release/3.20.html#ctest",
+        "https://cmake.org/cmake/help/v3.16/manual/cmake.1.html#run-a-command-line-tool"
+      ],
+      "ci_scope": "Hosted runners remain ubuntu-latest; ROS tests run inside ros:noetic-ros-base. Runner host version is separate from the ROS execution target.",
+      "verification": "Command API verified against official versioned documentation and git diff --check; no full Ubuntu/ROS build or CI execution performed."
+    }
+  },
+  "adas_diagnostics": {
+    "observed_on": "2026-10-06",
+    "source": "build/adas-diagnostics-20261006.json",
+    "method": "UDS 22 F1 00 and 22 F1 10 identification, and 19 02 FF DTC status in the existing/default ECU session.",
+    "scope": "ADAS-related physical-address candidates on existing ECAN only; HVAC is a transport reference.",
+    "queries": [
+      {
+        "ecu_label": "Forward radar",
+        "request_address": "0x7d0",
+        "response_address": "0x7d8",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "Forward camera",
+        "request_address": "0x7c4",
+        "response_address": "0x7cc",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "ADAS driving/project ownership candidate",
+        "request_address": "0x730",
+        "response_address": "0x738",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "Parking ADAS candidate",
+        "request_address": "0x7b1",
+        "response_address": "0x7b9",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "Corner radar candidate",
+        "request_address": "0x7b7",
+        "response_address": "0x7bf",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "MDPS/EPS candidate",
+        "request_address": "0x7d4",
+        "response_address": "0x7dc",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "ABS/ESC candidate",
+        "request_address": "0x7d1",
+        "response_address": "0x7d9",
+        "reads": [
+          {
+            "request_hex": "22f100",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "22f110",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          },
+          {
+            "request_hex": "1902ff",
+            "status": "unreadable",
+            "error": "MessageTimeoutError: timeout waiting for response"
+          }
+        ]
+      },
+      {
+        "ecu_label": "HVAC diagnostic transport reference",
+        "request_address": "0x7b3",
+        "response_address": "0x7bb",
+        "reads": [
+          {
+            "request_hex": "1902ff",
+            "status": "positive_response",
+            "response_body_hex": "0992341309",
+            "status_availability_mask": 9,
+            "dtcs": [
+              {
+                "dtc_raw_hex": "923413",
+                "status_hex": "0x09",
+                "status_flags": [
+                  "TEST_FAILED",
+                  "CONFIRMED_DTC"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "interpretation": {
+      "diagnostic_result": "Seven ADAS-related candidate endpoints did not respond to either identification DID or DTC list. HVAC reference returned the same raw 923413/status 09 record. No ADAS DTCs were obtained; timeouts do not establish zero faults or ECU absence.",
+      "selected_received_frame_counts": {
+        "0x12a": 0,
+        "0x1a0": 0,
+        "0x110": 0,
+        "0xcb": 0,
+        "0xea": 1875,
+        "0x161": 0,
+        "0x162": 0
+      },
+      "mdps_last_frame": {
+        "checksum_valid": true,
+        "raw_hex": "31efb2100101000000080f1000000001ccff000000000000",
+        "decoded_raw_fields": {
+          "MDPS_WrngLmpSta": 0,
+          "MDPS_LkaPlgInSta": 0,
+          "MDPS_LkaToiUnblSta": 0,
+          "MDPS_LkaToiFltSta": 0,
+          "MDPS_LkaFailSta": 0,
+          "MDPS_PaCanfltSta": 0
+        },
+        "scope": "Latest captured broadcast state only, not stored MDPS DTCs. Warning/LKA fault flags are zero in this frame."
+      },
+      "physical_controller_tx_deltas": [
+        22,
+        0,
+        0
+      ],
+      "physical_controller_rx_deltas": [
+        41450,
+        0,
+        0
+      ],
+      "logged_diagnostic_requests": 22,
+      "rx_overflow_delta": 26,
+      "capture_limit": "Nonzero RX overflow means the capture is not loss-free. Missing frames are a dated observation on this route, not proof of failed/unpowered ECUs or all-network absence.",
+      "endpoint_identity": "Pinned upstream Ioniq 5 FW records use forward camera 0x7C4 and radar 0x7D0; upstream 0x730 is an ADAS Driving candidate on LKA steering platforms. The local implementation's 0x730 camera-ownership assumption remains unverified. Neither 0x7C4 nor 0x730 responded here; no runtime endpoint change made.",
+      "next_diagnostic_focus": "Establish ADAS reachability: inspect camera/radar power and harness/network connection, and compare with a Hyundai-capable OBD/GDS all-system read. Present evidence does not distinguish ECU power/wiring, architecture/diagnostic routing, or ECU faults."
+    },
+    "actions": "Temporary ELM327 mode, power-save off, USB packet-tail reset, inactive Panda heartbeat, then restoration of original safety/param/power-save. Only identification/DTC/ISO-TP flow-control CAN writes. No ECU session change/reset, communication control, DTC clearing, actuator requests, firmware or heartbeat-policy change.",
+    "restoration": {
+      "errors": [],
+      "mode": 0,
+      "param": 0,
+      "power_save": 1,
+      "controls_allowed": 0
+    },
+    "sources": [
+      "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/values.py",
+      "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/fingerprints.py",
+      "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+      "Pinned opendbc hkg_can_fd_checksum and UdsClient; actual completed Panda USB/UDS query report"
+    ]
+  },
+  "dtc_clear": {
+    "observed_on": "2026-10-06",
+    "authorization": "User explicitly requested one DTC initialization/clear followed by checking recurrence.",
+    "scope": "One physical-address UDS 14 FF FF FF request per previously queried ADAS-related candidate and responding HVAC reference; no all-network scan.",
+    "source": "build/dtc-clear-20261006.json",
+    "pre_clear_sources": [
+      "build/vehicle-dtcs-20261006.json",
+      "build/adas-diagnostics-20261006.json"
+    ],
+    "queries": [
+      {
+        "ecu_label": "Forward radar",
+        "request_address": "0x7d0",
+        "response_address": "0x7d8",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "Forward camera",
+        "request_address": "0x7c4",
+        "response_address": "0x7cc",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "ADAS driving/project ownership candidate",
+        "request_address": "0x730",
+        "response_address": "0x738",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "Parking ADAS candidate",
+        "request_address": "0x7b1",
+        "response_address": "0x7b9",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "Corner radar candidate",
+        "request_address": "0x7b7",
+        "response_address": "0x7bf",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "MDPS/EPS candidate",
+        "request_address": "0x7d4",
+        "response_address": "0x7dc",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "ABS/ESC candidate",
+        "request_address": "0x7d1",
+        "response_address": "0x7d9",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "unconfirmed",
+          "attempts": 1,
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      },
+      {
+        "ecu_label": "HVAC diagnostic transport reference",
+        "request_address": "0x7b3",
+        "response_address": "0x7bb",
+        "before_clear": {
+          "request_hex": "1902ff",
+          "status": "positive_response",
+          "response_body_hex": "0992341309",
+          "status_availability_mask": 9,
+          "dtcs": [
+            {
+              "dtc_raw_hex": "923413",
+              "status_hex": "0x09",
+              "status_flags": [
+                "TEST_FAILED",
+                "CONFIRMED_DTC"
+              ]
+            }
+          ]
+        },
+        "before_clear_details": [
+          {
+            "request_hex": "1904923413ff",
+            "status": "unreadable",
+            "error": "NegativeResponseError: READ_DTC_INFORMATION - sub-function not supported",
+            "negative_response_code": 18
+          },
+          {
+            "request_hex": "1906923413ff",
+            "status": "unreadable",
+            "error": "NegativeResponseError: READ_DTC_INFORMATION - sub-function not supported",
+            "negative_response_code": 18
+          }
+        ],
+        "clear": {
+          "request_hex": "14ffffff",
+          "status": "positive_response_0x54",
+          "attempts": 1
+        },
+        "after_clear": {
+          "request_hex": "1902ff",
+          "status": "positive_response",
+          "response_body_hex": "0992341309",
+          "status_availability_mask": 9,
+          "dtcs": [
+            {
+              "dtc_raw_hex": "923413",
+              "status_hex": "0x09",
+              "status_flags": [
+                "TEST_FAILED",
+                "CONFIRMED_DTC"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "interpretation": {
+      "confirmed_clear_acknowledgement": "HVAC 0x7B3 accepted service 14 with positive response 54. This acknowledges the request, not repair of the underlying fault.",
+      "immediate_re_read": "HVAC returned the same raw DTC 923413/status 09 (TEST_FAILED and CONFIRMED_DTC) immediately after the acknowledged clear. Cannot classify this as a resolved historical/transient fault; exact component/cause remains unconfirmed.",
+      "adas_clear_status": "Seven candidate addresses timed out on clear and before/after reads. Clearing success and code absence are unconfirmed; do not silently repeat clears.",
+      "unconfirmed_addresses": [
+        "0x7d0",
+        "0x7c4",
+        "0x730",
+        "0x7b1",
+        "0x7b7",
+        "0x7d4",
+        "0x7d1"
+      ],
+      "physical_controller_tx_deltas": [
+        26,
+        0,
+        0
+      ],
+      "safety_tx_blocked_at_end": 0,
+      "post_clear_limit": "Some faults require their monitoring conditions or later operation cycles before recurrence; immediate code absence would not by itself prove repair."
+    },
+    "actions": "User-authorized one-time UDS ClearDiagnosticInformation, DTC/detail reads and receive flow control. Temporary Panda ELM327/power-save/packet-tail settings and inactive heartbeat, original safety/param/power-save restored. No ECU reset/session change, communication disable, actuator request, firmware flash or heartbeat-policy change.",
+    "restored_settings": {
+      "safety_mode": 0,
+      "safety_param": 0,
+      "power_save_enabled": 1,
+      "controls_allowed": 0
+    },
+    "restoration_errors": []
+  },
+  "fuse_replacement": {
+    "reported_on": "2026-10-06",
+    "source": "Direct user report in this chat",
+    "user_report": "The vehicle issue was caused by a fuse and was resolved after replacement.",
+    "fuse_identity": "Not supplied",
+    "independently_verified": "Panda ignition detection and stock LFA/SCC reception returned after the reported replacement.",
+    "verification_limits": "Passive CAN observation only; no DTC/ECU identification re-read and no independent physical fuse inspection.",
+    "passive_source": "build/panda-post-fuse-20261006.json"
+  },
+  "vehicle_computer_handoff": {
+    "prepared_on": "2026-10-06",
+    "authorization": "User explicitly requested the handoff document and push to the repository.",
+    "target": "Ubuntu 20.04 / ROS 1 Noetic / C++17",
+    "branch": "feat/initial-implementation",
+    "status": "preparing",
+    "document": "docs/vehicle_computer_handoff.md",
+    "delivery_scope": "Current project source, firmware patch source, aligned documentation, durable guidance/state, and selected dated JSON observation reports. No generated firmware binaries or automatic diagnostic/actuation scratch scripts.",
+    "vehicle_actions_in_this_request": "None; local files and Git only.",
+    "remaining_target_work": "Vehicle-computer catkin build, fresh passive preflight/parser verification, installed split-brake firmware provenance and actual camera ownership endpoint identification. No new live actuation or ECU disable authorized by the transfer request."
+  }
+}

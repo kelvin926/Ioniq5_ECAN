@@ -28,6 +28,7 @@ TEST(CommandAdapter, ConvertsRadiansAndClampsAcceleration) {
   using namespace ioniq5_ecan;
   CommandAdapterConfig config;
   config.lateral_mode = LateralInputMode::SteeringRateRadPerSec;
+  config.unfiltered_input = false;
   config.accel_min_mps2 = -0.5;
   config.accel_max_mps2 = 0.5;
   CommandAdapter adapter(config);
@@ -45,6 +46,7 @@ TEST(CommandAdapter, AppliesRateLimitBeforeIntegratingTargetAngle) {
   using namespace ioniq5_ecan;
   CommandAdapterConfig config;
   config.lateral_mode = LateralInputMode::SteeringRateDegPerSec;
+  config.unfiltered_input = false;
   config.max_target_rate_deg_s = 10.0;
   config.steer_actuator_delay_s = 0.0;
   CommandAdapter adapter(config);
@@ -61,6 +63,7 @@ TEST(CommandAdapter, SlewsCurvatureTargetInsteadOfJumpingToIt) {
   using namespace ioniq5_ecan;
   CommandAdapterConfig config;
   config.lateral_mode = LateralInputMode::Curvature;
+  config.unfiltered_input = false;
   config.max_target_rate_deg_s = 10.0;
   config.steer_actuator_delay_s = 0.0;
   CommandAdapter adapter(config);
@@ -76,6 +79,7 @@ TEST(CommandAdapter, SlewsCurvatureTargetInsteadOfJumpingToIt) {
 TEST(CommandAdapter, UsesCarrotIoniq5Defaults) {
   using namespace ioniq5_ecan;
   const CommandAdapterConfig config;
+  EXPECT_TRUE(config.unfiltered_input);
   EXPECT_DOUBLE_EQ(config.steer_actuator_delay_s, 0.1);
   EXPECT_DOUBLE_EQ(config.torque_kp, 1.0);
   EXPECT_DOUBLE_EQ(config.torque_ki, 0.1);
@@ -137,6 +141,35 @@ TEST(CommandAdapter, RejectsNonFiniteInput) {
   CommandSample command;
   command.lateral = std::numeric_limits<double>::quiet_NaN();
   EXPECT_THROW(adapter.update(command, vehicle, 0.01, true, false), std::invalid_argument);
+}
+
+TEST(CommandAdapter, UnfilteredModePreservesSteeringRateAndAcceleration) {
+  using namespace ioniq5_ecan;
+  CommandAdapterConfig config;
+  config.lateral_mode = LateralInputMode::SteeringRateDegPerSec;
+  config.unfiltered_input = true;
+  config.max_target_rate_deg_s = 10.0;
+  config.max_target_angle_deg = 1.0;
+  config.steer_actuator_delay_s = 0.0;
+  CommandAdapter adapter(config);
+  VehicleStateData vehicle;
+  CommandSample command;
+  command.lateral = 123.0;
+  command.acceleration_mps2 = 1.234;
+
+  const ControlOutput output = adapter.update(command, vehicle, 0.02, true, true);
+  EXPECT_DOUBLE_EQ(adapter.target_rate_deg_s(), 123.0);
+  EXPECT_DOUBLE_EQ(adapter.target_angle_deg(), 2.46);
+  EXPECT_DOUBLE_EQ(output.acceleration_mps2, 1.234);
+}
+
+TEST(CommandAdapter, UnfilteredModeRejectsInsteadOfClippingUnrepresentableAcceleration) {
+  using namespace ioniq5_ecan;
+  CommandAdapter adapter;
+  VehicleStateData vehicle;
+  CommandSample command;
+  command.acceleration_mps2 = 2.01;
+  EXPECT_THROW(adapter.update(command, vehicle, 0.01, true, true), std::out_of_range);
 }
 
 TEST(CommandSequence, AcceptsWraparoundAndRejectsDuplicates) {

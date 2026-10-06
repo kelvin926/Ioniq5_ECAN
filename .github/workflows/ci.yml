@@ -14,7 +14,7 @@ jobs:
       - name: Build
         run: cmake --build build/core --parallel
       - name: Test
-        run: ctest --test-dir build/core --output-on-failure
+        run: cmake -E chdir build/core ctest --output-on-failure
 
   panda-safety-patch:
     runs-on: ubuntu-latest

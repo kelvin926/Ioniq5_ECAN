@@ -48,6 +48,7 @@ struct VehicleStateData {
   double accelerator_pedal{0.0};
   bool brake_pressed{false};
   bool gas_pressed{false};
+  // MDPS LKA assistance fault; reception validity is tracked separately.
   bool eps_fault{false};
   bool acc_fault{false};
   bool cruise_engaged{false};
@@ -76,6 +77,7 @@ struct PandaHealth {
   uint8_t safety_mode{0};
   uint16_t safety_param{0};
   uint32_t safety_tx_blocked{0};
+  uint32_t last_rejected_address{0};
   uint32_t safety_rx_invalid{0};
   uint32_t tx_buffer_overflow{0};
   uint32_t rx_buffer_overflow{0};
@@ -88,6 +90,8 @@ enum class ControlState : uint8_t {
   Armed = 2,
   Active = 3,
   Fault = 4,
+  // Keep existing published numeric state values stable.
+  SoftDisabling = 5,
 };
 
 inline const char* to_string(ControlState state) {
@@ -102,6 +106,8 @@ inline const char* to_string(ControlState state) {
       return "ACTIVE";
     case ControlState::Fault:
       return "FAULT";
+    case ControlState::SoftDisabling:
+      return "SOFT_DISABLING";
   }
   return "UNKNOWN";
 }

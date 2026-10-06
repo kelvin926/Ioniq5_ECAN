@@ -95,8 +95,14 @@ void CommandAdapter::reset(const VehicleStateData& vehicle) {
 }
 
 ControlOutput CommandAdapter::update(const CommandSample& command, const VehicleStateData& vehicle,
-                                     double dt_seconds, bool active, bool longitudinal_allowed) {
-  dt_seconds = std::clamp(dt_seconds, 0.001, 0.05);
+                                     double dt_seconds, bool lateral_allowed,
+                                     bool longitudinal_allowed) {
+  if (!std::isfinite(dt_seconds) || dt_seconds <= 0.0) {
+    throw std::invalid_argument("control period must be finite and positive");
+  }
+  if (!config_.unfiltered_input) {
+    dt_seconds = std::clamp(dt_seconds, 0.001, 0.05);
+  }
   if (!initialized_) reset(vehicle);
 
   if (!std::isfinite(command.lateral) || !std::isfinite(command.acceleration_mps2)) {
@@ -104,7 +110,22 @@ ControlOutput CommandAdapter::update(const CommandSample& command, const Vehicle
   }
 
   ControlOutput output;
-  if (!active) {
+  // A temporary lateral pause must not discard an independently permitted SCC command.
+  output.longitudinal_active = longitudinal_allowed;
+  if (longitudinal_allowed) {
+    const double requested =
+      command.acceleration_mps2 * config_.acceleration_scale + config_.acceleration_offset;
+    if (config_.unfiltered_input &&
+        (requested < config_.accel_min_mps2 || requested > config_.accel_max_mps2)) {
+      throw std::out_of_range("acceleration command exceeds Panda representable range");
+    }
+    output.acceleration_mps2 =
+      config_.unfiltered_input
+        ? requested
+        : std::clamp(requested, config_.accel_min_mps2, config_.accel_max_mps2);
+    output.stopping = output.acceleration_mps2 < -0.1 && vehicle.speed_mps < 0.3;
+  }
+  if (!lateral_allowed) {
     torque_integral_ = 0.0;
     previous_torque_error_ = 0.0;
     target_angle_deg_ = vehicle.steering_angle_deg;
@@ -123,27 +144,42 @@ ControlOutput CommandAdapter::update(const CommandSample& command, const Vehicle
   } else {
     if (config_.lateral_mode == LateralInputMode::SteeringRateDegPerSec) {
       target_rate_deg_s_ =
-        std::clamp(lateral, -config_.max_target_rate_deg_s, config_.max_target_rate_deg_s);
+        config_.unfiltered_input
+          ? lateral
+          : std::clamp(lateral, -config_.max_target_rate_deg_s, config_.max_target_rate_deg_s);
       target_angle_deg_ += target_rate_deg_s_ * dt_seconds;
     } else if (config_.lateral_mode == LateralInputMode::SteeringRateRadPerSec) {
-      target_rate_deg_s_ = std::clamp(lateral * kRadiansToDegrees, -config_.max_target_rate_deg_s,
-                                      config_.max_target_rate_deg_s);
+      const double rate_deg_s = lateral * kRadiansToDegrees;
+      target_rate_deg_s_ =
+        config_.unfiltered_input
+          ? rate_deg_s
+          : std::clamp(rate_deg_s, -config_.max_target_rate_deg_s, config_.max_target_rate_deg_s);
       target_angle_deg_ += target_rate_deg_s_ * dt_seconds;
     } else {
       const double new_target =
         std::atan(config_.wheelbase_m * lateral) * config_.steering_ratio * kRadiansToDegrees;
       const double requested_rate = (new_target - target_angle_deg_) / dt_seconds;
-      target_rate_deg_s_ =
-        std::clamp(requested_rate, -config_.max_target_rate_deg_s, config_.max_target_rate_deg_s);
-      target_angle_deg_ += target_rate_deg_s_ * dt_seconds;
+      if (config_.unfiltered_input) {
+        target_rate_deg_s_ = requested_rate;
+        target_angle_deg_ = new_target;
+      } else {
+        target_rate_deg_s_ =
+          std::clamp(requested_rate, -config_.max_target_rate_deg_s, config_.max_target_rate_deg_s);
+        target_angle_deg_ += target_rate_deg_s_ * dt_seconds;
+      }
     }
 
-    target_angle_deg_ =
-      std::clamp(target_angle_deg_, -config_.max_target_angle_deg, config_.max_target_angle_deg);
+    if (!config_.unfiltered_input) {
+      target_angle_deg_ =
+        std::clamp(target_angle_deg_, -config_.max_target_angle_deg, config_.max_target_angle_deg);
+    }
 
+    const double predicted_target_angle =
+      target_angle_deg_ + target_rate_deg_s_ * config_.steer_actuator_delay_s;
     const double control_target_angle =
-      std::clamp(target_angle_deg_ + target_rate_deg_s_ * config_.steer_actuator_delay_s,
-                 -config_.max_target_angle_deg, config_.max_target_angle_deg);
+      config_.unfiltered_input ? predicted_target_angle
+                               : std::clamp(predicted_target_angle, -config_.max_target_angle_deg,
+                                            config_.max_target_angle_deg);
     const double desired_curvature =
       std::tan(control_target_angle * kDegreesToRadians / config_.steering_ratio) /
       config_.wheelbase_m;
@@ -193,14 +229,6 @@ ControlOutput CommandAdapter::update(const CommandSample& command, const Vehicle
   output.steering_torque = last_torque_;
   output.lateral_active = true;
   output.steering_request = update_steering_request(true, vehicle.steering_angle_deg);
-  output.longitudinal_active = longitudinal_allowed;
-  if (longitudinal_allowed) {
-    const double requested =
-      command.acceleration_mps2 * config_.acceleration_scale + config_.acceleration_offset;
-    output.acceleration_mps2 =
-      std::clamp(requested, config_.accel_min_mps2, config_.accel_max_mps2);
-    output.stopping = output.acceleration_mps2 < -0.1 && vehicle.speed_mps < 0.3;
-  }
   return output;
 }
 

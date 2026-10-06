@@ -14,7 +14,10 @@ struct SafetyConfig {
   // Repeating the currently selected LDA-only or SET-combined mode toggles it off.
   bool lateral_button_toggle{true};
   bool longitudinal_button_toggle{true};
-  bool disengage_on_brake{true};
+  // Brake intervention is channel-specific: lateral remains under the LDA toggle while
+  // longitudinal is latched off until the next SET event.
+  bool lateral_disengage_on_brake{false};
+  bool longitudinal_disengage_on_brake{true};
   bool disengage_on_cancel{true};
   bool longitudinal_override_on_gas{true};
   // Zero disables the optional host-side limit. Panda firmware limits remain active.
@@ -37,6 +40,7 @@ struct SafetyDecision {
   bool use_vehicle_safety_mode{false};
   bool heartbeat_engaged{false};
   std::string reason{"not initialized"};
+  uint32_t soft_disable_remaining_ms{0};
 };
 
 class SafetySupervisor {
@@ -64,6 +68,7 @@ class SafetySupervisor {
   uint64_t last_set_button_events_{0};
   uint64_t last_cancel_button_events_{0};
   uint32_t last_tx_blocked_{0};
+  TimePoint soft_disable_deadline_{};
   std::string reason_{"waiting for Panda"};
 };
 

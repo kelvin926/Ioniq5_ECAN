@@ -1,238 +1,252 @@
-# 연구차량 인수인계 — 2026-08-21
+# 연구차량 인수인계 — 2026-10-06
 
-이 문서는 차량 탑재 Ubuntu 20.04 컴퓨터의 Codex가 현재 상태에서 바로 작업을 이어가기
-위한 기준 문서입니다. 먼저 이 문서와 `git status`, `git log -1`, 실제 Panda health를
-확인하십시오. 아래의 “확인됨”과 “미확인”을 구분해서 사용해야 합니다.
+현재 코드/설정, 날짜가 있는 하드웨어 관측과 과거 실차 시험을 구분한 문서입니다.
+작업 시작 시 [AGENTS.md](../AGENTS.md), [state.json](../state.json), `git status`, `git log -1`을
+확인합니다. 아래 USB 기록은 관측 당시의 값이며 현재 연결 상태를 대신하지 않습니다.
 
-## 한눈에 보는 현재 상태
+## 프로젝트와 현재 구현
 
-| 항목 | 현재 값 |
+| 항목 | 기준 |
 | --- | --- |
-| 차량 | Hyundai Ioniq 5 2022, HDA1, EV, radar-SCC |
-| 호스트 타깃 | Ubuntu 20.04, ROS 1 Noetic, C++17 |
-| 하네스 | Hyundai K camera harness, 정상 방향 `harness_status=1` 필수 |
+| 차량 | 2022 Hyundai Ioniq 5, HDA1, EV, radar-SCC |
+| 실행 타깃 | Ubuntu 20.04, ROS 1 Noetic, catkin, C++17 |
+| 하네스 | Hyundai K camera harness, `harness_status=1` |
 | 제어 CAN | physical CAN1 / Panda logical bus 0 / ECAN 500/2000 kbps |
-| 사용하지 않는 CAN | physical CAN2/CAN3/CAN4, forwarding 모두 firmware에서 비활성화 |
-| Red Panda serial | `PANDA_SERIAL` |
-| firmware marker | `IONIQ5ECAN-dd8a5b3d-DEBUG` |
-| 현재 signed app SHA-256 | `1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae` |
-| 현재 Panda 상태 | 새 image 플래시 및 검증 완료, 차량 미연결 `NO_OUTPUT`, faults/overflow 0 |
+| 비-ECAN | transceiver 및 forwarding 비활성화, camera bus 2 미사용 |
+| Panda | Red Panda, serial `PANDA_SERIAL` |
+| 명령 | `/ioniq5/actuation_command`, 기본 `lateral` deg/s + `acceleration` m/s² |
+| 차량 조향 출력 | LFA `0x12A` 토크 100 Hz, native angle 제어 미구현/차량 지원 미확인 |
+| 종방향 출력 | SCC `0x1A0` 및 FCA `0x160` 50 Hz |
+| launch 기본값 | actuation/longitudinal/auto arm/raw TX가 켜진 연구장 YAML |
+| 관찰용 설정 | `config/ioniq5_ecan_passive.yaml`, 네 기능 모두 false |
 
-확인된 실차 결과:
+기본 `unfiltered_input=true`, `use_enable_field=false`입니다. 입력 scale/offset, rate→angle→torque
+변환, torque 제한/변화율, CAN 양자화, 채널 허가와 watchdog은 유지됩니다.
+270 count는 명령 상한이며 MDPS 최대 구동력이 확인된 값은 아닙니다.
+host CANCEL/gas override는 연구장 기본 YAML에서 false입니다. 자세한 단위와 상태 필드는
+[입력 계약](input_contract.md), 활성화 조건은 [상태와 제한](safety.md)에 있습니다.
 
-- 저속 주행 중 LFA `0x12A` 조향 송신과 좌우 조향 동작
-- 약 1 km/h에서 시작하여 직선 15 km/h까지 `SCC_CONTROL (0x1A0)` 가속 1회 성공
-- yaw rate, 횡·종가속도, 4륜 속도를 포함한 ECAN 수신 경로 구현
-- LDA 버튼은 조향 arm, SET 버튼은 조향+종방향 arm으로 사용
+초기 takeover는 정차, EPS 정상과 유효한 CAN을 요구합니다. 종방향 프로파일에서는 D와
+최근 순정 SCC template도 필요합니다. camera LFA quiet, 종방향이면 radar SCC quiet도
+확인한 뒤 Hyundai mode로 전환합니다. LDA는 lateral-only, SET release는 combined를
+선택/토글합니다. brake는 lateral을 유지하고 longitudinal만 SET 재조작 전까지 래치 해제합니다.
 
-아직 확인되지 않은 결과:
+## 최신 복귀/복구 구현
 
-- 이 커밋의 camera `0x730` + radar `0x7D0` 이중 ECU 비활성화 수정 후의 실차 가속
-- 자동 감속 요청으로 15 km/h에서 완전 정지하는 최신 경로
-- ROS C++ 노드의 전체 종방향 HIL/실차 동작
+- 활성 중 일시 MDPS LKA 보조 오류: `SOFT_DISABLING`, 고정 3초 창, LFA 0/비활성,
+  기존 arm/소유권/heartbeat/tester-present 유지, 정상 허가된 종방향은 현재 명령 지속
+- deadline 전에 EPS clear + 최신 유효 command/CAN + Panda 허가: 현재 명령으로 ACTIVE 복귀,
+  steering 적분/목표각 초기화, brake/ACC 종방향 래치 보존, raw LFA 우회 차단
+- 3초 만료 또는 CAN/Panda/command hard fault: 전체 disarm, auto rearm 억제, stock ECU 복구
+- ROS stock 복구: radar→camera, valid stock 재개와 Panda NO_OUTPUT 확인, 실패 시 실행 중
+  1/2/4/8/16/30초 capped retry, USB 자동 재연결, pending 동안 actuator 출력/rearm 차단
+- hard fault 복구 완료 후: 정상 상태와 정차 조건을 확인하고 `set_armed=false` → `true`,
+  물리 LDA/SET으로 재활성화. 장애 전 명령이나 채널을 자동 재개하지 않음
 
-## 하드웨어에서 확인된 사실
+이 구현은 ECU 자체 reset/수리를 보장하지 않습니다. UDS는 control thread에서 동기 실행하며
+hard real-time 보장도 없습니다. [구조](architecture.md)와 [지연](latency.md)을 참고하십시오.
 
-차량 연결은 `차량 카메라 커넥터 ↔ Hyundai K Y 하네스 ↔ harness board ↔ Red Panda ↔ USB
-호스트` 구성입니다. 하네스보드와 K 하네스만 연결하면 HVAC가 정상인데, 문제가 있던
-OBD-C 케이블로 Red Panda를 연결하면 USB와 Comma Power가 없어도 HVAC UI/LED/냉방이
-먹통이 됐습니다. 다른 OBD-C 케이블로 교체하자 HVAC가 정상으로 돌아왔습니다. 따라서
-HVAC 문제를 firmware나 Comma Power 문제로 단정하지 말고, 현재 정상 확인된 OBD-C
-케이블과 `harness_status=1` 방향만 사용하십시오.
+## 2026-10-06 USB 관측과 확인 범위
 
-이 차량은 과거 제조사가 자율주행 개조용 gateway를 제거했고 일부 케이블 상태가
-불명확합니다. ADAS fuse도 과거에는 제거됐다가 현재 다시 장착됐습니다. Panda 연결과
-무관하게 전방 안전 시스템/차로 변경 보조 경고가 들어오는 기존 상태가 있었습니다.
-별도 PCAN도 다른 컴퓨터에 연결된 적이 있으므로, 재현 시험에서는 PCAN이 송신하지 않는지
-확인하거나 분리하여 송신 주체를 하나로 유지하십시오.
+read-only `panda_preflight.probe`의 vendor control read와 USB bulk CAN 수신 결과입니다.
+사용자가 실차 연결, READY 상태와 하네스 방향 변경을 알려준 뒤 확인했습니다.
+전체 preflight validation 루틴은 실행하지 않았으므로 `PREFLIGHT PASS` 기록으로 취급하지 않습니다.
 
-CAN2 쪽 ADAS camera 신호는 이 차량에서 신뢰할 수 없었고 현재 설계에는 필요하지 않습니다.
-ECAN bus 0에서 조향, 종방향, 버튼 및 차량 상태를 모두 처리합니다.
+| 관측 항목 | 당시 값 |
+| --- | --- |
+| hardware / application | `0x07` Red Panda / true |
+| marker | `IONIQ5ECAN-dd8a5b3d-DEBUG` |
+| health / CAN packet hash | `0x290DAE03` / `0x75ABF276` |
+| harness / ignition line / ignition CAN | 1 / 0 / 0, READY는 사용자 확인 |
+| safety mode / param / controls allowed | 0 / 0 / 0 |
+| faults / heartbeat lost | 16 / 0, 기존 ECAN-only mask 적용 시 effective faults 0 |
+| ECAN 새 RX / TX | 2초 동안 4,854 / 모든 controller 0 |
+| MDPS `0xEA` | bus 0, 24 bytes, CRC 정상 368개 / 실패 0개 |
+| PA plugin / mode / CAN fault | 0 / 1 / 0: 미연결, 초기화 상태, fault 없음 |
+| ACI plugin / active / fault | 0 / 1 / 0: 미연결, 비활성, fault 없음 |
+| 정확한 설치 binary hash | 읽지 않음 |
 
-## 간헐적 가속 실패의 원인과 수정
+같은 날짜의 앞선 USB-only 관측은 harness/ignition/faults 모두 0이었습니다. 실차 연결 후
+처음에는 `FLIPPED(2)`와 새 RX 0이었고, 사용자 방향 변경 후 `NORMAL(1)`과 지속 RX를
+확인했습니다. READY와 별개로 Panda ignition 값은 계속 0이므로 초기 제어 허가를
+확인한 결과로 취급하지 않습니다. PA/ACI 상태는 현재 협조 제어가 연결되지 않았다는
+뜻이며 MDPS firmware의 잠재 지원 부재를 증명하지 않습니다. 순정 RSPA는 사용자 확인상
+미장착이며, native 명령 수용과 더 큰 정차 조향력은 여전히 미확인입니다.
 
-기존 시험 helper는 camera ECU `0x730`만 UDS communication-control로 비활성화하고 순정
-LFA `0x12A`가 멈춘 것만 확인했습니다. 그러나 HDA1 radar-SCC 차량의 메시지 소유권은
-다음과 같습니다.
+USB 수신에는 이전 queue가 포함되므로 읽은 총 8,947개와 새 hardware RX 수를 구분합니다.
+RX overflow는 누적 220,434, 마지막 2초 증가 2로 loss-free capture는 아닙니다.
+원본 요약은 `build/vehicle-observation-20261006-mdps.json`과 [state.json](../state.json)에
+있습니다. marker만으로 아래 split-brake 후보의 설치 여부를 단정할 수 없습니다.
+위 passive 관측에서는 CAN 송신, ECU 진단 요청, Panda control write 또는 firmware flash를
+수행하지 않았습니다.
 
-| ECU | UDS request/response | 소유 메시지 |
+같은 날 이후 제한을 유지한 우측 조향 요청을 받고 2초 read-only 수신을 다시 수행했습니다.
+최신 CRC 정상 프레임은 바퀴 속도 모두 0, brake=true, D(raw 5), pedal=0,
+조향각 -1.3 deg, EPS fault=false였습니다. Panda uptime 511초의 health는 harness=1,
+ignition line/CAN=0/0, safety mode=0, controls_allowed=0입니다.
+기존 `steering_sweep.py`의 시작 조건 `ignition_line=1`을 충족하지 못해 조향을
+실행하지 않았습니다. 이 조건을 바꾸거나 우회하지 않았으며, 점화 미감지 원인은
+미확인입니다. 원본은 `build/steering-readiness-20261006.json`에 있습니다.
+
+같은 날 사용자의 DTC 조회 요청으로 logical bus 0에서 진단을 수행했습니다.
+HVAC `0x7B3/0x7BB`가 `19 02 FF`에 정상 응답했고, 원시 DTC `923413` 한 건과
+status `0x09`(TEST_FAILED + CONFIRMED_DTC)를 읽었습니다. 통상 SAE 표시 후보는
+`B1234-13`이나, ECU의 DTC format identifier 조회 `19 01 FF`는 NRC `0x12`로
+거절됐습니다. 아이오닉5 전용 제조사 코드 설명과 계기판 경고의 원인은 미확인입니다.
+다른 9개 후보 진단 주소는 timeout이며, 코드 없음이나 ECU 부재로 해석하지 않습니다.
+
+조회 동안 Panda ELM327 `3/1`, controls_allowed=0을 유지했고 diagnostic 끝의
+safety_tx_blocked=0, physical CAN controller TX 증가 [11,0,0]을 확인했습니다.
+점화 미감지에 따른 2초 SILENT 복귀를 방지하려고 비활성 heartbeat를 사용했습니다.
+USB packet-tail reset과 timeout의 부분 수신 데이터 보존은 통신 처리이며 ECU reset이
+아닙니다. 종료 후 기존 safety `0/0`과 power_save=1 복원을 확인했습니다.
+DTC 삭제, ECU session 변경/reset, 통신 disable, 조향/가속 명령 또는 flash는 하지
+않았습니다. 원본은 `build/vehicle-dtcs-20261006.json`, 요약은 [state.json](../state.json)에
+있으며 현재 ECAN 경로의 부분 조회 결과입니다.
+
+같은 날 ADAS 집중 조회에서는 전방 radar `0x7D0`, 전방 camera `0x7C4`, ADAS 후보
+`0x730`, parking ADAS `0x7B1`, corner radar `0x7B7`, MDPS `0x7D4`, ABS/ESC `0x7D1`에
+`22 F1 00`, `22 F1 10`, `19 02 FF`를 보냈지만 모두 timeout이었습니다. HVAC 참조 조회는
+앞서 기록한 코드에 다시 정상 응답했습니다. 조회 구간의 ECAN RX 증가는 41,450,
+진단 TX 증가는 22였으며, `0x12A` LFA와 `0x1A0` SCC는 수신 기록에 없었습니다.
+최신 CRC 정상 MDPS `0xEA`는 warning lamp/LKA fault/fail raw 값이 모두 0입니다.
+RX overflow 증가 26 때문에 무손실 관측은 아니며, 이 결과로 ADAS ECU의 고장이나
+전원 단절을 확정하지 않습니다. 전원, harness/network 연결과 진단 접근 경로의 구분이
+필요합니다. 원본은 `build/adas-diagnostics-20261006.json`에 있습니다.
+
+이후 사용자가 고장코드 삭제를 명시적으로 요청하여 위 7개 후보와 HVAC에 각각
+`14 FF FF FF` 삭제 요청을 한 번 보냈습니다. HVAC는 positive response `54`로 수락했지만
+즉시 `19 02 FF` 재조회에서 동일한 `923413`, status `09`가 다시 확인됐습니다.
+삭제 전 snapshot/extended data 조회는 모두 NRC `12`로 거절되어 추가 기록을 얻지
+못했습니다. ADAS 관련 7개 후보는 삭제 및 전후 조회 모두 timeout이므로 삭제 성공은
+미확인입니다. ECU reset, 통신 disable 또는 actuator 명령은 보내지 않았고 Panda의
+기존 `0/0`, power_save=1을 복원했습니다. 삭제 전 원본을 보존했고 새 실행 기록은
+`build/dtc-clear-20261006.json`에 있습니다. 즉시 코드가 없더라도 관련 감시 조건이
+충족되기 전에는 문제 해결로 판단하지 않습니다.
+
+그 뒤 사용자가 퓨즈 교체로 문제가 해결됐다고 알렸습니다. 교체한 퓨즈의 위치/규격은
+제공되지 않았습니다. 송신 없이 USB/CAN 수신만 확인한 최신 3초 관측(Panda uptime
+242~245초)은 harness=1(NORMAL, 정방향), ignition_line=1, 전압 14.102 V였습니다.
+ECAN RX가 8,636 증가했고 LFA `0x12A` 300개, SCC `0x1A0` 150개를 수신했습니다.
+MDPS 300개, 조향각 299개, wheel speed 300개, TCS 150개도 CRC가 모두 정상이며
+counter가 진행했습니다. 선택 프레임 CRC 오류와 관측 중 RX overflow 증가는 0,
+모든 controller TX 증가는 0입니다. 최신 조향각은 0.3 deg, wheel speed는 모두 0,
+MDPS warning/LKA fault/fail은 0, ACCMode는 0입니다. Panda raw faults=24는 기존
+ECAN-only 제외 mask의 non-ECAN 두 비트이며 ECAN bus-off/error-warning/error-passive는
+모두 0입니다. 이 관측은 stock CAN 수신 복귀를 확인한 결과이며 ECU 진단 접근 경로나
+고장코드 소거를 재확인한 결과는 아닙니다. 원본은 `build/panda-post-fuse-20261006.json`에
+있습니다. 이전 점화 미감지와 LFA/SCC 미수신 결과는 퓨즈 교체 전의 기록입니다.
+
+native Zig 0.16 C++17 core smoke는 ECU retry와 3초 EPS 복귀 회귀 검사를 통과했습니다.
+전체 ROS Noetic 빌드, raw TX callback bench와 최신 dual-ECU/복귀/복구 실차 결과는
+미확인입니다. [검증 상태와 재현 방법](validation.md)에 정확한 범위가 있습니다.
+
+## 2026-08-21~24 실차 이력
+
+2026-08-21 helper 시험에서 저속 LFA 송신과 좌우 목표각 추종, 약 1 km/h부터 직선 약
+15 km/h까지 가속 1회를 확인했습니다. 이후 실행에서는 creep 부근에서 가속이 멈추거나
+Panda SCC 거부가 발생했습니다. 최신 dual-ECU 수정 후 성공이나 자동 감속/완전 정지
+성공 기록은 없습니다.
+
+**2026-08-24 사용자 정정:** 실패 로그의 `brake=True`는 가속이 실패한 뒤 운전자가 개입한
+결과입니다. 가속 실패의 확정 원인으로 해석하면 안 됩니다. P-CAN/gateway 작업은 미루고
+ECAN `0x1A0` 문제를 우선하기로 했습니다.
+
+당시 연결은 차량 camera connector → Hyundai K Y harness → harness board → Red Panda →
+USB host였습니다. 문제 OBD-C 케이블 사용 시 USB/Comma Power 없이도 HVAC UI/LED/냉방이
+먹통이 되었고 케이블 교체 후 회복했습니다. 이 결과는 firmware 원인으로 단정할 근거가
+아닙니다. 정상 확인한 케이블과 harness 방향을 기록해야 합니다.
+
+제조사가 이전 개조 gateway를 제거한 이력이 있고 그 인터페이스/일부 배선 상태는
+불명확합니다. 과거 ADAS fuse 제거 및 재장착, Panda와 무관한 전방 안전/차로 변경 보조
+경고도 기록되었습니다. 별도 PCAN을 사용한 이력은 동시 송신 재현 조건에 포함해야 합니다.
+강한 MDPS 위치 유지와 native angle 인터페이스는 별도 미해결 요구사항입니다.
+
+## SCC 소유권 수정의 근거와 한계
+
+| ECU | UDS request/response | 순정 메시지 |
 | --- | --- | --- |
-| ADAS camera | `0x730` / `0x738` | LFA `0x12A` |
-| radar | `0x7D0` / `0x7D8` | SCC_CONTROL `0x1A0` |
+| 현재 코드의 camera 소유권 대상, ECU 식별 미확인 | `0x730` / `0x738` | LFA `0x12A` |
+| radar | `0x7D0` / `0x7D8` | SCC `0x1A0` |
 
-따라서 radar가 보내는 순정 `0x1A0`과 helper가 보내는 제어 `0x1A0`이 동시에 존재했습니다.
-15 km/h까지 성공한 경우도 있었지만 다른 실행에서는 약 6.9 km/h에서 더 가속되지 않거나
-Panda가 `0x1A0`을 차단했습니다. 현재 수정은 다음 순서로 동작합니다.
+Pinned opendbc의 Ioniq 5 firmware 기록은 전방 camera를 `0x7C4`, radar를 `0x7D0`으로
+분류하며, `0x730`은 LKA steering 플랫폼의 ADAS Driving 후보입니다. 현재 코드의
+`0x730` camera 소유권 가정과 이 분류는 일치하지 않습니다. 2026-10-06에는 `0x730`과
+`0x7C4` 모두 진단 응답이 없어 실제 endpoint를 확인하지 못했고 runtime 주소는
+변경하지 않았습니다. [Pinned firmware 기록](https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/fingerprints.py)과
+[query 분류](https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/values.py)를 근거로 실차 식별을 먼저 확인해야 합니다.
 
-1. D 상태와 정지 상태에서 순정 `0x1A0` template을 캡처합니다.
-2. camera `0x730`을 비활성화하고 순정 `0x12A`가 quiet인지 확인합니다.
-3. 종방향 시험이면 radar `0x7D0`도 비활성화하고 순정 `0x1A0`이 quiet인지 확인합니다.
-4. Panda를 Hyundai CAN-FD safety param `3077`로 전환합니다.
-5. HDA1에 필요한 `0x12A`, `0x1E0`, `0x1A0`, `0x160`과 두 ECU tester-present만 보냅니다.
-6. `0x1A0`은 캡처한 순정 payload 위에 제어 신호만 덮어써 차량별 미확인 비트를 보존하고
-   counter/checksum을 다시 생성합니다.
-7. 종료 또는 예외 시 radar, camera 순서로 통신을 복구하고 Panda를 `NO_OUTPUT`으로 돌립니다.
+이전 helper는 camera만 비활성화했습니다. radar stock SCC가 계속 송신될 수 있어 제어
+SCC와 소유권 경합 위험이 있었습니다. 이를 차단하기 위해 helper와 ROS 노드 모두
+radar disable/quiet/tester-present/restore를 추가하고 stock SCC의 미소유 비트를 보존합니다.
+이 수정이 간헐적 가속 실패의 모든 원인을 해결했는지는 실차에서 검증되지 않았습니다.
+HDA2 auxiliary `0x51/0x1EA/0x200/0x345/0x1DA`는 최종 HDA1 송신 경로에서 제외했습니다.
 
-HDA2용 `0x51`, `0x1EA`, `0x200`, `0x345`, `0x1DA`는 ECAN-only HDA1 송신 목록에서
-제거했습니다. 구현은 `scripts/steering_sweep.py`와
-`patches/opendbc-hyundai-canfd-split-arm.patch`에 있습니다.
+## Firmware provenance
 
-## Panda firmware 재현과 플래시
+runtime/build pins는 Panda `dd8a5b3df77706337a11555377e7180c5adc8726`,
+opendbc `b72c1fd55ae7e84763e40912bbe06b8f533cb66b`입니다.
+별도 Carrot 비교 commit은 [upstream 근거](upstream.md)에 있으며 runtime pin 변경이 아닙니다.
 
-고정 upstream:
-
-- panda `dd8a5b3df77706337a11555377e7180c5adc8726`
-- opendbc `b72c1fd55ae7e84763e40912bbe06b8f533cb66b`
-
-Ubuntu 차량 컴퓨터에서 재현 빌드:
-
-```bash
-./scripts/build_panda_debug_firmware.sh
-source ~/.cache/ioniq5_ecan/upstream/venv/bin/activate
-sha256sum ~/.cache/ioniq5_ecan/upstream/panda/board/obj/panda_h7.bin.signed
-```
-
-Panda를 차량에서 분리하고 USB로만 연결한 상태에서 플래시합니다.
-
-```bash
-python3 scripts/flash_panda.py \
-  --serial PANDA_SERIAL \
-  --firmware ~/.cache/ioniq5_ecan/upstream/panda/board/obj/panda_h7.bin.signed \
-  --confirm PANDA_SERIAL
-```
-
-2026-08-21 Windows 개발 컴퓨터에서는 다음 명령으로 동일 소스를 빌드했습니다.
-
-```powershell
-& 'C:\Program Files\Git\bin\bash.exe' `
-  .\scripts\build_panda_debug_firmware.sh `
-  '/c/Users/hyunseo/.cache/ioniq5_ecan/upstream-adas730'
-```
-
-부트스텁은 이번 변경에서 다시 플래시하지 않았습니다. USB 단독에서는
-`harness_status=0`이므로 custom Hyundai safety mode가 SILENT로 거부되는 것이 정상입니다.
-실제 TX safety hook 검사는 정상 방향의 차량 하네스에서만 가능합니다.
-
-## 다음 실차 시험: 가장 먼저 실행할 명령
-
-시험 전 Cabana, ROS node, PCAN 송신 프로그램처럼 Panda나 같은 CAN을 점유하는 프로그램을
-모두 종료합니다. 시동 후 브레이크를 밟은 채 먼저 D에 넣고, 그 이후 P/R/N으로 바꾸지 않은
-상태에서 helper를 시작합니다.
-
-Ubuntu:
-
-```bash
-source ~/.cache/ioniq5_ecan/upstream/venv/bin/activate
-python3 scripts/steering_sweep.py \
-  --serial PANDA_SERIAL \
-  --target-speed-kph 15 \
-  --accel-max-mps2 0.7 \
-  --decel-max-mps2 0.7 \
-  --rolling-test \
-  --rolling-min-kph 1.0 \
-  --rolling-max-kph 16.0 \
-  --arm-timeout-s 60 \
-  --execute
-```
-
-현재 Windows 개발 컴퓨터에서는 Python 경로만 다음과 같이 바꿉니다.
-
-```powershell
-& '<WINDOWS_PATH_REDACTED>' `
-  .\scripts\steering_sweep.py `
-  --serial PANDA_SERIAL `
-  --target-speed-kph 15 `
-  --accel-max-mps2 0.7 `
-  --decel-max-mps2 0.7 `
-  --rolling-test `
-  --rolling-min-kph 1.0 `
-  --rolling-max-kph 16.0 `
-  --arm-timeout-s 60 `
-  --execute
-```
-
-제어 전에 반드시 아래 두 줄이 모두 출력되어야 합니다.
+2026-08-21 기록:
 
 ```text
-CAMERA_DISABLED address=0x730 stock_0x12A=quiet
-RADAR_DISABLED address=0x7D0 stock_0x1A0=quiet
+last recorded flashed signed app:
+1ef6d981457e8b2018fcbf72b8a43f88ba85f95a6b94800b177e8302df212bae
+split-brake signed candidate (built, flash not recorded):
+ffe0428536394ee7743a37f10338b4a19668f343f742e1b5de25c43df43f6986
+bootstub candidate (built, not flashed in that record):
+b420ab8d7d10d85a4b6883e37f6e4cbf38b724776afde823e7a9f4d5e1463a08
+split patch:
+e69f5a71f2a53ada43a38c1aefa759855b9915659d5ecb28682ad2311c910d54
 ```
 
-그다음 `ROLLING_WAIT`에서 브레이크를 놓아 1 km/h 이상으로 천천히 구르고,
-`ROLLING_READY` 후 안내가 나오면 SET을 한 번 눌렀다 놓습니다. `VEHICLE_STOPPED`가 나오면
-브레이크를 밟아 유지합니다. ECU 응답이나 quiet 확인이 실패하면 helper가 제어 전에
-중단합니다. 종료 로그에 restore warning이 있으면 시동을 완전히 껐다 켜 ECU 통신을
-복구하십시오.
+이 hash를 현재 설치 image의 hash로 취급하지 않습니다. 재현 build, 앱 flash, DFU recovery와
+ABI 검사 명령은 [Panda firmware](panda_firmware.md)에 있습니다.
 
-## 이전에 사용한 시험 예제
+## 다음 확인과 이전 helper 예제
 
-저속 좌 30도 3초, 우 30도 3초 1회. LDA 버튼으로 arm합니다.
+다음 실제 확인은 Ubuntu 20.04에서 관련 ROS 빌드, 설치 firmware revision 확인,
+passive fingerprint, ECU 수명주기/채널 동작, 일시 EPS 및 hard fault 복구입니다.
+한 기록에 commit/local diff/YAML/설치 firmware provenance, CAN address/bus/counter/time,
+gear/brake/pedal/button, Panda health와 diagnostics, disable/restore 로그 및 다른 송신기
+연결 상태를 남깁니다. 정차와 low-speed 조건, 버튼 조작은 현재 코드 및 시험계획을 따릅니다.
+
+아래는 이전 `scripts/steering_sweep.py`의 재현 예제이며 ROS 노드 명령이 아닙니다.
+helper에는 최신 ROS의 3초 EPS 복귀 및 지속 ECU retry 상태기계가 없습니다. `--execute`는
+실제 CAN 송신을 수행합니다. helper 종료 시 restore warning은 별도로 처리해야 합니다.
+Panda를 점유하는 다른 프로그램과 동시에 실행하지 않습니다.
 
 ```bash
+# 이전 직선 가속/감속 helper
+python3 scripts/steering_sweep.py \
+  --serial PANDA_SERIAL \
+  --target-speed-kph 15 --accel-max-mps2 0.7 --decel-max-mps2 0.7 \
+  --rolling-test --rolling-min-kph 1 --rolling-max-kph 16 \
+  --arm-timeout-s 60 --execute
+
+# 이전 저속 좌우 목표각 추종, LDA
 python3 scripts/steering_sweep.py \
   --serial PANDA_SERIAL \
   --offset-deg 30 --timed-hold-s 3 --steering-cycles 1 \
   --rolling-test --rolling-min-kph 1 --rolling-max-kph 10 \
   --arm-timeout-s 60 --execute
-```
 
-가속하면서 좌 15도 2초 → 직진 2초 → 우 15도 2초 → 직진 2초를 반복합니다. SET으로
-arm하며, 이 combined mode는 반복 종료 후 자동 정지하지 않고 제어를 해제하므로 운전자가
-속도를 관리해야 합니다.
-
-```bash
+# 이전 combined 반복, SET. 반복 종료는 제어 해제이며 자동 정지 아님
 python3 scripts/steering_sweep.py \
   --serial PANDA_SERIAL \
   --target-speed-kph 15 --accel-max-mps2 0.7 \
   --offset-deg 15 --combined-cycles 3 --combined-segment-s 2 \
   --rolling-test --rolling-min-kph 1 --rolling-max-kph 16 \
   --arm-timeout-s 60 --execute
-```
 
-정차 상태 최대 허용 토크 좌 3초, 우 3초 반복. 핸들을 ±5도 안에 두고 LDA로 arm합니다.
-
-```bash
+# 이전 정차 torque count 시험, 실제 MDPS 최대 구동력의 증명 아님
 python3 scripts/steering_sweep.py \
   --serial PANDA_SERIAL \
   --torque-sweep --timed-hold-s 3 --steering-cycles 3 \
   --arm-timeout-s 60 --execute
 ```
 
-## 검증 결과와 남은 작업
-
-이번 Windows 작업에서 완료한 검증:
-
-- `steering_sweep.py` Python 문법 검사
-- 양/음 가속과 stop request를 포함한 `SCC_CONTROL` 길이 및 Hyundai CAN-FD checksum 검사
-- opendbc/Panda patch 적용 후 ARM firmware 전체 빌드
-- 실제 Red Panda flash 후 marker, application mode, faults 0, RX/TX overflow 0 확인
-- `git diff --check`
-
-Windows에는 native `cc`가 없고 WSL 호출은 `Wsl/CallMsi/REGDB_E_CLASSNOTREG`로 실패하여
-opendbc host safety unittest를 실행하지 못했습니다. 차량 Ubuntu 컴퓨터에서는 firmware를
-사용하기 전에 최소한 다음을 수행하십시오.
-
-```bash
-cd ~/.cache/ioniq5_ecan/upstream/opendbc
-python3 -m unittest opendbc.safety.tests.test_hyundai_canfd.TestHyundaiCanfdSplitButtonArm
-
-cd /path/to/catkin_ws
-catkin_make -DCMAKE_BUILD_TYPE=Release
-catkin_make run_tests_ioniq5_ecan
-catkin_test_results --verbose
-```
-
-가장 중요한 후속 구현은 `steering_sweep.py`에서 검증할 camera/radar 이중 UDS lifecycle을
-ROS C++ 노드에도 통합하는 것입니다. 현재 C++ 노드는 CAN 송수신과 LFA/SCC codec을 갖고
-있지만, 최신 radar `0x7D0` 비활성화/quiet 확인/복구 상태기계는 아직 helper에만 있습니다.
-따라서 최신 helper의 실차 가속·감속을 먼저 확인한 뒤 같은 절차를 C++ 노드에 옮기고 HIL을
-통과시키십시오.
-
-문제 재현 시 다음을 한 로그에 남깁니다.
-
-- software commit과 Panda firmware SHA-256
-- Panda health 전체와 `harness_status`, orientation, ignition
-- `CAMERA_DISABLED`/`RADAR_DISABLED` 및 restore 결과
-- gear, brake, pedal, button, `controls_allowed`, `safety_tx_blocked`
-- 순정/제어 `0x12A`, `0x1A0`의 address, bus, counter, timestamp
-- 정상 OBD-C 케이블 사용 여부와 PCAN/다른 송신기 연결 여부
+종방향 helper 제어 전에는 `CAMERA_DISABLED ... stock_0x12A=quiet`와
+`RADAR_DISABLED ... stock_0x1A0=quiet` 둘 다 확인해야 합니다. helper 자체 출력 안내와
+시험계획을 따르며, 이 예제를 최신 ROS 복귀 검증 완료 기록으로 취급하지 않습니다.

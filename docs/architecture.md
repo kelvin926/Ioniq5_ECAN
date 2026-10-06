@@ -1,57 +1,83 @@
 # Architecture
 
+2026-10-06 현재 ROS C++ 노드의 구조입니다. 실행 타깃은 Ubuntu 20.04 / ROS 1 Noetic입니다.
+
 ```text
-Alpamayo-side controller
+Upstream controller
   └─ /ioniq5/actuation_command (TCPROS, queue 1, TCP_NODELAY)
-       └─ command adapter
-            ├─ rate/curvature → target angle → Carrot lateral-accel torque PID
-            └─ acceleration scaling and bounds
-                 └─ safety supervisor
-                      └─ 100 Hz control thread
-                           ├─ LFA 100 Hz
-                           ├─ LFAHDA_CLUSTER 20 Hz
-                           ├─ SCC_CONTROL 50 Hz (optional)
-                           └─ ADRV_0x160 50 Hz (optional)
-                                └─ Red Panda libusb
-                                     └─ Hyundai K harness / ECAN
+       └─ latest-command snapshot
+            └─ steady-clock control thread, nominal 100 Hz
+                 ├─ supervisor(command + vehicle + Panda health)
+                 ├─ ECU ownership / restoration lifecycle
+                 └─ command adapter, independent lateral/longitudinal permission
+                      ├─ rate/curvature → target angle → feedback torque controller
+                      └─ acceleration scale/offset and encoding range check
+                           └─ Hyundai CAN-FD codec
+                                ├─ LFA 0x12A: 100 Hz
+                                ├─ LFAHDA_CLUSTER 0x1E0: 20 Hz
+                                └─ SCC 0x1A0 / FCA 0x160: 50 Hz, optional
+                                     └─ Red Panda libusb → Hyundai K / ECAN
 
-Red Panda CAN RX
-  └─ ECAN logical bus 0 → /ioniq5/can_rx + /ioniq5/can0/rx
-       ├─ raw CAN-FD logging / rosbag / Cabana 변환
-       └─ vehicle state parser
+Red Panda CAN RX, separate thread
+  ├─ raw topics: /ioniq5/can_rx + /ioniq5/can{0,1,2}/rx
+  ├─ UDS response / stock-frame ownership observations
+  └─ vehicle parser → supervisor + adapter + state/diagnostics
 
-/ioniq5/can_tx
-  └─ SET combined-mode arm + active gate
-       └─ Panda HYUNDAI_CANFD whitelist
-            └─ Red Panda CAN TX
+/ioniq5/can_tx, ROS callback
+  └─ serialized actuation gate + connected Hyundai mode + longitudinal permission
+       └─ LFA additionally requires lateral permission
+            └─ Panda whitelist/content checks → USB write
 ```
 
-전용 Panda firmware는 Hyundai K 하네스의 `harness_status=1`만 허용합니다. 이 방향에서
-physical CAN1이 logical ECAN bus 0이며, 나머지 transceiver와 CAN0↔CAN2 forwarding은
-꺼집니다. camera CAN2는 parser, 조향, 종방향, 버튼 입력에 사용하지 않습니다.
+## CAN 소유권과 활성화
 
-차선유지(LDA) 버튼의 상승 에지는 조향 전용 모드를, 크루즈 `SET` release는 조향+종방향
-통합 모드를 선택합니다. 선택한 모드의 버튼을 다시 누르면 두 출력이 꺼집니다. Panda의
-`controls_allowed`는 전역 값이므로 저장소의 opt-in firmware 패치가 LDA 입력도 허용 상태로
-만들고, host supervisor가 실제 LFA/SCC 출력을 선택된 모드에 맞게 게이트합니다.
+Hyundai K의 정상 `harness_status=1`에서 physical CAN1은 Panda logical bus 0 ECAN입니다.
+ECAN-only firmware는 나머지 transceiver와 forwarding을 비활성화합니다.
+`camera_bus=2` 설정은 남아 있지만 이 차량의 parser와 제어에 사용하지 않습니다.
 
-ROS callback은 최신 command 하나만 mutex로 교환합니다. CAN RX와 제어 루프는 별도
-스레드이고, 제어 루프는 ROS callback spinner와 독립된 steady clock 100 Hz 주기를 사용합니다.
-raw RX는 receive thread에서 즉시 publish하고 raw TX는 ROS callback에서 Panda write mutex로
-직접 전달하므로 별도 100 Hz queue 지연을 추가하지 않습니다.
-동적 할당은 CAN 프레임 묶음과 USB packet에 남아 있으므로 hard real-time 보장은 하지
-않지만, Python/IPC 경계를 제어 hot path에서 제거했습니다.
+초기 takeover는 유효한 CAN, EPS 정상 상태와 정차를 요구합니다. 종방향을 켠 프로파일은
+D와 최근 순정 SCC template도 요구합니다. camera `0x730/0x738`의 stock LFA `0x12A`를
+UDS로 멈추고 quiet를 확인합니다. 종방향이면 radar `0x7D0/0x7D8`의 stock SCC `0x1A0`도
+멈추고 확인한 뒤 Hyundai safety mode로 전환합니다. SCC는 마지막 순정 payload에서
+소유 신호와 counter/CRC만 덮어써 미확인 비트를 보존합니다.
 
-Carrot 제어 경로는 `latAccelFactor=3.172929`, `friction=0.096019`, PID
-`1.0/0.1/0.0/1.0`과 저속 보간표를 기본으로 사용합니다. 목표 조향각과 actuator delay를
-적용한 뒤 자전거 모델로 곡률을 계산하므로 입력이 steering rate여도 동일한 토크
-제어기를 사용합니다. 모든 값은 YAML에서 변경할 수 있습니다.
+물리 LDA 상승 에지는 조향 전용, SET release는 조향과 종방향 통합 모드를 선택/토글합니다.
+host와 opt-in firmware가 채널을 각각 추적합니다. brake는 종방향만 래치 해제하고
+횡방향을 유지합니다. firmware 전역 `controls_allowed`와 채널 허가는 같은 개념이 아닙니다.
 
-입력 메시지는 임시 계약입니다. 최종 계약 변경 시 다음 경계만 수정합니다.
+## 두 복구 경로
 
-1. `msg/ActuationCommand.msg`
-2. `Ioniq5EcanNode::command_callback`
-3. 필요하면 `CommandAdapter`
+활성 중 일시 MDPS LKA 보조 오류는 `SOFT_DISABLING`으로 전환합니다. 최초 오류부터
+고정 3초 동안 LFA를 0/비활성으로 내리고 arm, heartbeat, ECU 소유권을 유지합니다.
+허가된 정상 종방향은 현재 명령을 계속 처리합니다. deadline 전에 오류가 사라지고
+최신 명령/CAN 및 Panda 허가가 정상이면 `ACTIVE`로 복귀합니다. 횡방향 적분과 목표각은
+실측각으로 초기화하며 raw LFA도 일시 정지를 우회할 수 없습니다.
 
-Hyundai codec, Panda USB protocol, parser, safety supervisor는 물리 입력 계약과 분리되어
-있습니다.
+3초 만료나 CAN/Panda/command hard fault는 전체 disarm과 순정 ECU 복구로 전환합니다.
+radar→camera 순서로 유효한 stock frame 재개를 확인하고 Panda `NO_OUTPUT`을 확인합니다.
+실패한 복구는 즉시 첫 시도 후 1, 2, 4, 8, 16, 최대 30초 간격으로 재시도합니다.
+USB 연결은 별도 재연결 루프를 사용합니다. 복구 중 재arm과 actuator 출력은 차단하며,
+완료 후 운전자 acknowledge/rearm 및 정차/물리 버튼 조건을 다시 요구합니다.
+
+정상 제어와 일시 복귀 대기에서는 비활성화한 각 ECU에 0.8초 이내 tester-present를
+보냅니다. 일반 종료도 stock ECU 복구를 시도하지만 종료 후에는 재시도 루프가 존재하지
+않습니다. 이 로직은 ECU 자체 reset이나 실제 고장 수리 기능이 아닙니다.
+
+## 스레드와 입력 경계
+
+ROS command callback은 mutex로 최신 값 하나를 교환합니다. CAN RX와 제어 루프는 별도
+스레드이며 raw RX는 receive thread에서 publish합니다. raw TX는 actuation mutex로
+제어/복구 전환과 직렬화하고 Panda write mutex로 전송합니다. 별도 100 Hz 송신 queue는
+추가하지 않습니다.
+
+UDS takeover/restore는 control thread에서 동기 실행하므로 제어 주기와 tester-present
+간격이 지연될 수 있습니다. USB, scheduler와 동적 할당도 남아 있어 hard real-time 보장은
+없습니다. 복구 재시도 후에는 최신 command/state/health를 다시 읽습니다.
+
+기본 입력은 steering rate를 목표각으로 적분한 뒤 Carrot Ioniq 5 토크 제어기로 변환합니다.
+`unfiltered_input=true`는 host 입력 clamp/평활화를 생략하지만 토크 변환과 Panda/CAN
+경계는 유지합니다. native angle 제어는 구현하지 않았습니다. 입력 변경은 메시지,
+callback, adapter 경계에서 수용하며 최종 상위 계약은 아직 미정입니다.
+
+상세 동작은 [입력 계약](input_contract.md), [상태 및 제한](safety.md),
+[raw CAN](raw_can.md), [주기와 측정](latency.md)을 참고하십시오.

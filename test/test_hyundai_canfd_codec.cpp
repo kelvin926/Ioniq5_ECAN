@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <stdexcept>
 
 #include "ioniq5_ecan/bit_codec.hpp"
 #include "ioniq5_ecan/hyundai_canfd_codec.hpp"
@@ -63,7 +64,7 @@ TEST(HyundaiCanFdCodec, MatchesPinnedOpenDbcGoldenFrames) {
                             0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 }
 
-TEST(HyundaiCanFdCodec, ClampsToPandaHardBoundsAndMaintainsChecksum) {
+TEST(HyundaiCanFdCodec, EnforcesPandaHardBoundsAndMaintainsChecksum) {
   using namespace ioniq5_ecan;
   HyundaiCanFdCodec codec;
   const CanFrame lfa = codec.make_lfa(999, true, true);
@@ -72,8 +73,32 @@ TEST(HyundaiCanFdCodec, ClampsToPandaHardBoundsAndMaintainsChecksum) {
   std::copy_n(lfa.data.begin(), 16, data.begin());
   EXPECT_EQ(static_cast<int>(get_signal(data, 41, 11, ByteOrder::LittleEndian)) - 1024, 270);
 
-  const CanFrame scc = codec.make_scc_control(9.0, -9.0, true, false, false, 30.0, 20.0);
+  EXPECT_THROW(codec.make_scc_control(9.0, -9.0, true, false, false, 30.0, 5.0), std::out_of_range);
+  EXPECT_THROW(codec.make_scc_control(0.0, 0.0, true, false, false, 30.0, 20.0), std::out_of_range);
+}
+
+TEST(HyundaiCanFdCodec, PreservesUnownedStockSccFields) {
+  using namespace ioniq5_ecan;
+  HyundaiCanFdCodec codec;
+  CanFrame stock;
+  stock.address = HyundaiCanFdCodec::kSccControlAddress;
+  stock.bus = 0;
+  stock.fd = true;
+  stock.size = 32;
+  stock.data[2] = 41U;
+  stock.data[25] = 0x5AU;
+  stock.data[31] = 0xA5U;
+
+  codec.set_scc_control_template(stock);
+  ASSERT_TRUE(codec.has_scc_control_template());
+  const CanFrame scc = codec.make_scc_control(0.7, 0.7, true, false, false, 30.0, 5.0);
+  EXPECT_EQ(scc.data[2], 42U);
+  EXPECT_EQ(scc.data[25], 0x5AU);
+  EXPECT_EQ(scc.data[31], 0xA5U);
   EXPECT_TRUE(HyundaiCanFdCodec::checksum_valid(scc));
+
+  codec.clear_scc_control_template();
+  EXPECT_FALSE(codec.has_scc_control_template());
 }
 
 }  // namespace
