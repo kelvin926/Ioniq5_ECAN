@@ -1,0 +1,89 @@
+{
+  "observed_on": "2026-10-06",
+  "timezone": "Asia/Seoul",
+  "request": "User explicitly authorized resolving startup/takeover while ignition cycling is difficult. Preserve interlocks and unrelated files.",
+  "vehicle_diagnostics_before_fix": {
+    "mode_only_at": "2026-10-06T22:28:11+09:00",
+    "mode_only_result": "NO_OUTPUT/7173 -> HYUNDAI/7173 without ECU disable became ready in 7 ms. All five mandatory RX families continued; controls_allowed=0. Original SILENT/0 restored.",
+    "usb_reset_probes_at": ["2026-10-06T22:29:52+09:00", "2026-10-06T22:30:23+09:00"],
+    "usb_reset_probes_result": "C0-only and Python equivalent of host connection sequence did not reproduce checksum failure; complete CAN packets valid.",
+    "ecu_trace_completed_at": "2026-10-06T22:31:59+09:00",
+    "ecu_trace_result": "Standstill/P, physical intent OFF. Camera extended session 5003003201f4, then 288301/tester-present quieted BOTH LFA and SCC. Radar 5003/288301 acknowledged. All mandatory RX families remained fresh. Hyundai/7173 ready within 3 ms with controls=0 and no actuator CAN writes.",
+    "restore_responses": "Radar then camera: 1003 -> 5003, 280001 -> 6800, 1001 -> 5001. Both restored before checking stock: 1.1 s sample LFA110/SCC55.",
+    "temporary_mdps_flag": "MDPS assistance-fault bits temporarily became raw1 with no replacement LFA traffic, then returned raw0 after stock restoration. Not a DTC read or a permanent fault finding.",
+    "ecu_trace_tx_delta": [12, 0, 0],
+    "actuator_frames_sent": 0,
+    "dtc_clear_or_ecu_reset": false,
+    "restored_panda": "Original safety0/0 controls0. Ignition not cycled.",
+    "interpretation": "Mode-only relay failure is not reproduced. Camera communication control can affect stock SCC, so radar stock confirmation must wait until camera communication is restored. Successful intent-OFF diagnostic takeover does not prove ROS/selected-button ACTIVE operation."
+  },
+  "reproduced_offline_race": {
+    "implementation": "Pinned opendbc plus original I5R1 patches, safety_tick_current_safety_config and real CANPackerSafety messages, UBSan libsafety.",
+    "timer_us": 2300000000,
+    "before_fix": {
+      "tick_before_first_rx": "After mode reset, the 1 Hz tick treats unseen zeroed RxStatus as invalid and permanently aborts I5R1 intent; later valid CAN cannot recover. controls=false, LFA TX=false.",
+      "rx_before_tick": "Same mode transition with valid first RX before tick: controls=true, LFA TX=true."
+    },
+    "fix": "At most 100 ms initialization grace for not-yet-seen RX status only in opt-in I5R1. Every RX must still be newly seen, checksum/counter/quality valid and <=100 ms fresh before ready or actuator TX. Corrupt received CAN, relay, heartbeat and stale-CAN faults still cancel intent.",
+    "after_fix_tests": {"total": 14, "passed": 14, "failures": 0},
+    "new_cases": ["tick before first RX across ELM/NO_OUTPUT/Hyundai", "partial initialization no permission", "unseen RX past 100 ms cancels", "corrupt initial RX never gets grace", "microsecond timer wrap"],
+    "vehicle_attribution": "A proven source race consistent with intermittent readiness failure; original vehicle failure did not record tick phase/B7 blocked, so that exact occurrence is not conclusively attributed."
+  },
+  "host_changes": {
+    "listener_recovery": "Unarmed startup recovery reinstalls an empty NO_OUTPUT/7173 listener. Explicit disarm, shutdown and armed faults needing rearm retain plain NO_OUTPUT/0. New connection still clears inherited physical intent.",
+    "ecu_restoration": "Keep radar -> camera request order but restore BOTH ECU communications before confirming fresh checksum-valid SCC/LFA. Keep pending flags/backoff and verify Panda NO_OUTPUT.",
+    "startup_stream": "C0 clears CAN assembly tails but not a pending EP1 USB packet. Startup discards old bytes only in plain NO_OUTPUT, until a successful short bulk transfer establishes a packet boundary. Timeout/partial/full transfers are not accepted as boundaries. Maximum 2 s; failure still disconnects. Runtime checksum rejection remains strict.",
+    "diagnostics": "Readiness timeout now reports session active/blocked, RX invalid/check flags and faults; checksum error includes offset/size/header.",
+    "targeted_host_tests": {"supervisor_and_listener": 7, "protocol": 5, "usb_read_including_boundary_cases": 6, "passed": true},
+    "runtime_hashes": {"node": "4e9d9fb705f346ed84290d608a4f394a3cf578c4390c1e4ee7ba663e23058640", "panda_shared_library": "afac73b89dc3607129a4da444fc92aba339d12bcd2edb678122002a7d40d19e7", "protocol_shared_library": "24fd9f3f3eaae4cb1cdb9c46a83cd1ae29148359c408638b39698726363cdbba"},
+    "build": "Targeted Ubuntu 20.04/Noetic node and affected tests built successfully.",
+    "patch_reproducibility": "Separate temporary Git index at pinned opendbc: split-arm, base command-session and follow-up startup patches apply sequentially. Existing working/index files unchanged.",
+    "current_source_uncommitted": true,
+    "git_commit_or_push": false
+  },
+  "passive_ros_check_before_final_usb_sync_change": {
+    "started_at": "2026-10-06T22:38:53+09:00",
+    "log": "/home/ave/catkin_ws_ioniq5/logs/ros/log/451988d8-c18b-11f1-b54d-bbcbadbae010/roslaunch-ave-325534.log",
+    "isolated_master": "http://127.0.0.1:11321",
+    "latest": {"vehicle_valid": true, "gear": 0, "brake": false, "eps_fault": false, "acc_fault": true, "state": "PASSIVE", "session_ready": true, "safety_mode": 19, "safety_param": 7173, "controls_allowed": false, "recovery_pending": false, "raw_can_tx_count": 0, "can_checksum_failures": 0},
+    "scope": "No command publisher, no ECU communication disable or actuator CAN. Own node/master/rosout stopped. Still old installed firmware; no ACTIVE claim."
+  },
+  "dtc_read_attempt": {
+    "at": "2026-10-06T22:40:21.979633+09:00",
+    "result": "Initial raw USB read hit checksum failure before sending planned 19 02 FF requests; query aborted and original Panda safety0/0 power-save1 restored.",
+    "physical_tx_delta": [0, 0, 0],
+    "dtcs_obtained": false,
+    "no_faults_claim": false
+  },
+  "firmware_build": {
+    "panda_pin": "dd8a5b3df77706337a11555377e7180c5adc8726",
+    "opendbc_pin": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
+    "path": "/home/ave/catkin_ws_ioniq5/third_party/ecan_firmware/panda/board/obj/panda_h7.bin.signed",
+    "sha256": "6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52",
+    "new_patch": "patches/opendbc-command-session-startup.patch",
+    "new_patch_sha256": "5d30edf83c8a6ea1a5c9e419134b9e7e57d9907a42d972dc159c5ffbad319676",
+    "result": "Signed Red Panda H7 application built with ALLOW_DEBUG/IONIQ5_ECAN_ONLY; ambient DEBUG and RELEASE unset. Bootstub not rebuilt/flashed.",
+    "flash": "completed separately after fresh USB-only confirmation; see firmware_flash"
+  },
+  "firmware_flash": {
+    "recorded_at": "2026-10-06T22:44:38+09:00",
+    "script": "scripts/flash_panda.py --serial/--confirm PANDA_SERIAL",
+    "result": "Exit 0: flashed and verified selected Red Panda. Installed signature matched candidate through Panda.up_to_date, expected application marker and I5R1 capability verified after reset.",
+    "installed_app_sha256": "6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52",
+    "previous_verified_app_sha256": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+    "bootstub_flashed": false,
+    "recovery_dfu_used": false,
+    "transient_enumeration": "Serial descriptor PIPE messages during reset; helper retried, verified application identity/signature and returned success.",
+    "post_flash_preflight": {"passed": true, "harness_status": 0, "ignition_line": 0, "ignition_can": 0, "controls_allowed": 0, "faults": 0, "rx_buffer_overflow": 0, "tx_buffer_overflow": 0, "physical_tx_total": [0, 0, 0]},
+    "standby_negative_tx": {"passed": true, "session_flags": 16, "rejected_attempts": 3, "physical_tx_delta": [0, 0, 0], "controls_allowed": 0},
+    "scope": "USB-only firmware and negative-TX proof, not vehicle ECU acceptance or ACTIVE/moving verification."
+  },
+  "fresh_flash_prerequisite": {
+    "user_confirmation": "USB only connected, direct current user reply",
+    "device_verified": {"harness_status": 0, "ignition_line": 0, "ignition_can": 0, "controls_allowed": 0},
+    "pre_flash_preflight": "Strict FAIL on pre-existing accumulated RX overflow 6652599, not on harness/ignition/controls."
+  },
+  "post_fix_vehicle_result": "Vehicle reconnected: startup/session ready and normal stock RX confirmed, no TX. 0x730 DTC query then explicitly approved single clear: 54 acknowledged, three same testFailed/warning records recurred after about 2 s; ACCEnable3 persisted. Control tests stopped, no repeated clear/reset/cycle. See post-fix-ecu-dtcs-20261006.json.",
+  "unverified": ["Post-fix selected-button vehicle ACTIVE and actual tracking", "Moving command-return", "Manufacturer-specific meanings/root cause of recurrent 0x730 DTCs"],
+  "scope": "Only ECAN workspace source/build/logs/evidence changed; no global ROS/shell/package configuration or unrelated project changes."
+}

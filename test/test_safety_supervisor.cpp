@@ -3,8 +3,27 @@
 #include <chrono>
 
 #include "ioniq5_ecan/safety_supervisor.hpp"
+#include "ioniq5_ecan/recovery_retry.hpp"
 
 namespace {
+
+TEST(RecoveryStandby, UnarmedStartupRestoresEmptyListener) {
+  using namespace ioniq5_ecan;
+  EXPECT_EQ(recovery_standby_param(7173U, false, true, false, false), 7173U);
+  EXPECT_EQ(recovery_standby_param(7173U, false, false, false, false), 0U);
+}
+
+TEST(RecoveryStandby, FaultExplicitOffAndShutdownDoNotReinstallListener) {
+  using namespace ioniq5_ecan;
+  EXPECT_EQ(recovery_standby_param(7173U, false, true, true, false), 0U);
+  EXPECT_EQ(recovery_standby_param(7173U, false, true, false, true), 0U);
+  EXPECT_EQ(recovery_standby_param(7173U, false, true, true, true), 0U);
+}
+
+TEST(RecoveryStandby, HealthyCommandGapRetainsProfile) {
+  using namespace ioniq5_ecan;
+  EXPECT_EQ(recovery_standby_param(7173U, true, true, false, false), 7173U);
+}
 
 struct FixtureData {
   ioniq5_ecan::TimePoint now{ioniq5_ecan::SteadyClock::now()};

@@ -162,6 +162,7 @@ void PandaUsb::connect() {
     control_write(0xE7, 0, 0);  // disable power saving
     configure_can();
     set_safety_mode(kSafetyNoOutput, 0);  // A new USB session never inherits driver approval.
+    synchronize_can_receive();
     if (config_.command_session_param != 0U) {
       std::array<uint32_t, 2> session{};
       if (control_read(0xB7, 0, 0, session.data(), sizeof(session)) !=
@@ -176,6 +177,45 @@ void PandaUsb::connect() {
     disconnect();
     throw;
   }
+}
+
+bool PandaUsb::initial_receive_boundary(std::size_t capacity, int status, int transferred) {
+  if (status != 0 && status != LIBUSB_ERROR_TIMEOUT) {
+    throw std::runtime_error(std::string("Red Panda initial CAN drain failed: ") +
+                             libusb_error_name(status));
+  }
+  if (capacity == 0U || capacity % 64U != 0U || transferred < 0 ||
+      static_cast<std::size_t>(transferred) > capacity) {
+    throw std::runtime_error("Red Panda initial CAN drain returned an invalid byte count/capacity");
+  }
+  // Only successful short USB transfers establish the boundary. A timeout may
+  // leave half a CAN packet even when transferred is nonzero or a multiple of 64.
+  return status == 0 && static_cast<std::size_t>(transferred) < capacity;
+}
+
+void PandaUsb::synchronize_can_receive() {
+  // C0 resets the firmware assembler, not an already queued EP1 USB packet.
+  // Discard the old startup stream through a successful short transfer. In the
+  // pinned comms_can_read, a short packet means all CAN tails have been drained.
+  // This is allowed only before ready_, in plain NO_OUTPUT with approval cleared;
+  // runtime checksum errors remain fatal and are never resynchronized in place.
+  std::array<unsigned char, 16384> buffer{};
+  const auto deadline = SteadyClock::now() + std::chrono::seconds(2);
+  auto heartbeat_due = SteadyClock::now();
+  while (SteadyClock::now() < deadline) {
+    if (SteadyClock::now() >= heartbeat_due) {
+      send_heartbeat(false);
+      heartbeat_due = SteadyClock::now() + std::chrono::milliseconds(200);
+    }
+    int transferred = 0;
+    const int status = libusb_bulk_transfer(handle_, kCanReadEndpoint, buffer.data(),
+      static_cast<int>(buffer.size()), &transferred, 100);
+    if (initial_receive_boundary(buffer.size(), status, transferred)) {
+      receive_carry_.clear();
+      return;
+    }
+  }
+  throw std::runtime_error("Red Panda initial CAN stream did not reach a packet boundary");
 }
 
 void PandaUsb::disconnect() {

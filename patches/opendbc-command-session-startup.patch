@@ -1,0 +1,112 @@
+diff --git a/opendbc/safety/safety.h b/opendbc/safety/safety.h
+--- a/opendbc/safety/safety.h
++++ b/opendbc/safety/safety.h
+@@ -332,6 +332,10 @@
+   uint32_t ts = microsecond_timer_get();
+   if (cfg != NULL) {
+     for (int i=0; i < cfg->rx_checks_len; i++) {
++      if (ioniq5_session_rx_initializing(&cfg->rx_checks[i].status, ts)) {
++        controls_allowed = false;
++        continue;
++      }
+       uint32_t elapsed_time = safety_get_ts_elapsed(ts, cfg->rx_checks[i].status.last_timestamp);
+       // lag threshold is max of: 1s and MAX_MISSED_MSGS * expected timestep.
+       // Quite conservative to not risk false triggers.
+diff --git a/opendbc/safety/modes/ioniq5_command_session.h b/opendbc/safety/modes/ioniq5_command_session.h
+--- a/opendbc/safety/modes/ioniq5_command_session.h
++++ b/opendbc/safety/modes/ioniq5_command_session.h
+@@ -10,6 +10,7 @@
+ static int ioniq5_session_cruise_prev = 0;
+ static bool ioniq5_session_button_seen = false;
+ static bool ioniq5_session_ignore_set_release = false;
++static uint32_t ioniq5_session_init_ts = 0U;
+ 
+ static void ioniq5_session_abort(void) {
+   if (ioniq5_session_profile != 0U) {
+@@ -93,6 +94,7 @@
+ 
+ static void ioniq5_session_finish_init(void) {
+   if (ioniq5_session_profile != 0U) {
++    ioniq5_session_init_ts = microsecond_timer_get();
+     hyundai_canfd_lateral_controls_allowed = ioniq5_session_lateral;
+     hyundai_canfd_longitudinal_controls_allowed = ioniq5_session_longitudinal;
+     hyundai_canfd_lda_button_prev = ioniq5_session_lda_prev;
+@@ -101,6 +103,14 @@
+   }
+ }
+ 
++static bool ioniq5_session_rx_initializing(const RxStatus *status, uint32_t now) {
++  // A mode transition clears RX status. An early 1 Hz tick must not permanently
++  // cancel intent before the first packet arrives. Ready/TX still require every
++  // checked message to be fresh and valid; received bad packets never get grace.
++  return ioniq5_session_profile != 0U && !ioniq5_session_blocked && !status->msg_seen &&
++         safety_get_ts_elapsed(now, ioniq5_session_init_ts) <= 100000U;
++}
++
+ static void ioniq5_session_enforce(bool valid) {
+   if (ioniq5_session_profile != 0U) {
+     if (!valid || relay_malfunction || safety_rx_checks_invalid) ioniq5_session_abort();
+diff --git a/opendbc/safety/tests/test_ioniq5_command_session.py b/opendbc/safety/tests/test_ioniq5_command_session.py
+--- a/opendbc/safety/tests/test_ioniq5_command_session.py
++++ b/opendbc/safety/tests/test_ioniq5_command_session.py
+@@ -132,6 +132,60 @@
+     self.fresh(lda=True)
+     self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
+ 
++  def transition_at(self, mode, timestamp):
++    self.safety.init_tests()
++    self.safety.set_timer(timestamp)
++    self.assertEqual(0, self.safety.set_safety_hooks(mode, self.PARAM))
+ 
++  def test_tick_before_first_rx_preserves_intent_without_permission(self):
++    self.select_lateral()
++    for mode in (CarParams.SafetyModel.elm327, CarParams.SafetyModel.noOutput, CarParams.SafetyModel.hyundaiCanfd):
++      self.transition_at(mode, 2300000000)
++      self.safety.safety_tick_current_safety_config()
++      self.assertFalse(self.safety.get_controls_allowed())
++      self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++      self.fresh(lda=True)
++    self.assertTrue(self.safety.get_controls_allowed())
++    self.assertTrue(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_partial_initial_rx_does_not_authorize_output(self):
++    self.select_lateral()
++    self.transition_at(CarParams.SafetyModel.hyundaiCanfd, 2300000000)
++    self.rx("MDPS")
++    self.safety.safety_tick_current_safety_config()
++    self.assertFalse(self.safety.get_controls_allowed())
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++    self.fresh(lda=True)
++    self.assertTrue(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_missing_initial_rx_after_100ms_cancels_session(self):
++    self.select_lateral()
++    self.transition_at(CarParams.SafetyModel.hyundaiCanfd, 2300000000)
++    self.safety.set_timer(2300100001)
++    self.safety.safety_tick_current_safety_config()
++    self.fresh(lda=True)
++    self.assertFalse(self.safety.get_controls_allowed())
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_corrupt_initial_rx_never_gets_grace(self):
++    self.select_lateral()
++    self.transition_at(CarParams.SafetyModel.hyundaiCanfd, 2300000000)
++    packet = self.packer.make_can_msg_safety("MDPS", 0, {"COUNTER": 2})
++    packet[0].data[0] ^= 1
++    self.assertFalse(self.safety.safety_rx_hook(packet))
++    self.safety.safety_tick_current_safety_config()
++    self.fresh(lda=True)
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++
++  def test_initial_rx_grace_handles_timer_wrap(self):
++    self.select_lateral()
++    self.transition_at(CarParams.SafetyModel.hyundaiCanfd, 0xfffffff0)
++    self.safety.set_timer(10)
++    self.safety.safety_tick_current_safety_config()
++    self.assertFalse(self.safety.safety_tx_hook(self.lfa()))
++    self.fresh(lda=True)
++    self.assertTrue(self.safety.safety_tx_hook(self.lfa()))
++
++
+ if __name__ == "__main__":
+   unittest.main()

@@ -8,6 +8,9 @@
 
 | 시점 | 확인한 범위 | 한계 |
 | --- | --- | --- |
+| 2026-10-06 수정 후 재연결/진단 | 오류 없이 startup/CAN valid/session ready/NO_OUTPUT 대기, stock LFA100/SCC50 Hz 및 TX0 관측. 0x730/7D0 DTC 조회 성공, 승인된 0x730 한 번 삭제 54 수락 | 즉시 기록 없음 이후 2초 내 동일 세 status89 기록 재발, ACCEnable3 지속. 추가 삭제/진단/제어 중단. ECU identity/고장 원인과 실제 추종 미확인. [기록](evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json) |
+| 2026-10-06 정차 실패 후 수정 | 실제 libsafety로 tick-before-first-RX 경쟁 재현, 수정 뒤 custom 14개와 host 관련 18개 통과. 수정 node/ARM 앱 빌드, 새 앱 USB-only flash/서명/capability, preflight PASS/3개 차단/물리 TX 0 | 초기 USB 동기화, 빈 listener 복귀와 통신 복구 순서 수정. 수정 후 실차 ACTIVE/추종/주행 중 복귀 및 ACC 이상 해소 미확인. [기록](evidence/2026-10-06/ecan-recovery-fix-20261006.json) |
+| 2026-10-06 22:09~22:17 정차 ROS/ECU 시험 | 임시 20 Hz 입력과 700 ms idle 단절/복귀, physical OFF 무출력 확인. D/brake/LDA 조건에서 0x730/0x7D0 응답, stock LFA/SCC quiet 및 복구 확인 | 인계 후 Panda CAN 준비 검증 실패로 ACTIVE 미진입, 비영점 실조향 단계 미실행. 복구 뒤 ACCEnable=3 통신 이상 신호 관측. [기록](evidence/2026-10-06/stationary-ros-test-20261006.json) |
 | 2026-10-06 I5R1 자동 재인계 | Release 빌드, core 50개 + protocol 5개 + USB read 4개 + preflight 8개 모두 통과. 입력 단절/주행 중 복귀, OFF, stale health/brake 래치, CAN/ignition 고장, 대기 중 mode drift 및 USB partial timeout 회귀 | 호스트 67개 unique test. 실제 ROS publisher와 차량 ECU 수명주기 통합 시험은 미실시 |
 | 2026-10-06 I5R1 firmware | 고정 Hyundai CAN-FD 및 custom safety 995개 실행, 117개 skip, 878개 통과. 이 중 command-session custom 9개 전부 통과. Red Panda DEBUG ARM 앱/bootstub 빌드 통과 | bootstub은 후보 빌드만 수행, flash하지 않음. CAN trace를 재현한 safety test는 실제 ECU 수용을 증명하지 않음 |
 | 2026-10-06 USB-only flash/bench | 사용자 확인 후 하네스 분리 상태에서 앱 flash, 서명/기능 응답 재검증. read-only preflight PASS. NO_OUTPUT 7173에서 조향/가속/진단 3개 차단, 물리 TX 증가 [0,0,0], controls_allowed=0 | [기록](evidence/2026-10-06/command-session-usb-20261006.json). 차량 CAN 수신, stock 복구 및 주행 중 재인계 실차 결과는 아님 |
@@ -24,8 +27,11 @@
 
 이전 Windows 전달 작업에서는 ROS Noetic 빌드를 수행하지 못했으나, 같은 날 차량 컴퓨터의
 `/home/ave/catkin_ws_ioniq5`에서 native 빌드와 package test를 확인했습니다. 최신 I5R1 앱
-설치 서명과 capability는 USB-only로 확인했습니다. dual-ECU HIL/실차, 주행 중 입력 복귀,
-실제 일시 EPS 및 hard fault 복구는 여전히 미확인입니다.
+설치 서명과 capability는 USB-only로 확인했습니다. 이후 정차 시험에서 dual-ECU 통신
+disable/복구는 관측했지만 Panda 준비 검증 실패와 SCC 통신 이상 신호가 남았습니다.
+관련 경쟁 조건과 host 복구 경로는 이후 수정/빌드하고 새 앱을 USB-only로 검증했습니다.
+수정 후 차량 수신/대기는 정상이나, 승인된 0x730 한 번 삭제 후 세 기록이 재발하고 ACC 이상이 남아 제어 시험은 중단했습니다.
+ACTIVE 추종, 주행 중 입력 복귀, 실제 일시 EPS 복귀 및 차량 고장 해소는 여전히 미확인입니다.
 
 ## 변경에 맞는 host 확인
 
@@ -71,7 +77,7 @@ passive ROS 노드는 Panda 설정을 수행합니다. control write 없는 pref
 - 입력 대기 중 물리 OFF/CANCEL, hard fault, 프로세스/USB/Panda 재시작은 이전 ON을 자동 계승하지 않음
 - EPS 복귀가 brake/ACC 종방향 래치를 해제하지 않는지 확인
 - raw TX는 종방향 허가 gate를 따르고, 일시 EPS 대기 중 raw LFA는 차단되는지 확인
-- hard fault 복구의 radar→camera stock 재개, 유실 ACK와 valid stock 구분, Panda NO_OUTPUT 확인
+- hard fault 복구의 radar→camera 통신 요청 후 두 stock 재개, 유실 ACK와 valid stock 구분, Panda NO_OUTPUT 확인
 - 실패 복구의 1/2/4/8/16/30초 backoff, USB 재연결, pending 중 재arm 거부 및 완료 후 명시적 재arm 확인
 
 ## 실차 결과를 남길 항목

@@ -2,6 +2,8 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -75,8 +77,15 @@ std::vector<CanFrame> PandaUsb::unpack_frames(std::vector<uint8_t>& carry, const
     const std::size_t packet_size = kCanHeaderSize + length;
     if (carry.size() - position < packet_size) break;
     if (xor_checksum(carry.data() + position, packet_size) != 0U) {
+      std::ostringstream error;
+      error << "Panda USB CAN packet checksum failure: offset=" << position
+            << " buffered=" << carry.size() << " packet_size=" << packet_size << " header=";
+      for (std::size_t index = 0; index < kCanHeaderSize; ++index) {
+        error << std::hex << std::setw(2) << std::setfill('0')
+              << static_cast<unsigned>(carry[position + index]);
+      }
       carry.clear();
-      throw std::runtime_error("Panda USB CAN packet checksum failure");
+      throw std::runtime_error(error.str());
     }
 
     const uint32_t word = static_cast<uint32_t>(carry[position + 1]) |

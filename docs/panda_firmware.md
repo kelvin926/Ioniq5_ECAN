@@ -12,6 +12,7 @@ HDA1 종방향 실차 시험은 카메라 ECU `0x730`의 통신을 끊어 순정
 정지시키는 것만으로는 충분하지 않습니다. 레이더 ECU `0x7D0`도 별도로 통신 비활성화하여
 순정 `SCC_CONTROL (0x1A0)`이 멈춘 것을 확인한 뒤 제어를 시작합니다. 두 ECU에는 시험 중
 각각 tester-present를 보내며, 종료 시 레이더와 카메라 순서로 통신을 복구합니다.
+두 ECU의 통신을 모두 복구한 다음 순정 SCC/LFA의 새 유효 프레임을 확인합니다.
 
 이 저장소는 고정 opendbc에 opt-in safety param bit `1024`와 ECAN-only bit `2048`을
 추가합니다. `1024`가 있을 때 firmware가 횡/종방향 허가를 별도로 추적합니다. LDA는
@@ -44,6 +45,10 @@ combined param은 `7173`입니다. 같은 param을 NO_OUTPUT와 ELM327에도 사
 actuator 프레임이 금지되고 stock 통신을 복구합니다. Hyundai 모드로 돌아갈 때는 모든
 필수 CAN의 새 checksum/counter/freshness 검증 전까지 actuator TX를 금지합니다.
 SILENT/일반 NO_OUTPUT/프로세스 시작, CAN 고장 및 heartbeat 불일치는 선택을 지웁니다.
+후속 `opendbc-command-session-startup.patch`는 모드 전환 직후 첫 RX보다 안전 tick이
+먼저 실행되는 경쟁 조건을 수정합니다. 아직 수신하지 않은 메시지에만 최대 100 ms 초기
+대기를 적용하며, ready/TX는 여전히 모든 필수 CAN의 새 정상 수신을 요구합니다.
+수신된 불량 CAN이나 100 ms 이후 미수신은 이 예외의 대상이 아닙니다.
 CANCEL도 세션을 취소합니다. USB `0xB7`은 magic `0x49355231`과 세션 상태를 읽기만 하며,
 `0xB8`은 종방향 허가를 지울 수만 있고 허가를 새로 만들 수 없습니다.
 
@@ -62,7 +67,7 @@ Ubuntu 20.04 기본 Python은 너무 오래되므로 `uv`가 관리하는 Python
 split-button/forwarding 및 I5R1 command-session patch, Panda ECAN-only patch와 builder-marker patch를
 idempotent하게 적용합니다. 그 뒤 `RELEASE`와 ambient `DEBUG` 환경 변수를 제거하고
 `PANDA_BUILDER=IONIQ5ECAN`으로 `ALLOW_DEBUG` bootstub과 firmware를 빌드합니다. 두 출력 및
-네 patch의 SHA-256을 시험 로그에 보관하십시오. UV/Python/임시 cache도 빌드 폴더 안에 둡니다.
+다섯 patch의 SHA-256을 시험 로그에 보관하십시오. UV/Python/임시 cache도 빌드 폴더 안에 둡니다.
 이 컴퓨터의 빌드 경로는 `/home/ave/catkin_ws_ioniq5/third_party/ecan_firmware`이며 첫 인자로
 명시해 재사용할 수 있습니다. 시스템 Python/ROS 또는 다른 작업공간은 변경하지 않습니다.
 
@@ -154,4 +159,10 @@ Panda logical bus 0에 대응합니다.
 - USB-only preflight PASS, NO_OUTPUT 7173에서 3개 송신 시도 차단, 실제 CAN TX 증가 0.
 
 네 patch hash 및 관측 범위는 [USB-only 기록](evidence/2026-10-06/command-session-usb-20261006.json)에
-있습니다. 이후 실차 CAN 수신/ECU 복구/주행 중 재인계는 실행하지 않았습니다.
+있습니다. 이는 초기 설치 이력이며, 이후 시험과 현재 수정 앱은 아래 기록으로 구분합니다.
+
+2026-10-06 정차 인계 실패 뒤 초기 RX 경쟁 조건 수정 앱을 USB-only로 별도 플래시했습니다.
+현재 signed 앱 SHA-256은 `6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52`입니다.
+추가 patch hash, 설치 서명/capability, 관련 14개 safety test, preflight PASS와 standby 송신
+3개 차단/물리 TX 0은 [복구 수정 기록](evidence/2026-10-06/ecan-recovery-fix-20261006.json)에 있습니다.
+bootstub은 변경하지 않았으며 수정 후 실차 ACTIVE/주행 재인계는 아직 확인하지 않았습니다.

@@ -73,11 +73,13 @@ class PandaUsb {
   static std::vector<uint8_t> pack_frames(const std::vector<CanFrame>& frames);
   static std::vector<CanFrame> decode_bulk_read(std::vector<uint8_t>& carry,
     const uint8_t* bytes, std::size_t capacity, int status, int transferred, TimePoint received_at);
+  static bool initial_receive_boundary(std::size_t capacity, int status, int transferred);
   static std::vector<CanFrame> unpack_frames(std::vector<uint8_t>& carry, const uint8_t* bytes,
                                              std::size_t size, TimePoint received_at);
 
  private:
   static void pack_frames_into(const std::vector<CanFrame>& frames, std::vector<uint8_t>& output);
+  void synchronize_can_receive();
   void control_write(uint8_t request, uint16_t value, uint16_t index);
   int control_read(uint8_t request, uint16_t value, uint16_t index, void* data, uint16_t size);
   void ensure_connected() const;

@@ -35,7 +35,11 @@ Hyundai K의 정상 `harness_status=1`에서 physical CAN1은 Panda logical bus 
 ECAN-only firmware는 나머지 transceiver와 forwarding을 비활성화합니다.
 `camera_bus=2` 설정은 남아 있지만 이 차량의 parser와 제어에 사용하지 않습니다.
 
-입력 구독은 대기/OFF/USB 재연결 중에도 유지합니다. I5R1 기본 프로파일은 firmware가
+입력 구독은 대기/OFF/USB 재연결 중에도 유지합니다.
+USB 시작 시 plain NO_OUTPUT에서 이전 수신 데이터를 성공한 short transfer 경계까지
+비운 뒤 새 데이터를 해석합니다. runtime 체크섬 오류는 재동기화하지 않고 계속 차단합니다.
+미arm 초기 연결 실패는 빈 버튼 감시 profile을 복원하지만 hard fault/OFF/종료는 재승인을 요구합니다.
+I5R1 기본 프로파일은 firmware가
 NO_OUTPUT에서도 물리 버튼 선택을 검증하며, 최신 입력과 ON이 모두 있어야 첫 takeover를
 준비합니다. 초기 takeover는 유효한 CAN, EPS 정상 상태와 정차를 요구합니다. 종방향을 켠 프로파일은
 D와 최근 순정 SCC template도 요구합니다. camera `0x730/0x738`의 stock LFA `0x12A`를
@@ -63,7 +67,7 @@ radar→camera 순정 통신 복구/NO_OUTPUT으로 돌아갑니다. 같은 I5R1
 실측각으로 초기화하며 raw LFA도 일시 정지를 우회할 수 없습니다.
 
 3초 만료나 CAN/Panda hard fault, EPS pause 중 command 단절은 전체 disarm과 순정 ECU 복구로 전환합니다.
-radar→camera 순서로 유효한 stock frame 재개를 확인하고 Panda `NO_OUTPUT`을 확인합니다.
+radar→camera 순서로 두 통신 복구를 먼저 요청한 뒤 유효한 stock frame 재개와 Panda `NO_OUTPUT`을 확인합니다.
 실패한 복구는 즉시 첫 시도 후 1, 2, 4, 8, 16, 최대 30초 간격으로 재시도합니다.
 USB 연결은 별도 재연결 루프를 사용합니다. 복구 중 재arm과 actuator 출력은 차단하며,
 완료 후 운전자 acknowledge/rearm 및 정차/물리 버튼 조건을 다시 요구합니다.

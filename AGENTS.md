@@ -117,6 +117,14 @@
 - Failed ECU restoration remains pending and retries with 1-30 second capped backoff;
   USB reconnection is automatic, but no actuator output resumes during restoration.
 - Confirm valid stock traffic and Panda NO_OUTPUT before finishing restoration.
+- Restore both radar and camera communications before confirming stock SCC/LFA;
+  camera communication control has also silenced SCC on this vehicle.
+- After restoration, check vehicle broadcast fault status separately. Resumed stock traffic
+  does not establish restored assistance functionality; never bypass RX readiness to force ACTIVE.
+- The I5R1 initial-RX grace applies only to unseen messages for 100 ms after mode change.
+  It never grants ready/TX, forgives bad received CAN, or replaces freshness checks.
+- USB startup draining is limited to plain NO_OUTPUT before ready. Only a successful short
+  transfer is a stream boundary; never resynchronize runtime checksum failures in place.
 - For an active temporary MDPS LKA assistance fault, retain CAN ownership and arm,
   pause lateral output, and allow ACTIVE return only within a fixed 3-second window
   with fresh valid commands/CAN and Panda permission. Healthy longitudinal may continue.

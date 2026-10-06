@@ -2,14 +2,29 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "Published current I5R1 implementation and concise ROS input/control/startup README plus aligned detailed docs to kelvin926/Ioniq5_ECAN main as verified kelvin926 using memory-only one-time OAuth. Git push succeeded and remote main matched 70310fb. Static docs/schema/JSON/link/diff checks passed, no repeated build or hardware action. Delivery metadata is recorded separately; token cleanup runs at auth-process exit.",
+  "update_reason": "User requests publishing current fixes and evidence to main. Ignition cycling is deferred because it also shuts down this computer; the ignition-cycle hypothesis remains unverified. Preserve recurrent ECU/ACC fault and unverified ACTIVE outcome. Git delivery only with fresh one-time kelvin926 authentication; no vehicle actions or unrelated changes.",
   "current_request": {
-    "description": "Update README briefly with ROS topic/message fields/units, control/button/command-return behavior and script startup. Align detailed docs and publish current related project changes to kelvin926/Ioniq5_ECAN main using kelvin926 one-time authentication without storing GitHub login on this shared computer.",
-    "status": "complete_main_delivery_verified",
+    "description": "Commit and push the current ECAN startup/recovery fixes, firmware patch source, aligned documentation and dated evidence to kelvin926/Ioniq5_ECAN main. Keep actual tracking/fault resolution unverified and all vehicle tests stopped.",
+    "status": "main_delivery_authenticated_commit_and_push_pending",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
-    "historical_detail_notice": "Earlier actuation/configuration records and I5R1 flash authorization below are historical. Current scope is documentation/delivery and one-time Git push, not live ROS control, CAN/ECU actions or another firmware flash.",
+    "current_constraints": {
+      "recorded_on": "2026-10-06",
+      "source": "Direct user messages after stationary test",
+      "ignition_cycle_difficult": true,
+      "ignition_cycle_constraint": "User reports turning vehicle ignition off also shuts down this computer. No cycle performed or requested for this Git delivery; need for a cycle is only a user hypothesis.",
+      "ignition_cycle_requested_or_performed": false,
+      "actuation_remains_stopped": true,
+      "scoped_diagnosis_and_fix_authorized": true,
+      "dtc_clear_or_ecu_reset_explicitly_requested": true,
+      "current_dtc_clear_scope": "One 0x730 ECU clear completed with before/after; positive 54 then three recurrent records. Authorization consumed. Stop on recurrence: no repeat clear, more diagnostics or actuation without new user direction.",
+      "ecu_reset_authorized": false,
+      "flash_requires_fresh_usb_only_confirmation": true,
+      "fresh_usb_only_confirmation_received": true,
+      "device_harness_and_ignition_zero_verified": true
+    },
+    "historical_detail_notice": "Nested earlier actuation/configuration requests and prior delivery/flash records are historical. Current user authorization is Git delivery only, not further diagnostics/clear/reset/cycle/actuation/flash or unrelated changes. Earlier fresh USB-only authorization applied to the separately verified firmware flash.",
     "vehicle_actuation_decision": {
       "recorded_on": "2026-10-06",
       "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
@@ -55,6 +70,42 @@
       }
     }
   },
+  "stationary_ros_test": {
+    "observed_on": "2026-10-06",
+    "source": "docs/evidence/2026-10-06/stationary-ros-test-20261006.json",
+    "ros_input": "20 Hz non-latched commands; physical OFF +2/-2 deg/s and 700 ms input gap produced ARMED/PASSIVE/ARMED without actuator output.",
+    "startup_issue": "Both launcher starts hit a first-read USB CAN packet checksum error. Transport reconnected but recovery left NO_OUTPUT/0, disabling the physical-button listener. Existing set_armed=true service restored healthy NO_OUTPUT/7173 without forcing controls_allowed.",
+    "vehicle_attempt": "Fresh CAN confirmed standstill, D/raw5, brake=true, EPS/ACC healthy and lateral-only ON. Thirteen 0/0 commands initiated dual-ECU communications takeover. 0x730/738 and 0x7D0/7D8 responded; LFA/SCC quiet confirmed.",
+    "blocker": "Panda command-session CAN readiness failed within 500 ms after Hyundai mode transition. No ACTIVE, nonzero real steering, acceleration tracking or ACTIVE/moving command-return stage occurred. Which required RX condition failed remains unknown; no checks bypassed.",
+    "restoration": "Camera stock resumed; radar positive restore ACK preceded a first stock observation timeout, then retry confirmed stock SCC. NO_OUTPUT/0 and pending=false confirmed at 22:14:39.812 KST; later LFA100/SCC50 frames in 1s, ECAN TX delta0 and overflow delta0.",
+    "residual_fault": "After restore VehicleState.acc_fault=true. Read-only post-shutdown capture at 22:17:11 KST confirms CRC-valid TCS ACCEnable=3, pinned DBC communication-issue label. This is broadcast status, not a DTC or proof of permanent hardware damage. Vehicle fault resolution unverified.",
+    "user_followup": {
+      "recorded_on": "2026-10-06",
+      "cluster_warning_during_test": "User confirmed it appeared; exact wording, ECU and whether the visible warning is still present were not supplied.",
+      "ignition_cycle": "User says turning ignition off/on is difficult; no cycle requested or performed.",
+      "hypothesis": "User suspects connecting while ignition was already on.",
+      "assessment": "USB startup/checksum mechanism remains unknown. ACC fault was false with Panda/node already connected before takeover and true after takeover failure. This temporal evidence prioritizes ECU communication interruption/takeover failure for diagnosis, not a proven causal conclusion about hot connection.",
+      "read_only_recheck": "22:24:58 KST: ACCEnable raw3 remains, MDPS fault raw0, stock LFA100/SCC50/TCS50 frames after backlog drain, ECAN RX4328/TXdelta0/new error0. Ignition1, controls0, safety0/0; no reset/config writes/heartbeat/UDS/DTC/actuation."
+    },
+    "cleanup": "Generated publishers, both ECAN/roslaunch instances and their own master/rosout stopped. No known Panda client left. Last post-shutdown Panda safety0/0 controls0; 13 lifetime TX frames match observed diagnostics, no returned LFA/SCC actuator frames.",
+    "implementation_changed": false,
+    "firmware_flashed": false,
+    "git_commit_or_push": false
+  },
+  "recovery_fix": {
+    "recorded_on": "2026-10-06",
+    "source": "docs/evidence/2026-10-06/ecan-recovery-fix-20261006.json",
+    "proven_race": "A 1 Hz safety tick before first RX after a mode reset permanently aborts I5R1 intent; fresh RX before tick passes. Original vehicle tick phase was not captured, so exact occurrence attribution remains an inference.",
+    "firmware_fix": "Only unseen RX gets 100 ms initialization grace. Ready/TX still needs every newly received fresh valid mandatory message. Bad received CAN, timeout, relay/heartbeat and runtime faults still cancel.",
+    "host_fix": "Startup-only plain-NO_OUTPUT drain to successful short USB boundary; idle unarmed listener recovery; restore both ECU communications before fresh stock confirmation; richer error diagnostics.",
+    "tests": {"custom_firmware": 14, "targeted_host": 18, "failed": 0},
+    "build": "Noetic affected node/tests and signed Red Panda ARM application passed; no broad rerun.",
+    "flash": "Completed USB-only and installed signature/capability verified. Bootstub unchanged, no DFU.",
+    "usb_checks": "Preflight PASS, standby 3/3 requests rejected, physical TX delta [0,0,0], controls0.",
+    "actual_tracking": "Not executed after fix. Reconnected vehicle/P: CAN valid, session ready, NO_OUTPUT/7173 controls0 and raw TX0. ACCEnable3 remains. One approved 0x730 clear briefly removed records, then three same failures recurred in 2 s; stopped.",
+    "post_fix_vehicle_record": "docs/evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json",
+    "git_commit_or_push": false
+  },
   "controller_startup": {
     "implemented_on": "2026-10-06",
     "user_confirmation": "Buttons are press-again ON/OFF toggles, not hold-to-run. The colleague's separate upper controller will publish the agreed ECAN input.",
@@ -84,7 +135,7 @@
       "catkin_summary": "126 tests, 0 errors, 0 failures, 0 skipped; root and child gtest suites are double-counted.",
       "launcher": "Bash syntax and --check passed without launching ROS master/node or accessing Panda. TMPDIR/ROS_HOME/logs scoped to this workspace.",
       "node_sha256": "be6f94ef3049545ceda0f2f23519fd1f8af488bb6df48f9f29489a2a9963206a",
-      "scope": "Offline host/safety tests, scoped ARM firmware build and user-authorized USB-only app flash/bench completed. No actual ROS publisher integration or vehicle ECU takeover/restoration/moving-reengagement executed."
+      "scope": "Historical offline host/safety and USB-only flash/bench checks passed. Later stationary_ros_test observed ROS input/idle return and ECU communication disable/restoration, but post-disable Panda readiness failed before ACTIVE; vehicle tracking and moving re-engagement remain unverified."
     },
     "cabana_observation": "Earlier PID 58228 check was historical. No Cabana or other process was started/stopped by this implementation/flash work. User closes Panda clients before starting ECAN.",
     "changed_scope": "Necessary ECAN files/build tooling within workspace only. Earlier implementation was local; current documentation delivery published related changes to main. Other project/Cabana changes preserved, no global ROS/shell/package changes.",
@@ -169,7 +220,7 @@
     "protected": "All unrelated files and directory structures, other workspaces including catkin_ws_ouster, OS/ROS installation, global packages, shell settings, personal configuration, Desktop and application-menu entries outside this workspace.",
     "incidental_writes": "Consider tools/applications that automatically write outside the workspace; do not silently bypass the constraint by launching them. Stop and seek explicit new authorization if such writes are necessary.",
     "existing_external_changes": "Previously user-authorized Cabana settings and shortcuts remain historical changes. This instruction does not authorize changing or undoing them.",
-    "actions_for_this_request": "Project docs/AGENTS/state update and scoped Git commit/push; one-time auth script/browser profile/socket only in ignored package build/. No unrelated program/settings changes or Panda access."
+    "actions_for_this_request": "Scoped source/patch changes, affected tests/builds, no-actuator ECU diagnostics, fresh USB-only app flash/verification and explicitly approved one 0x730-only DTC clear/recurrence check. Own processes stopped; source/build/cache/log/evidence/state within workspace. No unrelated/global changes, other ECU clear, ECU reset, vehicle ignition cycle or Git commit/push."
   },
   "maintenance": {
     "instructions_file": "AGENTS.md",
@@ -201,8 +252,8 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
-    "head_subject": "Add I5R1 command recovery and concise ROS documentation",
+    "head": "f2b6f0f6387471379fb146bd825585749f9025ab",
+    "head_subject": "Record verified I5R1 main documentation delivery",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
@@ -219,7 +270,7 @@
       "commit_or_push_performed": true,
       "push_status": "current_ecan_source_and_documentation_delivered_to_main"
     },
-    "head_scope": "Snapshot of the verified implementation/doc delivery commit at 2026-10-06T22:03:25+09:00. A later metadata-only delivery record commit may follow; git HEAD/origin main is authoritative. Prior tested node/app SHA-256 remain in controller_startup/command_gap_resume evidence.",
+    "head_scope": "Pre-recovery-fix delivery baseline: local HEAD and live remote main both f2b6f0f6387471379fb146bd825585749f9025ab. Current fixes/docs/evidence are being prepared for a new scoped push; git HEAD/origin main is authoritative. Dated binary/test provenance is retained separately.",
     "delivery_snapshot": {
       "observed_at": "2026-10-06T22:03:25+09:00",
       "origin_main": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
@@ -643,26 +694,89 @@
   "panda": {
     "latest_observation": {
       "observed_on": "2026-10-06",
-      "observed_at": "2026-10-06T21:52:56+09:00",
-      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json",
+      "observed_at": "2026-10-06T22:52:19.320287+09:00",
+      "source": "docs/evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json#single_clear_result",
+      "method": "After authorized one 0x730 clear, recurrence read and restoration of Panda/default session",
+      "harness_status": 1,
+      "ignition_line": 1,
+      "ignition_can": 0,
+      "controls_allowed": 0,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "faults": 24,
+      "ignored_faults": 24,
+      "physical_tx_delta": [8, 0, 0],
+      "tx_scope": "Authorized diagnostic session/read/receive flow-control and one clear only, no actuator CAN",
+      "acc_enable_raw": 3,
+      "mdps_fault_raw": 0,
+      "recurrent_730_dtc_raw": ["588186/89", "56b881/89", "563881/89"],
+      "interpretation": "Recurrent ECU records/ACC fault persist despite successful single clear. Further diagnostics and control tests stopped. No physical-damage/root-cause claim or ACTIVE proof."
+    },
+    "current_installed_application": {
+      "verified_on": "2026-10-06",
+      "app_sha256": "6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52",
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "verification": "Panda.up_to_date signature comparison against signed candidate plus post-reset I5R1 capability and application identity",
+      "startup_patch_sha256": "5d30edf83c8a6ea1a5c9e419134b9e7e57d9907a42d972dc159c5ffbad319676",
+      "bootstub_flashed": false,
+      "source": "docs/evidence/2026-10-06/ecan-recovery-fix-20261006.json",
+      "supersedes": "Earlier command_session_firmware_build/flash and usb_only_post_flash_observation are historical fbfcae2e-image records."
+    },
+    "pre_fix_vehicle_observation": {
+      "observed_at": "2026-10-06T22:24:58+09:00",
+      "source": "docs/evidence/2026-10-06/stationary-ros-test-20261006.json#ignition_on_followup",
+      "method": "Read-only vendor IN and claimed bulk IN after own ECAN node stopped; no reset/configuration/heartbeat/CAN TX by this capture.",
+      "harness_status": 1,
+      "ignition_line": 1,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "ecan_rx_delta": 4328,
+      "ecan_tx_delta": 0,
+      "ecan_tx_total": 13,
+      "ecan_new_error_delta": 0,
+      "stock_post_drain_frame_counts": {"TCS": 50, "LFA": 100, "SCC": 50, "accelerator": 100, "MDPS": 100},
+      "selected_crc_failures": 0,
+      "acc_enable_raw": 3,
+      "mdps_eps_fault_raw": 0,
+      "interpretation": "Stock communication is present, no actuator permission or additional TX; SCC communication-fault broadcast remains. Prior node cleanup confirmed NO_OUTPUT=19, later idle health shows SILENT=0. No DTC/fault resolution established.",
+      "firmware_provenance": "No flash in this test; earlier installed image provenance remains separately recorded."
+    },
+    "pre_stationary_connection_observation": {
+      "observed_on": "2026-10-06",
+      "observed_at": "2026-10-06T22:05:23+09:00",
+      "source": "scripts/panda_preflight.py --serial PANDA_SERIAL --sample-seconds 2 --ecan-only --require-harness --require-command-session --json, followed by vendor-read-only health/controller-counter sample",
+      "method": "USB vendor control IN reads only. Preflight claims/releases interface; follow-up uses unclaimed control reads. No bulk CAN reads, CAN reset/configuration write, heartbeat, diagnostic request or CAN TX.",
       "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
       "hardware_type": "0x07 / Red Panda",
       "application_mode": true,
-      "panda_uptime_s": 195,
-      "harness_status": 0,
-      "ignition_line": 0,
+      "packet_versions": {
+        "format": "hash",
+        "health": "0x290DAE03",
+        "can": "0x75ABF276",
+        "matches_pinned": true
+      },
+      "command_session": {
+        "supported": true,
+        "status_hex": "3152354900000000"
+      },
+      "panda_uptime_s": 945,
+      "voltage_mV": 13882,
+      "harness_status": 1,
+      "ignition_line": 1,
       "ignition_can": 0,
       "safety_mode": 0,
       "safety_param": 0,
       "controls_allowed": 0,
-      "sample_seconds": 0.2,
-      "faults": 0,
-      "fault_status": 0,
-      "rx_buffer_overflow": 0,
+      "faults": 24,
+      "fault_status": 1,
+      "power_save_enabled": 1,
+      "rx_buffer_overflow": 1494593,
       "tx_buffer_overflow": 0,
       "heartbeat_lost": 0,
-      "tx_count_by_physical_controller": [
-        0,
+      "sample_seconds": 2,
+      "rx_delta_by_physical_controller": [
+        5781,
         0,
         0
       ],
@@ -671,16 +785,72 @@
         0,
         0
       ],
-      "rx_delta_by_physical_controller": [
+      "forwarded_count_by_physical_controller": [
         0,
         0,
         0
       ],
-      "command_session_supported": true,
-      "preflight_passed": true,
-      "interpretation": "USB-only post-flash snapshot, no vehicle CAN traffic. Prior vehicle snapshots/accumulated counters predate the flash and are retained separately. Standby negative TX bench blocked all 3 attempts with physical TX delta zero.",
-      "exact_installed_binary_hash": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
-      "provenance": "Installed app signature matched the signed candidate via Panda.up_to_date; post-reset 0xB7 magic 0x49355231 verified. Marker and packet ABI alone were not used as binary provenance."
+      "ecan_health": {
+        "bus_off": 0,
+        "bus_off_count": 0,
+        "error_warning": 0,
+        "error_passive": 0,
+        "last_error": 7,
+        "last_stored_error": 2,
+        "last_data_error": 0,
+        "last_data_stored_error": 1,
+        "receive_error_count": 0,
+        "transmit_error_count": 0,
+        "total_error_count": 39,
+        "total_tx_lost_count": 0,
+        "total_rx_lost_count": 0,
+        "total_tx_count": 0,
+        "total_rx_count": 1498691,
+        "total_forwarded_count": 0,
+        "total_tx_checksum_error_count": 0,
+        "can_speed_kbps": 500,
+        "can_data_speed_kbps": 2000,
+        "canfd_enabled": 1,
+        "brs_enabled": 1,
+        "canfd_non_iso": 0,
+        "irq0_call_rate": 2882,
+        "irq1_call_rate": 0,
+        "irq2_call_rate": 0,
+        "can_core_reset_count": 0,
+        "bus": 0,
+        "rx_delta": 5781,
+        "tx_delta": 0
+      },
+      "preflight_passed": false,
+      "preflight_failures": [
+        "health.rx_buffer_overflow=1494593"
+      ],
+      "overflow_followup": {
+        "observed_at": "2026-10-06T22:06:00+09:00",
+        "read_only": true,
+        "sample_seconds": 1.0020438629999262,
+        "rx_buffer_overflow_before": 1597086,
+        "rx_buffer_overflow_after": 1599974,
+        "rx_buffer_overflow_delta": 2888,
+        "ecan_rx_delta": 2888,
+        "ecan_tx_delta": 0,
+        "ecan_total_error_before": 39,
+        "ecan_total_error_after": 39,
+        "ecan_total_error_delta": 0,
+        "ecan_bus_off": 0,
+        "ecan_error_warning": 0,
+        "ecan_error_passive": 0,
+        "no_can_consumer_detected": "Cabana/pandad/ECAN checked separately"
+      },
+      "known_consumer_processes": {
+        "Cabana": false,
+        "pandad": false,
+        "ECAN_node": false,
+        "method": "pgrep exact process names/anchored ECAN executable; no programs started or stopped",
+        "scope": "Does not exclude all unrecognized processes/adapters."
+      },
+      "interpretation": "USB and vehicle harness/ignition recognition plus current ECAN reception verified. Current ECAN bus-off/warning/passive are zero, new ECAN error delta zero and TX zero. Receive queue overflow is ongoing (all 2888 received frames also increment drop count in 1s); no known CAN consumer running. This is not loss-free capture or full preflight PASS. Intentional non-ECAN faults=24 are ignored by ECAN-only validation; raw observations retained.",
+      "exact_installed_binary_hash": "Not re-read in this check; separately recorded authorized flash signature/hash provenance remains historical."
     },
     "cabana_reception_observation": {
       "observed_on": "2026-10-06",
@@ -906,9 +1076,50 @@
     },
     "latest_user_connection_report": {
       "reported_on": "2026-10-06",
-      "source": "Direct user message: 지금은 판다 연결했어.",
-      "detail": "User reports Panda reconnected; whether vehicle harness is connected was not independently measured. Previous USB-only preflight/flash snapshots are historical. Do not rerun USB-only bench/flash based on the earlier confirmation.",
+      "source": "Direct current user reply: 다시연결됨",
+      "detail": "Vehicle/P reconnection confirmed after USB-only fix flash. Post-fix CAN/ready observed, ACC fault persists. One specifically approved 0x730 clear acknowledged then same three failures recurred; stop condition applies.",
       "hardware_probed_for_documentation": false
+    },
+    "usb_only_post_flash_observation": {
+      "observed_on": "2026-10-06",
+      "observed_at": "2026-10-06T21:52:56+09:00",
+      "source": "docs/evidence/2026-10-06/command-session-usb-20261006.json",
+      "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
+      "hardware_type": "0x07 / Red Panda",
+      "application_mode": true,
+      "panda_uptime_s": 195,
+      "harness_status": 0,
+      "ignition_line": 0,
+      "ignition_can": 0,
+      "safety_mode": 0,
+      "safety_param": 0,
+      "controls_allowed": 0,
+      "sample_seconds": 0.2,
+      "faults": 0,
+      "fault_status": 0,
+      "rx_buffer_overflow": 0,
+      "tx_buffer_overflow": 0,
+      "heartbeat_lost": 0,
+      "tx_count_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "tx_delta_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "rx_delta_by_physical_controller": [
+        0,
+        0,
+        0
+      ],
+      "command_session_supported": true,
+      "preflight_passed": true,
+      "interpretation": "USB-only post-flash snapshot, no vehicle CAN traffic. Prior vehicle snapshots/accumulated counters predate the flash and are retained separately. Standby negative TX bench blocked all 3 attempts with physical TX delta zero.",
+      "exact_installed_binary_hash": "fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b",
+      "provenance": "Installed app signature matched the signed candidate via Panda.up_to_date; post-reset 0xB7 magic 0x49355231 verified. Marker and packet ABI alone were not used as binary provenance."
     }
   },
   "vehicle_diagnostics": {
@@ -1044,7 +1255,7 @@
     {
       "id": "local_ros_and_firmware_changes",
       "status": "published_main_vehicle_validation_pending",
-      "detail": "Current dual-ECU/I5R1 source and patches published in main delivery 70310fb01ad9d9ea708325c01b7feeaaa099afeb. USB-only app flash is separately verified; actual vehicle ownership/stock restoration/moving return remains untested."
+      "detail": "Current dual-ECU/I5R1 source and patches published in main delivery 70310fb01ad9d9ea708325c01b7feeaaa099afeb. USB-only app flash separately verified; later stationary test observed ECU communication disable/restoration, but readiness failed before ACTIVE and moving return remains untested."
     },
     {
       "id": "automatic_deceleration",
@@ -1053,18 +1264,18 @@
     },
     {
       "id": "final_input_contract",
-      "status": "units_and_message_agreed_integration_validation_pending",
-      "detail": "Upper team will target ActuationCommand steering-wheel angle rate deg/s and acceleration m/s^2. Confirm physical sign, actual 20 Hz recommended publication/jitter, source-plan freshness and vehicle tracking; no live upper-controller integration performed."
+      "status": "temporary_ros_input_observed_upper_controller_and_tracking_pending",
+      "detail": "Temporary 20 Hz ROS input and idle gap/return observed in stationary test. Upper team contract remains steering-wheel rate deg/s and acceleration m/s^2. Upper-controller source freshness/cadence, physical sign and actual vehicle tracking remain unverified."
     },
     {
       "id": "adas_diagnostic_reachability",
-      "status": "stock_broadcast_restored_uds_not_retested",
-      "detail": "User reports fuse replacement resolved the issue; post-replacement passive capture independently confirms ignition detection and stock LFA/SCC reception. Earlier ADAS UDS timeouts remain a pre-replacement result; diagnostic reachability was not re-tested."
+      "status": "communication_and_dtc_responses_observed_identity_pending",
+      "detail": "Post-fuse 0x730/738 and 0x7D0/7D8 communication/restore and later DTC read responses observed. One authorized 0x730 clear returned 54 then three same records recurred in 2 s. Earlier timeouts were pre-fuse observations; manufacturer identity/code meaning remains unverified."
     },
     {
       "id": "camera_ownership_endpoint_identity",
       "status": "unverified",
-      "detail": "Current implementation uses 0x730 for camera ownership; pinned upstream Ioniq 5 firmware database identifies fwdCamera at 0x7C4 and classifies 0x730 as ADAS Driving on LKA steering platforms. Neither responded in the 2026-10-06 read. Verify endpoint identity before changing runtime ownership or claiming it confirmed."
+      "detail": "Implementation uses 0x730; pinned upstream identifies fwdCamera at 0x7C4 and 0x730 as ADAS Driving on LKA platforms. Pre-fuse reads timed out; later stationary test observes 0x730 response and LFA quiet/restore, not ECU firmware identity. Do not equate successful communication control with identity confirmation."
     },
     {
       "id": "hvac_dtc_923413_after_clear",
@@ -1073,11 +1284,26 @@
     },
     {
       "id": "command_gap_resume_vehicle_validation",
-      "status": "implementation_and_usb_verified_vehicle_test_pending",
-      "detail": "I5R1 firmware app installed/verified and offline/USB tests passed. Actual camera/radar endpoint ownership, positive restore and moving command return in the vehicle remain untested; no road-safety conclusion."
+      "status": "stationary_takeover_failed_before_active_moving_return_pending",
+      "detail": "I5R1 offline/USB checks passed; stationary ROS input and ECU communication disable/restore observed. Post-takeover Panda readiness failed before ACTIVE; actual tracking and ACTIVE/moving command return remain unverified. No road-safety conclusion."
+    },
+    {
+      "id": "startup_usb_checksum_and_listener_recovery",
+      "status": "host_fixes_built_tests_pass_post_reconnect_startup_normal",
+      "detail": "Two launches plus a later initial diagnostic read reproduced checksum errors. C0 clears assembly tails but not pending EP1. New startup-only NO_OUTPUT drain requires successful short bulk boundary; runtime checksum remains fatal. Empty listener recovery fixed separately without armed-fault automatic resume."
+    },
+    {
+      "id": "post_takeover_command_session_readiness",
+      "status": "offline_race_fixed_flashed_ready_observed_active_pending",
+      "detail": "Offline actual libsafety reproduces tick-before-first-RX permanently aborting intent while RX-before-tick works. Bounded 100 ms unseen-RX initialization fixed; every RX fresh/valid and no-output gates unchanged. 14 tests/ARM build and USB-only flash/signature/negative-TX pass. Post-reconnect standby session ready observed. Original vehicle tick phase and post-fix ACTIVE remain unverified."
+    },
+    {
+      "id": "post_restore_scc_communication_fault",
+      "status": "acc_enable_3_and_730_records_recur_after_authorized_single_clear",
+      "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
     }
   ],
-  "next_action": "Requested documentation/main delivery is complete. Keep reconnected Panda untouched for this request. Next vehicle work, only if requested, starts with read-only/passive reception and actual camera/radar endpoint identification before validating ECU stock restoration and same-session moving input return under the closed-course test plan. Reboots/hard faults do not inherit prior ON.",
+  "next_action": "Publish only current scoped fixes/docs/evidence to main with verified one-time kelvin926 authentication and normal fast-forward push. Verify remote main and revoke only the new token. Vehicle diagnostics/clear/reset/cycle/actuation remain stopped; do not claim tracking works or ignition cycling is proven necessary. Preserve other projects/global ROS/configuration.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -1241,6 +1467,30 @@
       "type": "concise_ros_documentation_and_i5r1_main_delivered",
       "summary": "Verified kelvin926 one-time account and published 36 related project files. README 91 lines with topic/schema/units, button/gap-return flow and startup. Static doc checks passed; remote main confirmed 70310fb01ad9d9ea708325c01b7feeaaa099afeb. No Panda access or repeated builds/tests.",
       "source": "git push exit 0, git ls-remote, updated README/docs/state and task-local auth process."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "panda_reconnected_read_only_check",
+      "summary": "Red Panda/I5R1, harness=1, ignition=1 and ECAN 5781/2s confirmed. Physical TX zero/current ECAN error state zero. Strict preflight FAIL on RX overflow 1494593; 1s follow-up shows 2888 more drops matching RX and no new ECAN errors while known CAN consumers are absent. No writes or process changes.",
+      "source": "Read-only preflight and vendor health/CAN-counter output at 22:05:23/22:06:00 KST."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "stationary_ros_vehicle_test_failed_before_active",
+      "summary": "Generated input/idle return observed; first-read checksum/lost listener reproduced. Manual normal listener rearm then D/brake/lateral ON + zero commands quieted both owned frames, but Panda readiness failed before ACTIVE. Stock restored with radar retry; ACCEnable3 remains. Own processes stopped, no nonzero actuator stage or implementation/firmware change.",
+      "source": "docs/evidence/2026-10-06/stationary-ros-test-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "startup_and_recovery_root_cause_fix_usb_flash",
+      "summary": "Reproduced first-RX/tick race and checksum startup issue. Fixed bounded initialization, startup stream drain, empty listener recovery and dependency-aware restore. 14 custom safety/18 host tests and affected builds pass; fresh USB-only app flash/signature/capability/preflight/negative-TX verified. Await vehicle reconnection; actual ACTIVE and ACC fault resolution still unverified. No unrelated changes, clear/reset/cycle or Git push.",
+      "source": "docs/evidence/2026-10-06/ecan-recovery-fix-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "post_fix_reconnection_and_single_730_clear_recurrence_stop",
+      "summary": "Reconnected startup/session ready/stock RX normal with no actuator TX. ACC fault persisted; preserved ECU records and user authorized one 0x730 clear. Positive54/immediate empty list followed by same three status89 records in 2 s, ACCEnable3 unchanged. Default session/Panda restored, stopped further clear/diagnostics/actuation. Actual tracking and vehicle root cause unverified.",
+      "source": "docs/evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json"
     }
   ],
   "ecu_recovery": {
@@ -1253,6 +1503,7 @@
     ],
     "retry_policy": "First cleanup is immediate; failed attempts wait 1, 2, 4, 8, 16, then at most 30 seconds. Retrying continues while the process is running; disconnected Panda waits for the existing USB reconnect loop.",
     "restoration": "Restore radar then camera; on retry first observe valid stock CAN traffic to tolerate a lost acknowledgement, otherwise re-enter the diagnostic session and restore communication. Retain pending flags until stock traffic returns. Verify Panda NO_OUTPUT/mode/param/controls state before reporting completion.",
+    "current_restoration_update": "Both radar and camera communication restores precede stock confirmation. Camera disable also quieted SCC in 22:31 trace. Request order and checksum-valid/pending/backoff/rearm checks preserved; source built, integrated post-fix vehicle recovery still pending.",
     "stock_frame_validation": "Only correct-size, checksum-valid 0x12A/0x1A0 received frames confirm stock traffic; returned/rejected frames do not count.",
     "output_and_rearm": "Hard faults and expired temporary-steering windows still stop all actuator output, inhibit automatic rearm, and use the existing pending stock-ECU restoration path. Pending restoration rejects rearm. Explicit acknowledgement/rearm and stationary physical activation conditions remain. A temporary EPS pause keeps the existing ECU ownership and may resume within its separate 3-second window.",
     "diagnostics": [
@@ -2043,7 +2294,26 @@
       ]
     },
     "verification_record": "docs/evidence/2026-10-06/command-session-usb-20261006.json",
-    "vehicle_result": "Not executed. Endpoint identity and actual positive takeover/quiet/stock restoration/moving return require vehicle validation; offline success is not road-safety evidence."
+    "vehicle_result": "Stationary ROS/ECU test attempted: both session responses, owned-frame quiet and stock communication restoration observed. Panda readiness failed before ACTIVE; actual actuator tracking and moving command return not executed. ACCEnable3 communication-fault broadcast remains after restore. Firmware endpoint identity unconfirmed; offline/partial stationary evidence is not road-safety validation."
+  },
+  "recovery_fix_delivery": {
+    "requested_on": "2026-10-06",
+    "target": "https://github.com/kelvin926/Ioniq5_ECAN",
+    "branch": "main",
+    "account": "kelvin926",
+    "status": "kelvin926_authenticated_commit_and_push_pending",
+    "scope": "Current startup/initial-RX/listener/dual-ECU restoration fixes, reproducible firmware patch source, targeted regression tests, aligned docs/AGENTS/state and three dated evidence JSON files. No built binaries or diagnostic/auth scratch scripts.",
+    "verification": "Prior 18 targeted host and 14 custom firmware tests/builds/USB flash checks retained. Current four JSON parsers, Bash syntax, staged diff whitespace, explicit 23-file staging and credential-pattern check passed. No repeated build or vehicle access.",
+    "authentication": {
+      "status": "fresh_one_time_identity_and_permission_verified",
+      "verified_account": "kelvin926",
+      "verified_user_id": 52805466,
+      "granted_scope": "public_repo",
+      "token_or_device_code_recorded": false,
+      "cleanup": "New token currently only in auth worker memory, pending scoped delivery and revocation. Task-local browser launch exited; temporary profile remains solely under ignored build until worker cleanup."
+    },
+    "authentication_policy": "Fresh GitHub CLI public OAuth device flow, request public_repo, verify kelvin926 before writes; new token only in process memory/child Git environment. Temporary incognito profile under ignored package build, browser filesystem sandbox read-only outside workspace. No saved Git credentials/global config changes; revoke only this issued token and remove task profile at completion.",
+    "unresolved": "ACCEnable3 and three 0x730 status89 records recur after one clear; actual tracking and moving re-engagement remain unverified. Ignition-cycle hypothesis is not established."
   },
   "documentation_delivery": {
     "requested_on": "2026-10-06",

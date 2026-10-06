@@ -43,7 +43,7 @@ host 설정과 독립적으로 세션을 취소합니다. 자세한 단위와 �
   새 유효 command/CAN 확인 후 같은 세션에서는 주행 중에도 현재 입력으로 재인계
 - 최초 takeover는 정차. 물리 OFF/CANCEL, CAN/USB/harness/ignition 고장 및 프로세스/장치
   재시작은 이전 ON 또는 주행 중 재인계 자격을 자동 계승하지 않음
-- ROS stock 복구: radar→camera, valid stock 재개와 Panda NO_OUTPUT 확인, 실패 시 실행 중
+- ROS stock 복구: radar→camera 통신 요청을 먼저 완료한 뒤 두 valid stock 재개와 Panda NO_OUTPUT 확인, 실패 시 실행 중
   1/2/4/8/16/30초 capped retry, USB 자동 재연결, pending 동안 actuator 출력/rearm 차단
 - hard fault 복구 완료 후: 정상 상태와 정차 조건을 확인하고 `set_armed=false` → `true`,
   물리 LDA/SET으로 재활성화. 장애 전 명령이나 채널을 자동 재개하지 않음
@@ -146,8 +146,52 @@ ECAN-only 제외 mask의 non-ECAN 두 비트이며 ECAN bus-off/error-warning/er
 사용자가 firmware 수정/flash를 승인하고 하네스를 분리한 뒤 I5R1 앱을 flash했습니다.
 설치 서명/capability, USB-only preflight PASS 및 standby 3개 송신 시도 차단/물리 TX 증가 0을
 확인했습니다. bootstub은 교체하지 않았습니다. [USB-only 기록](evidence/2026-10-06/command-session-usb-20261006.json)에
-앱/후보/patch hash가 있습니다. 최신 dual-ECU/입력 복귀/stock 복구 실차 결과와 ROS publisher
-통합 시험은 미확인입니다. [검증 상태와 재현 방법](validation.md)에 정확한 범위가 있습니다.
+앱/후보/patch hash가 있습니다. 이후 정차 ROS 시험의 제한된 결과는 아래와 같습니다.
+[검증 상태와 재현 방법](validation.md)에 정확한 범위가 있습니다.
+
+## 2026-10-06 22:09~22:17 정차 ROS 시험
+
+사용자 승인 임시 publisher로 20 Hz 조향각속도 입력과 700 ms idle 단절/복귀를 확인했습니다.
+물리 OFF에서는 `ARMED → PASSIVE → ARMED`이며 actuator 출력은 없었습니다.
+실행 직후 USB packet checksum 오류는 두 번의 시작에서 재현됐고, 자동 재연결 후
+버튼 감시 profile이 0으로 남았습니다. 기존 재arm service로 NO_OUTPUT/7173 대기만 복원했습니다.
+
+CAN으로 D/brake/정차/LDA lateral-only를 확인한 후 0 값으로 최초 인계를 시도했습니다.
+`0x730/0x738`, `0x7D0/0x7D8`이 session 요청에 응답했고 순정 LFA/SCC quiet도 확인됐지만,
+Hyundai mode 전환 뒤 Panda CAN 준비 검증이 500 ms 안에 통과하지 못했습니다.
+ACTIVE, 비영점 실조향 및 ACTIVE 단절/복귀 단계는 실행되지 않았습니다. 어느 필수 RX 조건이
+실패했는지는 추가 trace가 필요하며, RX 검사를 우회하거나 firmware를 수정하지 않았습니다.
+
+camera는 stock 복구를 확인했고 radar는 첫 관측 timeout 뒤 자동 retry에서 stock 재개를
+확인했습니다. NO_OUTPUT/복구 pending 해제 뒤 LFA 100 Hz/SCC 50 Hz와 TX 증가 0을
+관측하고 시험 프로세스를 종료했습니다. 이후 읽기 전용 capture에서도 ACCEnable=3
+통신 이상 신호가 남았습니다. **통신 복구가 차량 보조 기능 정상 복구를 의미하지 않습니다.**
+DTC 조회/삭제, ECU reset, 차량 고장 해소와 ECU firmware identity 확인은 수행하지 않았습니다.
+원본은 [정차 시험 기록](evidence/2026-10-06/stationary-ros-test-20261006.json)입니다.
+
+## 2026-10-06 정차 실패 후 복구 수정
+
+모드 변경 직후 첫 RX보다 1 Hz safety tick이 먼저 실행되면 I5R1 선택이 영구 취소되는
+경쟁 조건을 실제 libsafety로 재현했습니다. 아직 수신하지 않은 메시지에만 최대 100 ms
+초기 대기를 적용해 수정했고 필수 새 CAN/CRC/counter/freshness 및 TX gate는 유지했습니다.
+원래 실차 실패 시 tick phase는 기록되지 않아 그 발생 건의 원인으로 확정하지는 않습니다.
+관련 safety 14개와 host 18개 테스트, node/ARM 앱 빌드를 통과했습니다.
+
+host USB 시작은 NO_OUTPUT에서 short-transfer 경계까지 이전 데이터를 비우며 실행 중
+checksum 오류는 계속 차단합니다. 미arm 초기 오류의 빈 버튼 감시 복구와, radar/camera
+두 통신을 모두 복구한 다음 순정 프레임을 확인하는 2단계 복구도 적용했습니다.
+카메라 disable만으로 LFA와 SCC가 함께 quiet해진 독립 진단 trace가 근거입니다.
+
+사용자가 다시 USB-only 상태를 확인하고 장치 harness/ignition0도 확인한 뒤 수정 앱을
+플래시하고 설치 서명을 비교했습니다. 현재 앱 SHA-256은
+`6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52`입니다.
+bootstub 변경 없이 preflight PASS, standby 3개 차단/물리 TX 0을 확인했습니다.
+수정 후 차량 재연결에서 USB 오류 없는 수신/NO_OUTPUT 대기와 Panda ready를 확인했습니다.
+그러나 ACCEnable3은 남았고, 별도 승인된 0x730 1회 DTC 삭제는 54 수락 후 약 2초 만에
+동일 raw `588186`, `56b881`, `563881`이 status89로 재발했습니다. 추가 삭제/진단/제어를
+중단했으며 제조사 고장 의미/ECU identity와 실제 추종은 미확인입니다.
+[DTC 재발 기록](evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json)을 함께 참고하십시오.
+[복구 수정 기록](evidence/2026-10-06/ecan-recovery-fix-20261006.json)을 참고하십시오.
 
 ## 2026-08-21~24 실차 이력
 
@@ -179,9 +223,10 @@ USB host였습니다. 문제 OBD-C 케이블 사용 시 USB/Comma Power 없이�
 
 Pinned opendbc의 Ioniq 5 firmware 기록은 전방 camera를 `0x7C4`, radar를 `0x7D0`으로
 분류하며, `0x730`은 LKA steering 플랫폼의 ADAS Driving 후보입니다. 현재 코드의
-`0x730` camera 소유권 가정과 이 분류는 일치하지 않습니다. 2026-10-06에는 `0x730`과
-`0x7C4` 모두 진단 응답이 없어 실제 endpoint를 확인하지 못했고 runtime 주소는
-변경하지 않았습니다. [Pinned firmware 기록](https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/fingerprints.py)과
+`0x730` camera 소유권 가정과 이 분류는 일치하지 않습니다. 퓨즈 교체 전에는 `0x730`과
+`0x7C4` 모두 진단 응답이 없었습니다. 이후 정차 시험에서 `0x730` 응답과 LFA quiet/복구를
+관측했지만 ECU firmware identity는 확인하지 않았고 runtime 주소는 변경하지 않았습니다.
+[Pinned firmware 기록](https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/fingerprints.py)과
 [query 분류](https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/values.py)를 근거로 실차 식별을 먼저 확인해야 합니다.
 
 이전 helper는 camera만 비활성화했습니다. radar stock SCC가 계속 송신될 수 있어 제어

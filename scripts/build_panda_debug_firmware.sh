@@ -7,6 +7,7 @@ OPENDBC_COMMIT="b72c1fd55ae7e84763e40912bbe06b8f533cb66b"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 split_arm_patch="${repo_root}/patches/opendbc-hyundai-canfd-split-arm.patch"
 command_session_patch="${repo_root}/patches/opendbc-command-session.patch"
+command_session_startup_patch="${repo_root}/patches/opendbc-command-session-startup.patch"
 panda_version_patch="${repo_root}/patches/panda-builder-env.patch"
 panda_ecan_patch="${repo_root}/patches/panda-ecan-only.patch"
 
@@ -58,8 +59,16 @@ apply_patch_once() {
 
 apply_patch_once "${opendbc_dir}" "${split_arm_patch}" \
   "opt-in LDA lateral / SET longitudinal Panda safety patch"
-apply_patch_once "${opendbc_dir}" "${command_session_patch}" \
-  "volatile command-gap button session and standby safety patch"
+# The follow-up changes files created by the base patch, so its reverse check
+# would fail on an already upgraded cache. Do not reapply the base there.
+if git -C "${opendbc_dir}" apply --reverse --check "${command_session_startup_patch}" >/dev/null 2>&1; then
+  printf 'Command-session base and startup fix already applied.\n'
+else
+  apply_patch_once "${opendbc_dir}" "${command_session_patch}" \
+    "volatile command-gap button session and standby safety patch"
+fi
+apply_patch_once "${opendbc_dir}" "${command_session_startup_patch}" \
+  "command-session initial RX versus safety-tick race fix"
 apply_patch_once "${panda_dir}" "${panda_version_patch}" \
   "IONIQ5ECAN firmware builder marker patch"
 apply_patch_once "${panda_dir}" "${panda_ecan_patch}" \
@@ -102,6 +111,7 @@ bootstub="${panda_dir}/board/obj/bootstub.panda_h7.bin"
 sha256sum "${bootstub}"
 sha256sum "${firmware}"
 sha256sum "${split_arm_patch}" "${command_session_patch}" "${panda_version_patch}" "${panda_ecan_patch}"
+sha256sum "${command_session_startup_patch}"
 printf 'Built pinned DEBUG bootstub: %s\n' "${bootstub}"
 printf 'Built pinned DEBUG firmware: %s\n' "${firmware}"
 printf 'Flash only after reading docs/panda_firmware.md.\n'

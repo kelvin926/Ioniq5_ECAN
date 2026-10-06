@@ -784,11 +784,18 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle, 
   panda_->set_safety_mode(PandaUsb::kSafetyHyundaiCanFd, configured_param);
   if (safety_config_.resume_on_command_return) {
     const auto deadline = SteadyClock::now() + std::chrono::milliseconds(500);
-    while (!panda_->health().command_session_ready) {
+    PandaHealth readiness = panda_->health();
+    while (!readiness.command_session_ready) {
       if (SteadyClock::now() >= deadline) {
-        throw std::runtime_error("Panda command-session CAN did not become ready after takeover");
+        throw std::runtime_error("Panda command-session CAN did not become ready after takeover: "
+          "active=" + std::to_string(readiness.command_session_active) +
+          " blocked=" + std::to_string(readiness.command_session_blocked) +
+          " rx_invalid=" + std::to_string(readiness.safety_rx_invalid) +
+          " rx_checks_invalid=" + std::to_string(readiness.safety_rx_checks_invalid) +
+          " faults=" + std::to_string(readiness.faults));
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      readiness = panda_->health();
     }
   }
   if (safety_config_.allow_longitudinal) verify_longitudinal_firmware();
@@ -850,10 +857,31 @@ void Ioniq5EcanNode::enter_no_output_mode() {
       record_error("camera restore", error);
     }
   }
+  // Camera communication control also silences SCC on this vehicle. Restore
+  // both communications first; a radar ACK alone cannot make stock SCC resume.
+  // Keep each disabled flag until new checksum-valid stock frames are observed.
+  if (elm_ready && radar_disabled_) {
+    try {
+      confirm_ecu_restored("RADAR", HyundaiCanFdCodec::kSccControlAddress,
+                           stock_scc_count_, radar_disabled_);
+    } catch (const std::exception& error) {
+      record_error("radar stock confirmation", error);
+    }
+  }
+  if (elm_ready && camera_disabled_) {
+    try {
+      confirm_ecu_restored("CAMERA", HyundaiCanFdCodec::kLfaAddress,
+                           stock_lfa_count_, camera_disabled_);
+    } catch (const std::exception& error) {
+      record_error("camera stock confirmation", error);
+    }
+  }
 
   try {
-    const uint16_t standby_param = preserve_command_session_.load()
-                                    ? safety_config_.required_safety_param : 0U;
+    const uint16_t standby_param = recovery_standby_param(
+      safety_config_.required_safety_param, preserve_command_session_.load(),
+      safety_config_.resume_on_command_return, auto_arm_inhibited_.load(),
+      recovery_rearm_required_.load());
     panda_->set_safety_mode(PandaUsb::kSafetyNoOutput, standby_param);
     const PandaHealth health = panda_->health();
     if (health.safety_mode != PandaUsb::kSafetyNoOutput || health.safety_param != standby_param ||
@@ -1061,9 +1089,14 @@ void Ioniq5EcanNode::restore_ecu(const char* label, uint32_t request_address,
   // Re-enter the diagnostic session because a timed-out previous restore may have
   // returned the ECU to its default session already.
   uds_request(request_address, response_address, {0x10U, 0x03U}, {0x50U, 0x03U});
-  const std::vector<uint8_t> response =
-    uds_request(request_address, response_address, {0x28U, 0x00U, 0x01U}, {0x68U, 0x00U});
+  uds_request(request_address, response_address, {0x28U, 0x00U, 0x01U}, {0x68U, 0x00U});
   uds_request(request_address, response_address, {0x10U, 0x01U}, {0x50U, 0x01U});
+  ROS_INFO("%s communication restore acknowledged; stock confirmation pending", label);
+}
+
+void Ioniq5EcanNode::confirm_ecu_restored(const char* label, uint32_t owned_address,
+                                        std::atomic<uint64_t>& owned_count, bool& disabled) {
+  if (!disabled) return;
   const uint64_t before = owned_count.load();
   const auto deadline = SteadyClock::now() + kEcuRestoreObservation;
   while (running_.load() && SteadyClock::now() < deadline && owned_count.load() == before) {
@@ -1071,8 +1104,7 @@ void Ioniq5EcanNode::restore_ecu(const char* label, uint32_t request_address,
   }
   const uint64_t resumed = owned_count.load() - before;
   if (resumed == 0U) {
-    throw std::runtime_error(std::string(label) + " restore response " + bytes_as_hex(response) +
-                             " received but stock 0x" +
+    throw std::runtime_error(std::string(label) + " stock 0x" +
                              [&] {
                                std::ostringstream stream;
                                stream << std::hex << owned_address;

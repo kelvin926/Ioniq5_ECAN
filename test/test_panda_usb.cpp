@@ -47,4 +47,23 @@ TEST(PandaUsbRead, InvalidTransferLengthIsRejected) {
       SteadyClock::now()), std::runtime_error);
   }
 }
+
+TEST(PandaUsbRead, StartupDrainRequiresSuccessfulShortTransfer) {
+  EXPECT_TRUE(PandaUsb::initial_receive_boundary(16384, 0, 0));
+  EXPECT_TRUE(PandaUsb::initial_receive_boundary(16384, 0, 63));
+  EXPECT_TRUE(PandaUsb::initial_receive_boundary(16384, 0, 128));
+  EXPECT_FALSE(PandaUsb::initial_receive_boundary(16384, 0, 16384));
+  for (int count : {0, 63, 128, 16384}) {
+    EXPECT_FALSE(PandaUsb::initial_receive_boundary(16384, LIBUSB_ERROR_TIMEOUT, count));
+  }
+}
+
+TEST(PandaUsbRead, StartupDrainRejectsHardErrorsAndInvalidCounts) {
+  EXPECT_THROW(PandaUsb::initial_receive_boundary(16384, LIBUSB_ERROR_NO_DEVICE, 0),
+               std::runtime_error);
+  EXPECT_THROW(PandaUsb::initial_receive_boundary(16384, 0, -1), std::runtime_error);
+  EXPECT_THROW(PandaUsb::initial_receive_boundary(16384, 0, 16385), std::runtime_error);
+  EXPECT_THROW(PandaUsb::initial_receive_boundary(0, 0, 0), std::runtime_error);
+  EXPECT_THROW(PandaUsb::initial_receive_boundary(63, 0, 0), std::runtime_error);
+}
 }  // namespace

@@ -66,6 +66,8 @@ class Ioniq5EcanNode {
                    TimePoint& last_tester_present);
   void restore_ecu(const char* label, uint32_t request_address, uint32_t response_address,
                    uint32_t owned_address, std::atomic<uint64_t>& owned_count, bool& disabled);
+  void confirm_ecu_restored(const char* label, uint32_t owned_address,
+                            std::atomic<uint64_t>& owned_count, bool& disabled);
   void maintain_disabled_ecus(TimePoint now);
   bool copy_recent_scc_template(TimePoint now, CanFrame& frame) const;
 
