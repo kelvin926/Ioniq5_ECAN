@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "Vehicle-computer handoff, current source and six preserved evidence datasets pushed to origin/feat/initial-implementation. Remote handoff commit verified with git ls-remote; main unchanged. This state-only delivery receipt follows the verified handoff commit.",
+  "update_reason": "User explicitly requested main-branch delivery. Fast-forwarded local main to the previously prepared source/handoff and changed the vehicle-computer checkout instructions to main; main push and remote verification are in progress.",
   "current_request": {
-    "description": "Prepare and push the vehicle-computer handoff and current project source/context for Ubuntu 20.04 / ROS 1 Noetic.",
-    "status": "vehicle_computer_handoff_pushed_and_remote_verified",
+    "description": "Deliver the vehicle-computer handoff, current source and context on main, as explicitly requested by the user.",
+    "status": "main_handoff_prepared_pending_push",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -83,7 +83,7 @@
   },
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
-    "branch": "feat/initial-implementation",
+    "branch": "main",
     "head": "e47a886e9a091d797d65b2c03ece2a503eef905d",
     "head_subject": "Document vehicle computer handoff and preserve diagnostic evidence",
     "remote_snapshot": {
@@ -108,7 +108,7 @@
       "existing_work_preserved": true,
       "commit_or_push_performed": true,
       "implementation_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
-      "push_status": "handoff_and_implementation_pushed_remote_verified",
+      "push_status": "main_delivery_pending",
       "document_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d"
     },
     "head_scope": "Verified delivered source/documentation commit before the subsequent state-only delivery receipt. The exact containing checkout commit is git rev-parse HEAD."
@@ -1542,10 +1542,10 @@
   },
   "vehicle_computer_handoff": {
     "prepared_on": "2026-10-06",
-    "authorization": "User explicitly requested the handoff document and push to the repository.",
+    "authorization": "User requested handoff/push, then explicitly requested delivery on main.",
     "target": "Ubuntu 20.04 / ROS 1 Noetic / C++17",
-    "branch": "feat/initial-implementation",
-    "status": "pushed_and_remote_verified",
+    "branch": "main",
+    "status": "main_prepared_pending_push",
     "document": "docs/vehicle_computer_handoff.md",
     "delivery_scope": "Current project source, firmware patch source, aligned documentation, durable guidance/state, and selected dated JSON observation reports. No generated firmware binaries or automatic diagnostic/actuation scratch scripts.",
     "vehicle_actions_in_this_request": "None; local files and Git only.",
@@ -1593,11 +1593,16 @@
     },
     "document_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
     "remote": "origin",
-    "remote_branch": "feat/initial-implementation",
-    "main_changed": false,
+    "remote_branch": "main",
+    "main_changed": true,
     "remote_verified_on": "2026-10-06",
     "verification_method": "git push success and git ls-remote comparison to the local delivered handoff commit.",
-    "document_url": "https://github.com/kelvin926/Ioniq5_ECAN/blob/feat/initial-implementation/docs/vehicle_computer_handoff.md",
-    "receipt_scope": "The delivery receipt is a state-only child of document_commit; source/document/evidence are unchanged by it."
+    "document_url": "https://github.com/kelvin926/Ioniq5_ECAN/blob/main/docs/vehicle_computer_handoff.md",
+    "receipt_scope": "Main promotion includes the prior implementation/documentation and delivery receipt; exact main document commit will be recorded after remote verification.",
+    "previous_feature_delivery": {
+      "branch": "feat/initial-implementation",
+      "verified_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
+      "verified_on": "2026-10-06"
+    }
   }
 }

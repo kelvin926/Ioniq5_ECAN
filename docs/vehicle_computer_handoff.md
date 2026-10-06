@@ -6,7 +6,7 @@
 ## 가져올 브랜치와 읽을 파일
 
 - 저장소: `https://github.com/kelvin926/Ioniq5_ECAN`
-- 전달 브랜치: **`feat/initial-implementation`**. 이번 전달에서 `main`은 변경하지 않습니다.
+- 전달 브랜치: **`main`**. 사용자의 요청으로 최신 제어 코드와 전달 문서를 main에 반영합니다.
 - 제어 코드 기준 commit: `7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6`.
   전달 문서와 evidence는 이 commit 다음의 문서 commit에 포함됩니다. 위 코드 commit만
   checkout하지 말고 전달 브랜치의 최신 내용을 가져옵니다.
@@ -61,7 +61,7 @@ bus-off/error-warning/error-passive는 모두 0입니다. 원시 fault 값과 ve
 
 ```bash
 mkdir -p "$HOME/catkin_ws/src"
-git clone --branch feat/initial-implementation \
+git clone --branch main \
   https://github.com/kelvin926/Ioniq5_ECAN.git "$HOME/catkin_ws/src/ioniq5_ecan"
 export ECAN_REPO="$HOME/catkin_ws/src/ioniq5_ecan"
 cd "$ECAN_REPO"
@@ -76,8 +76,8 @@ catkin workspace의 `src/ioniq5_ecan`이 그 checkout을 가리키게 합니다.
 ```bash
 git status --short
 git fetch origin
-git checkout feat/initial-implementation
-git pull --ff-only origin feat/initial-implementation
+git checkout main
+git pull --ff-only origin main
 git rev-parse HEAD
 ```
 
@@ -220,7 +220,7 @@ rosservice call /ioniq5_ecan/set_armed "data: false"
 
 ## 다음 작업자에게 전달할 시작 문구
 
-> Ubuntu 20.04 차량 컴퓨터에서 Ioniq5_ECAN 작업을 이어간다. `feat/initial-implementation`의
+> Ubuntu 20.04 차량 컴퓨터에서 Ioniq5_ECAN 작업을 이어간다. `main`의
 > 최신 checkout에서 AGENTS.md, state.json, docs/vehicle_computer_handoff.md를 먼저 읽고
 > 현재 commit을 기록해라. 퓨즈 교체 뒤 Panda 정방향/ignition=1과 순정 LFA 100 Hz/SCC 50 Hz
 > 수신은 확인했지만 차량 컴퓨터 catkin 빌드, 설치 firmware patch revision과 camera 소유권
