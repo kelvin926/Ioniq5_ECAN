@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "Prepared vehicle-computer handoff with verified local commands/configuration, current implementation revision and six content-identical dated evidence JSON files. Prior source changes committed; handoff/documentation commit and authorized Git push remain in progress.",
+  "update_reason": "Vehicle-computer handoff, current source and six preserved evidence datasets pushed to origin/feat/initial-implementation. Remote handoff commit verified with git ls-remote; main unchanged. This state-only delivery receipt follows the verified handoff commit.",
   "current_request": {
     "description": "Prepare and push the vehicle-computer handoff and current project source/context for Ubuntu 20.04 / ROS 1 Noetic.",
-    "status": "vehicle_computer_handoff_prepared_pending_push",
+    "status": "vehicle_computer_handoff_pushed_and_remote_verified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -84,13 +84,14 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "feat/initial-implementation",
-    "head": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
-    "head_subject": "Add bounded steering recovery and persistent ECU restoration",
+    "head": "e47a886e9a091d797d65b2c03ece2a503eef905d",
+    "head_subject": "Document vehicle computer handoff and preserve diagnostic evidence",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
-      "origin_feature": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
-      "update_result": "Fetched origin; fast-forward update reported Already up to date."
+      "origin_feature": "e47a886e9a091d797d65b2c03ece2a503eef905d",
+      "update_result": "Pushed implementation and handoff commits; git ls-remote confirmed the feature branch at the handoff commit and unchanged main. A state-only delivery receipt follows.",
+      "scope": "Remote verified before the following state-only receipt commit; not a continuing remote monitor."
     },
     "working_tree": {
       "observed_on": "2026-10-06",
@@ -107,9 +108,10 @@
       "existing_work_preserved": true,
       "commit_or_push_performed": true,
       "implementation_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
-      "push_status": "not_yet_pushed"
+      "push_status": "handoff_and_implementation_pushed_remote_verified",
+      "document_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d"
     },
-    "head_scope": "Implementation commit verified before the following handoff/documentation commit; run git rev-parse HEAD for the containing checkout revision."
+    "head_scope": "Verified delivered source/documentation commit before the subsequent state-only delivery receipt. The exact containing checkout commit is git rev-parse HEAD."
   },
   "project": {
     "objective": "Deliver the upstream controller's lateral and acceleration commands to the research vehicle through Red Panda ECAN, with a low-latency C++ runtime and YAML tuning.",
@@ -829,6 +831,12 @@
       "type": "post_fuse_passive_recovery_confirmed",
       "summary": "User-reported fuse replacement followed by NORMAL harness/ignition=1, LFA 100 Hz/SCC 50 Hz and valid CRC/counter reception. No transmission or settings changes; no DTC re-read.",
       "source": "Direct user report and docs/evidence/2026-10-06/panda-post-fuse-20261006.json"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "vehicle_computer_handoff_delivered",
+      "summary": "Current implementation and vehicle-computer handoff/evidence pushed to feat/initial-implementation; main unchanged. Native Ubuntu/ROS build and fresh vehicle-computer checks remain target work.",
+      "source": "Git push/ls-remote output, docs/vehicle_computer_handoff.md, source commit 7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6, handoff commit e47a886e9a091d797d65b2c03ece2a503eef905d"
     }
   ],
   "ecu_recovery": {
@@ -1537,7 +1545,7 @@
     "authorization": "User explicitly requested the handoff document and push to the repository.",
     "target": "Ubuntu 20.04 / ROS 1 Noetic / C++17",
     "branch": "feat/initial-implementation",
-    "status": "prepared_pending_push",
+    "status": "pushed_and_remote_verified",
     "document": "docs/vehicle_computer_handoff.md",
     "delivery_scope": "Current project source, firmware patch source, aligned documentation, durable guidance/state, and selected dated JSON observation reports. No generated firmware binaries or automatic diagnostic/actuation scratch scripts.",
     "vehicle_actions_in_this_request": "None; local files and Git only.",
@@ -1580,7 +1588,16 @@
     "verification": {
       "scope": "Document/source/configuration read-back, relative links, JSON and Git whitespace checks. Six archived JSON datasets equal their originals; archived hashes use repository LF line endings and original Windows-byte hashes are retained separately.",
       "implementation_testing": "No new implementation changes or repeated tests/builds for transfer. Prior core verification remains documented; native target ROS build still pending.",
-      "vehicle_actions": "None; no Panda/UDS/CAN/flash actions for this transfer."
-    }
+      "vehicle_actions": "None; no Panda/UDS/CAN/flash actions for this transfer.",
+      "status": "passed_for_document_and_evidence_scope"
+    },
+    "document_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
+    "remote": "origin",
+    "remote_branch": "feat/initial-implementation",
+    "main_changed": false,
+    "remote_verified_on": "2026-10-06",
+    "verification_method": "git push success and git ls-remote comparison to the local delivered handoff commit.",
+    "document_url": "https://github.com/kelvin926/Ioniq5_ECAN/blob/feat/initial-implementation/docs/vehicle_computer_handoff.md",
+    "receipt_scope": "The delivery receipt is a state-only child of document_commit; source/document/evidence are unchanged by it."
   }
 }
