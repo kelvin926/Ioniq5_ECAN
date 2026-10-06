@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "User requested concise README and current ROS input/control/startup documentation, followed by push to kelvin926/Ioniq5_ECAN via non-persistent one-time kelvin926 authentication. Aligned docs with existing I5R1 implementation/verified scope; user now reports Panda reconnected, so prior USB-only flash state is historical. No hardware access or new implementation/build/vehicle tests for this documentation request.",
+  "update_reason": "Published current I5R1 implementation and concise ROS input/control/startup README plus aligned detailed docs to kelvin926/Ioniq5_ECAN main as verified kelvin926 using memory-only one-time OAuth. Git push succeeded and remote main matched 70310fb. Static docs/schema/JSON/link/diff checks passed, no repeated build or hardware action. Delivery metadata is recorded separately; token cleanup runs at auth-process exit.",
   "current_request": {
     "description": "Update README briefly with ROS topic/message fields/units, control/button/command-return behavior and script startup. Align detailed docs and publish current related project changes to kelvin926/Ioniq5_ECAN main using kelvin926 one-time authentication without storing GitHub login on this shared computer.",
-    "status": "documentation_and_consistency_checks_passed_authenticated_ready_to_push",
+    "status": "complete_main_delivery_verified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -87,7 +87,7 @@
       "scope": "Offline host/safety tests, scoped ARM firmware build and user-authorized USB-only app flash/bench completed. No actual ROS publisher integration or vehicle ECU takeover/restoration/moving-reengagement executed."
     },
     "cabana_observation": "Earlier PID 58228 check was historical. No Cabana or other process was started/stopped by this implementation/flash work. User closes Panda clients before starting ECAN.",
-    "changed_scope": "Necessary package source/tests/docs/state/patches/launcher plus workspace build outputs and third_party/ecan_firmware tooling/caches only. Existing unrelated edits preserved. No system Python/ROS/global shell changes, commit or push.",
+    "changed_scope": "Necessary ECAN files/build tooling within workspace only. Earlier implementation was local; current documentation delivery published related changes to main. Other project/Cabana changes preserved, no global ROS/shell/package changes.",
     "ros_environment_isolation": {
       "inspected_on": "2026-10-06",
       "source": "scripts/start_ecan.sh and workspace ecan executable",
@@ -201,8 +201,8 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
-    "head_subject": "Record verified main handoff delivery",
+    "head": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
+    "head_subject": "Add I5R1 command recovery and concise ROS documentation",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
@@ -214,12 +214,19 @@
       "observed_on": "2026-10-06",
       "preexisting_modified_tracked_files": 4,
       "preexisting_changes": "README, validation, vehicle-computer handoff and state retained uncommitted workspace-migration records. Cabana's three existing modified files are preserved separately.",
-      "changes_in_this_request": "See preserved local git status/diff: ECAN source/includes/config/tests, I5R1 firmware patches/helpers, startup launcher, AGENTS/state and aligned docs/evidence. Existing message/controller and migration edits preserved.",
+      "changes_in_this_request": "36 scoped package files published, including prior local ECAN/I5R1 source/tests/patches/launcher and aligned documentation/evidence. Auth helper/profile under ignored build/ is not committed. Cabana and unrelated workspace files preserved.",
       "existing_work_preserved": true,
-      "commit_or_push_performed": false,
-      "push_status": "user_requested_main_push_with_one_time_kelvin926_auth_pending"
+      "commit_or_push_performed": true,
+      "push_status": "current_ecan_source_and_documentation_delivered_to_main"
     },
-    "head_scope": "Main HEAD remains 9aa0b8c86035a8888ab0c23c1feabc8874142a25. Current source/docs/firmware patch work is local/uncommitted; exact tested node/app hashes are recorded separately."
+    "head_scope": "Snapshot of the verified implementation/doc delivery commit at 2026-10-06T22:03:25+09:00. A later metadata-only delivery record commit may follow; git HEAD/origin main is authoritative. Prior tested node/app SHA-256 remain in controller_startup/command_gap_resume evidence.",
+    "delivery_snapshot": {
+      "observed_at": "2026-10-06T22:03:25+09:00",
+      "origin_main": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
+      "account": "kelvin926",
+      "authentication": "one-time device flow, no credential/token persistence",
+      "source": "git push exit 0 and git ls-remote"
+    }
   },
   "vehicle_computer_workspace": {
     "observed_on": "2026-10-06",
@@ -1036,8 +1043,8 @@
     },
     {
       "id": "local_ros_and_firmware_changes",
-      "status": "local_uncommitted",
-      "detail": "ROS dual-ECU and split-brake changes remain local; candidate flash status must be kept separate from source changes."
+      "status": "published_main_vehicle_validation_pending",
+      "detail": "Current dual-ECU/I5R1 source and patches published in main delivery 70310fb01ad9d9ea708325c01b7feeaaa099afeb. USB-only app flash is separately verified; actual vehicle ownership/stock restoration/moving return remains untested."
     },
     {
       "id": "automatic_deceleration",
@@ -1070,7 +1077,7 @@
       "detail": "I5R1 firmware app installed/verified and offline/USB tests passed. Actual camera/radar endpoint ownership, positive restore and moving command return in the vehicle remain untested; no road-safety conclusion."
     }
   ],
-  "next_action": "Finish doc/JSON/link/diff checks, verify device authorization account is kelvin926, commit scoped current ECAN implementation plus aligned documentation, push main without force, verify remote SHA, then revoke only this token and remove its task-local browser profile. Do not access reconnected Panda or start control/bench/flash for this documentation request.",
+  "next_action": "Requested documentation/main delivery is complete. Keep reconnected Panda untouched for this request. Next vehicle work, only if requested, starts with read-only/passive reception and actual camera/radar endpoint identification before validating ECU stock restoration and same-session moving input return under the closed-course test plan. Reboots/hard faults do not inherit prior ON.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -1228,6 +1235,12 @@
       "type": "concise_docs_and_one_time_delivery_requested",
       "summary": "User asked to publish concise README ROS input/control/startup docs and current project changes using one-time kelvin926 auth without a shared-computer login. User reports Panda reconnected; no hardware access requested or performed.",
       "source": "Direct user messages, updated README/docs and scoped device-auth process."
+    },
+    {
+      "date": "2026-10-06",
+      "type": "concise_ros_documentation_and_i5r1_main_delivered",
+      "summary": "Verified kelvin926 one-time account and published 36 related project files. README 91 lines with topic/schema/units, button/gap-return flow and startup. Static doc checks passed; remote main confirmed 70310fb01ad9d9ea708325c01b7feeaaa099afeb. No Panda access or repeated builds/tests.",
+      "source": "git push exit 0, git ls-remote, updated README/docs/state and task-local auth process."
     }
   ],
   "ecu_recovery": {
@@ -2061,9 +2074,10 @@
       "requested_scopes": [
         "public_repo"
       ],
-      "status": "kelvin926_verified_in_memory_only",
+      "status": "kelvin926_verified_one_time_push_succeeded",
       "token_or_device_code_recorded": false,
-      "verified_user_id": 52805466
+      "verified_user_id": 52805466,
+      "cleanup": "Auth process owns only this token and its temporary browser profile; its finally block revokes the issued token/removes profile/socket at completion. End-of-turn cleanup result is reported separately, not pre-claimed in this metadata snapshot."
     },
     "verification": {
       "checked_on": "2026-10-06",
@@ -2079,6 +2093,14 @@
       ],
       "scope": "Documentation/static checks only for this request. Previous Release/67 host and 9 custom firmware tests retained as dated evidence, no repeated build/test or Panda access."
     },
-    "git_commit_or_push_status": "verified_authentication_ready_to_commit_and_push"
+    "git_commit_or_push_status": "completed_remote_main_verified",
+    "source_and_docs_commit": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
+    "remote_verification": {
+      "observed_at": "2026-10-06T22:03:25+09:00",
+      "source": "Successful git push and git ls-remote refs/heads/main",
+      "remote_main": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
+      "push_exit_code": 0,
+      "force_push": false
+    }
   }
 }
