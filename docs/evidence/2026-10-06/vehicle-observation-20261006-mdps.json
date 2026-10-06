@@ -1,0 +1,131 @@
+{
+  "observed_on": "2026-10-06",
+  "vehicle_ready_source": "Direct user confirmation in this chat",
+  "read_only": true,
+  "sample_seconds": 2,
+  "health": {
+    "uptime_s": 281,
+    "voltage_mV": 5852,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 220434,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 0,
+    "safety_param": 0,
+    "fault_status": 1,
+    "power_save_enabled": 1,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.1101604551076889,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 76,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 34.540306091308594
+  },
+  "rx_delta_by_controller": [
+    4854,
+    0,
+    0
+  ],
+  "tx_delta_by_controller": [
+    0,
+    0,
+    0
+  ],
+  "rx_buffer_overflow_delta": 2,
+  "frames_read": 8947,
+  "selected_bus0_address_counts": {
+    "0xea": 368,
+    "0x12a": 0,
+    "0xcb": 0,
+    "0x110": 0,
+    "0x165": 0,
+    "0x16a": 0,
+    "0x1a0": 0
+  },
+  "mdps_crc_valid_frames": 368,
+  "mdps_crc_invalid_frames": 0,
+  "mdps_field_counts": {
+    "PA_plugin": {
+      "0": 368
+    },
+    "PA_mode": {
+      "1": 368
+    },
+    "PA_CAN_fault": {
+      "0": 368
+    },
+    "LKA_plugin": {
+      "0": 368
+    },
+    "LKA_active": {
+      "0": 368
+    },
+    "LKA_unavailable": {
+      "0": 368
+    },
+    "LKA_fault": {
+      "0": 368
+    },
+    "LKA_assistance_fault": {
+      "0": 368
+    },
+    "ACI_active": {
+      "1": 368
+    },
+    "ACI_plugin": {
+      "0": 368
+    },
+    "ACI_fault": {
+      "0": 368
+    },
+    "ACI_lv2_active": {
+      "0": 368
+    },
+    "ACI_lv2_fault": {
+      "0": 368
+    },
+    "TPA_plugin": {
+      "0": 368
+    },
+    "TPA_CAN_fault": {
+      "0": 368
+    },
+    "TPA_mode": {
+      "0": 368
+    }
+  },
+  "last_mdps": {
+    "payload_hex": "a9da2410010100000008091000000001f1ff000000000000",
+    "counter": 36,
+    "decoded": {
+      "PA_plugin": 0,
+      "PA_mode": 1,
+      "PA_CAN_fault": 0,
+      "LKA_plugin": 0,
+      "LKA_active": 0,
+      "LKA_unavailable": 0,
+      "LKA_fault": 0,
+      "LKA_assistance_fault": 0,
+      "ACI_active": 1,
+      "ACI_plugin": 0,
+      "ACI_fault": 0,
+      "ACI_lv2_active": 0,
+      "ACI_lv2_fault": 0,
+      "TPA_plugin": 0,
+      "TPA_CAN_fault": 0,
+      "TPA_mode": 0
+    }
+  },
+  "freshness_note": "Initial USB backlog can predate the sample; increasing RX counters and latest MDPS after draining establish ongoing reception, not ECU command acceptance."
+}

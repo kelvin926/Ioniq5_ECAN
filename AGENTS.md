@@ -132,6 +132,8 @@
 - `patches/opendbc-hyundai-canfd-split-arm.patch`: custom channel semantics.
 - `patches/panda-ecan-only.patch`: ECAN-only firmware behavior.
 - `docs/vehicle_handoff.md`: current handoff and dated historical evidence; consult verification scope.
+- `docs/vehicle_computer_handoff.md`: Ubuntu 20.04/Noetic transfer and startup procedure.
+- `docs/evidence/2026-10-06/`: preserved observations; distinguish pre/post-fuse records.
 - `docs/validation.md`: completed verification versus remaining ROS, bench, and vehicle checks.
 - Pinned Panda: `dd8a5b3df77706337a11555377e7180c5adc8726`.
 - Pinned opendbc: `b72c1fd55ae7e84763e40912bbe06b8f533cb66b`.

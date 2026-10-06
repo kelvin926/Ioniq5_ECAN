@@ -75,7 +75,7 @@ read-only `panda_preflight.probe`의 vendor control read와 USB bulk CAN 수신 
 
 USB 수신에는 이전 queue가 포함되므로 읽은 총 8,947개와 새 hardware RX 수를 구분합니다.
 RX overflow는 누적 220,434, 마지막 2초 증가 2로 loss-free capture는 아닙니다.
-원본 요약은 `build/vehicle-observation-20261006-mdps.json`과 [state.json](../state.json)에
+원본 요약은 [vehicle-observation-20261006-mdps.json](evidence/2026-10-06/vehicle-observation-20261006-mdps.json)과 [state.json](../state.json)에
 있습니다. marker만으로 아래 split-brake 후보의 설치 여부를 단정할 수 없습니다.
 위 passive 관측에서는 CAN 송신, ECU 진단 요청, Panda control write 또는 firmware flash를
 수행하지 않았습니다.
@@ -86,7 +86,7 @@ RX overflow는 누적 220,434, 마지막 2초 증가 2로 loss-free capture는 �
 ignition line/CAN=0/0, safety mode=0, controls_allowed=0입니다.
 기존 `steering_sweep.py`의 시작 조건 `ignition_line=1`을 충족하지 못해 조향을
 실행하지 않았습니다. 이 조건을 바꾸거나 우회하지 않았으며, 점화 미감지 원인은
-미확인입니다. 원본은 `build/steering-readiness-20261006.json`에 있습니다.
+미확인입니다. 원본은 [steering-readiness-20261006.json](evidence/2026-10-06/steering-readiness-20261006.json)에 있습니다.
 
 같은 날 사용자의 DTC 조회 요청으로 logical bus 0에서 진단을 수행했습니다.
 HVAC `0x7B3/0x7BB`가 `19 02 FF`에 정상 응답했고, 원시 DTC `923413` 한 건과
@@ -101,7 +101,7 @@ safety_tx_blocked=0, physical CAN controller TX 증가 [11,0,0]을 확인했습�
 USB packet-tail reset과 timeout의 부분 수신 데이터 보존은 통신 처리이며 ECU reset이
 아닙니다. 종료 후 기존 safety `0/0`과 power_save=1 복원을 확인했습니다.
 DTC 삭제, ECU session 변경/reset, 통신 disable, 조향/가속 명령 또는 flash는 하지
-않았습니다. 원본은 `build/vehicle-dtcs-20261006.json`, 요약은 [state.json](../state.json)에
+않았습니다. 원본은 [vehicle-dtcs-20261006.json](evidence/2026-10-06/vehicle-dtcs-20261006.json), 요약은 [state.json](../state.json)에
 있으며 현재 ECAN 경로의 부분 조회 결과입니다.
 
 같은 날 ADAS 집중 조회에서는 전방 radar `0x7D0`, 전방 camera `0x7C4`, ADAS 후보
@@ -112,7 +112,7 @@ DTC 삭제, ECU session 변경/reset, 통신 disable, 조향/가속 명령 또�
 최신 CRC 정상 MDPS `0xEA`는 warning lamp/LKA fault/fail raw 값이 모두 0입니다.
 RX overflow 증가 26 때문에 무손실 관측은 아니며, 이 결과로 ADAS ECU의 고장이나
 전원 단절을 확정하지 않습니다. 전원, harness/network 연결과 진단 접근 경로의 구분이
-필요합니다. 원본은 `build/adas-diagnostics-20261006.json`에 있습니다.
+필요합니다. 원본은 [adas-diagnostics-20261006.json](evidence/2026-10-06/adas-diagnostics-20261006.json)에 있습니다.
 
 이후 사용자가 고장코드 삭제를 명시적으로 요청하여 위 7개 후보와 HVAC에 각각
 `14 FF FF FF` 삭제 요청을 한 번 보냈습니다. HVAC는 positive response `54`로 수락했지만
@@ -121,7 +121,7 @@ RX overflow 증가 26 때문에 무손실 관측은 아니며, 이 결과로 ADA
 못했습니다. ADAS 관련 7개 후보는 삭제 및 전후 조회 모두 timeout이므로 삭제 성공은
 미확인입니다. ECU reset, 통신 disable 또는 actuator 명령은 보내지 않았고 Panda의
 기존 `0/0`, power_save=1을 복원했습니다. 삭제 전 원본을 보존했고 새 실행 기록은
-`build/dtc-clear-20261006.json`에 있습니다. 즉시 코드가 없더라도 관련 감시 조건이
+[dtc-clear-20261006.json](evidence/2026-10-06/dtc-clear-20261006.json)에 있습니다. 즉시 코드가 없더라도 관련 감시 조건이
 충족되기 전에는 문제 해결로 판단하지 않습니다.
 
 그 뒤 사용자가 퓨즈 교체로 문제가 해결됐다고 알렸습니다. 교체한 퓨즈의 위치/규격은
@@ -134,7 +134,7 @@ counter가 진행했습니다. 선택 프레임 CRC 오류와 관측 중 RX over
 MDPS warning/LKA fault/fail은 0, ACCMode는 0입니다. Panda raw faults=24는 기존
 ECAN-only 제외 mask의 non-ECAN 두 비트이며 ECAN bus-off/error-warning/error-passive는
 모두 0입니다. 이 관측은 stock CAN 수신 복귀를 확인한 결과이며 ECU 진단 접근 경로나
-고장코드 소거를 재확인한 결과는 아닙니다. 원본은 `build/panda-post-fuse-20261006.json`에
+고장코드 소거를 재확인한 결과는 아닙니다. 원본은 [panda-post-fuse-20261006.json](evidence/2026-10-06/panda-post-fuse-20261006.json)에
 있습니다. 이전 점화 미감지와 LFA/SCC 미수신 결과는 퓨즈 교체 전의 기록입니다.
 
 native Zig 0.16 C++17 core smoke는 ECU retry와 3초 EPS 복귀 회귀 검사를 통과했습니다.

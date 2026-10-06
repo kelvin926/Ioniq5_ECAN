@@ -1,0 +1,966 @@
+{
+  "observed_on": "2026-10-06",
+  "bus": 0,
+  "scope": "ADAS-related physical-address candidates on existing ECAN only; HVAC is a transport reference.",
+  "method": "UDS 22 F1 00 and 22 F1 10 identification, and 19 02 FF DTC status in the existing/default ECU session.",
+  "address_basis": "Pinned opendbc Hyundai FW database/query configuration; candidate labels do not establish installation or reachability.",
+  "opendbc_commit": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
+  "queries": [
+    {
+      "ecu_label": "Forward radar",
+      "request_address": "0x7d0",
+      "response_address": "0x7d8",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "Forward camera",
+      "request_address": "0x7c4",
+      "response_address": "0x7cc",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "ADAS driving/project ownership candidate",
+      "request_address": "0x730",
+      "response_address": "0x738",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "Parking ADAS candidate",
+      "request_address": "0x7b1",
+      "response_address": "0x7b9",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "Corner radar candidate",
+      "request_address": "0x7b7",
+      "response_address": "0x7bf",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "MDPS/EPS candidate",
+      "request_address": "0x7d4",
+      "response_address": "0x7dc",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "ABS/ESC candidate",
+      "request_address": "0x7d1",
+      "response_address": "0x7d9",
+      "reads": [
+        {
+          "request_hex": "22f100",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "22f110",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        },
+        {
+          "request_hex": "1902ff",
+          "status": "unreadable",
+          "error": "MessageTimeoutError: timeout waiting for response"
+        }
+      ]
+    },
+    {
+      "ecu_label": "HVAC diagnostic transport reference",
+      "request_address": "0x7b3",
+      "response_address": "0x7bb",
+      "reads": [
+        {
+          "request_hex": "1902ff",
+          "status": "positive_response",
+          "response_body_hex": "0992341309",
+          "status_availability_mask": 9,
+          "dtcs": [
+            {
+              "dtc_raw_hex": "923413",
+              "status_hex": "0x09",
+              "status_flags": [
+                "TEST_FAILED",
+                "CONFIRMED_DTC"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "restoration_errors": [],
+  "health_before": {
+    "uptime_s": 2609,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 3313732,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 0,
+    "safety_param": 0,
+    "fault_status": 1,
+    "power_save_enabled": 1,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.0399630181491375,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 73,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 35.15031814575195
+  },
+  "can_health_before": [
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 7,
+      "last_stored_error": 1,
+      "last_data_error": 0,
+      "last_data_stored_error": 1,
+      "receive_error_count": 0,
+      "transmit_error_count": 0,
+      "total_error_count": 31,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 1,
+      "total_tx_count": 24,
+      "total_rx_count": 3383243,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 1,
+      "brs_enabled": 1,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 2434,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 7,
+      "last_stored_error": 1,
+      "last_data_error": 7,
+      "last_data_stored_error": 0,
+      "receive_error_count": 3,
+      "transmit_error_count": 0,
+      "total_error_count": 0,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 0,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 4
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 1,
+      "error_passive": 1,
+      "last_error": 2,
+      "last_stored_error": 2,
+      "last_data_error": 1,
+      "last_data_stored_error": 1,
+      "receive_error_count": 127,
+      "transmit_error_count": 0,
+      "total_error_count": 16520500,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 0,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    }
+  ],
+  "health_diagnostic_mode": {
+    "uptime_s": 2609,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 3313756,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 3,
+    "safety_param": 1,
+    "fault_status": 1,
+    "power_save_enabled": 0,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.0399630181491375,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 73,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 35.456058502197266
+  },
+  "health_diagnostic_end": {
+    "uptime_s": 2626,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 3313758,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 3,
+    "safety_param": 1,
+    "fault_status": 1,
+    "power_save_enabled": 0,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.11317819356918335,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 74,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 37.61033248901367
+  },
+  "can_health_diagnostic_end": [
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 0,
+      "last_stored_error": 1,
+      "last_data_error": 0,
+      "last_data_stored_error": 1,
+      "receive_error_count": 0,
+      "transmit_error_count": 0,
+      "total_error_count": 31,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 1,
+      "total_tx_count": 46,
+      "total_rx_count": 3424693,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 1,
+      "brs_enabled": 1,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 2424,
+      "irq1_call_rate": 1,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 7,
+      "last_stored_error": 1,
+      "last_data_error": 7,
+      "last_data_stored_error": 0,
+      "receive_error_count": 3,
+      "transmit_error_count": 0,
+      "total_error_count": 0,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 0,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 5
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 1,
+      "error_passive": 1,
+      "last_error": 7,
+      "last_stored_error": 2,
+      "last_data_error": 7,
+      "last_data_stored_error": 1,
+      "receive_error_count": 127,
+      "transmit_error_count": 0,
+      "total_error_count": 16792044,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 16000,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    }
+  ],
+  "health_after": {
+    "uptime_s": 2626,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 3313758,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 0,
+    "safety_param": 0,
+    "fault_status": 1,
+    "power_save_enabled": 1,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.11317819356918335,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 74,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 36.37630844116211
+  },
+  "tx_log": [
+    {
+      "address": "0x7d0",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x7d0",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x7d0",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x730",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x730",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x730",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7b7",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x7b7",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x7b7",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7d4",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x7d4",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x7d4",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0,
+      "data": "0322f10000000000"
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0,
+      "data": "0322f11000000000"
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7b3",
+      "bus": 0,
+      "data": "031902ff00000000"
+    }
+  ],
+  "returned_frames": [
+    {
+      "address": "0x7d0",
+      "bus": 0
+    },
+    {
+      "address": "0x7d0",
+      "bus": 0
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0
+    },
+    {
+      "address": "0x730",
+      "bus": 0
+    },
+    {
+      "address": "0x730",
+      "bus": 0
+    },
+    {
+      "address": "0x730",
+      "bus": 0
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0
+    },
+    {
+      "address": "0x7b7",
+      "bus": 0
+    },
+    {
+      "address": "0x7b7",
+      "bus": 0
+    },
+    {
+      "address": "0x7b7",
+      "bus": 0
+    },
+    {
+      "address": "0x7d4",
+      "bus": 0
+    },
+    {
+      "address": "0x7d4",
+      "bus": 0
+    },
+    {
+      "address": "0x7d4",
+      "bus": 0
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0
+    },
+    {
+      "address": "0x7b3",
+      "bus": 0
+    }
+  ],
+  "rejected_frames": [],
+  "received_counts": {
+    "0:0x10a:32": 1875,
+    "0:0x120:32": 1874,
+    "0:0x125:16": 1864,
+    "0:0x130:16": 1874,
+    "0:0x145:32": 937,
+    "0:0x15a:8": 1874,
+    "0:0x175:24": 937,
+    "0:0x180:8": 938,
+    "0:0x185:8": 938,
+    "0:0x19a:32": 1875,
+    "0:0x1aa:16": 939,
+    "0:0x1b0:32": 938,
+    "0:0x1cf:8": 937,
+    "0:0x1f0:16": 376,
+    "0:0x1f5:32": 188,
+    "0:0x20a:16": 188,
+    "0:0x225:16": 188,
+    "0:0x235:32": 188,
+    "0:0x250:24": 187,
+    "0:0x255:32": 187,
+    "0:0x25a:32": 188,
+    "0:0x2aa:32": 188,
+    "0:0x2b0:32": 94,
+    "0:0x2b5:32": 188,
+    "0:0x2c0:32": 94,
+    "0:0x2d5:32": 93,
+    "0:0x2e0:32": 188,
+    "0:0x2e5:32": 187,
+    "0:0x2fa:32": 188,
+    "0:0x2ff:8": 94,
+    "0:0x30a:32": 188,
+    "0:0x315:16": 94,
+    "0:0x31a:32": 19,
+    "0:0x325:32": 188,
+    "0:0x330:32": 188,
+    "0:0x33a:32": 188,
+    "0:0x34a:32": 19,
+    "0:0x35:32": 1875,
+    "0:0x360:32": 188,
+    "0:0x36f:8": 188,
+    "0:0x37f:8": 187,
+    "0:0x380:8": 94,
+    "0:0x382:8": 94,
+    "0:0x383:8": 94,
+    "0:0x384:8": 94,
+    "0:0x386:8": 93,
+    "0:0x38a:16": 94,
+    "0:0x39b:8": 94,
+    "0:0x3a0:16": 94,
+    "0:0x3a5:8": 188,
+    "0:0x3a6:8": 94,
+    "0:0x3aa:8": 94,
+    "0:0x3b0:8": 94,
+    "0:0x3b1:8": 93,
+    "0:0x3b2:8": 94,
+    "0:0x3b5:32": 94,
+    "0:0x3c1:8": 93,
+    "0:0x3c2:8": 93,
+    "0:0x3ca:16": 19,
+    "0:0x3e0:8": 93,
+    "0:0x3e1:8": 93,
+    "0:0x3e2:8": 93,
+    "0:0x3e5:8": 93,
+    "0:0x3e6:8": 93,
+    "0:0x3ea:8": 94,
+    "0:0x3f0:32": 19,
+    "0:0x3f5:32": 19,
+    "0:0x401:8": 93,
+    "0:0x405:8": 94,
+    "0:0x410:8": 94,
+    "0:0x411:8": 94,
+    "0:0x412:8": 94,
+    "0:0x413:8": 94,
+    "0:0x414:8": 94,
+    "0:0x416:8": 94,
+    "0:0x417:8": 94,
+    "0:0x418:8": 94,
+    "0:0x419:8": 155,
+    "0:0x41a:8": 93,
+    "0:0x41b:8": 93,
+    "0:0x41c:8": 282,
+    "0:0x41f:8": 31,
+    "0:0x422:8": 93,
+    "0:0x425:8": 93,
+    "0:0x427:8": 94,
+    "0:0x429:8": 94,
+    "0:0x42a:8": 94,
+    "0:0x432:8": 93,
+    "0:0x435:8": 93,
+    "0:0x442:8": 93,
+    "0:0x444:8": 93,
+    "0:0x445:8": 93,
+    "0:0x448:8": 93,
+    "0:0x454:8": 93,
+    "0:0x472:8": 94,
+    "0:0x473:8": 94,
+    "0:0x474:8": 94,
+    "0:0x47f:8": 94,
+    "0:0x48f:8": 20,
+    "0:0x4a3:8": 93,
+    "0:0x4a:32": 1874,
+    "0:0x4b4:8": 94,
+    "0:0x4d8:8": 94,
+    "0:0x4dd:8": 94,
+    "0:0x4df:8": 94,
+    "0:0x4eb:8": 94,
+    "0:0x4f2:8": 18,
+    "0:0x4f3:8": 18,
+    "0:0x4fe:8": 9,
+    "0:0x60:32": 1875,
+    "0:0x65:32": 1875,
+    "0:0x6f:8": 1874,
+    "0:0x7bb:8": 1,
+    "0:0x8b:8": 93,
+    "0:0x90:32": 188,
+    "0:0xa0:24": 1875,
+    "0:0xda:24": 1875,
+    "0:0xea:24": 1875,
+    "0:0xf5:32": 1875,
+    "0:0xff:8": 93
+  },
+  "received_examples": {
+    "0:0x60:32": "5b13b400000000000202000240ff00ff000005000008fd0000000004fffa0000",
+    "0:0x65:32": "643eb400000e0011010000000002020400000000ffff00000000000000000000",
+    "0:0xa0:24": "8ed8b43047bbf70000000000000000000040010000000000",
+    "0:0x1b0:32": "b6925400720000002300040d58035271582d260063ff7a7a787c100000410100",
+    "0:0x10a:32": "7577c00000000005fff9e71f42404141ba0200000000013500000a0000c0ab57",
+    "0:0x19a:32": "26c3be0100a500004020d20000000109603100040000040015000000003210dc",
+    "0:0x1aa:16": "2a80a01070a000000028000000000000",
+    "0:0x35:32": "ec5ac151000025010b0000100040000004000000f03996d40000000000000000",
+    "0:0xda:24": "fef1c1000000000a010000000000000000000000f8075e02",
+    "0:0xf5:32": "c2dbc1344600000000000015000000000000000000000000010000fafaffff40",
+    "0:0xea:24": "31efb2100101000000080f1000000001ccff000000000000",
+    "0:0x4a:32": "b816b600000008000880b08065806b003039353232390000a67f9e9e00000000",
+    "0:0x6f:8": "0df0b40000000000",
+    "0:0x39b:8": "0000002400000000",
+    "0:0x255:32": "2e0876150000e0000092001682070092073e1b00101500285105893c38020000",
+    "0:0x2e5:32": "b4c57651000003152c0f00006e00000000000000000000000000000000000000",
+    "0:0x3b5:32": "c4373a000000004747000002e9eff67fba020000000069090000000000000000",
+    "0:0x130:16": "5e04a202020300000100000000000000",
+    "0:0x15a:8": "3d59a70b000c0100",
+    "0:0x125:16": "ae8ff6c9ff0007000000000000000000",
+    "0:0x41c:8": "48a0409e01000000",
+    "0:0x120:32": "3ffbc00000000005ffd9671f41404141bb0200000000013500000a0000002040",
+    "0:0x175:24": "113c5a00ff0300000d0140000d000000df00000000000000",
+    "0:0x1cf:8": "90d0002000000000",
+    "0:0x145:32": "6bfa55100405000001047d004093000000004200007e40050038000800000000",
+    "0:0x180:8": "79d2a00000000000",
+    "0:0x185:8": "8c2da00000000000",
+    "0:0x3a5:8": "c1105d0000000000",
+    "0:0x33a:32": "296978000000000000000000f000000000000000000000000000000000000000",
+    "0:0x3b2:8": "ec360102392f3418",
+    "0:0x1f0:16": "b41b5701000028000000000000000000",
+    "0:0x47f:8": "f0fcffffffffffff",
+    "0:0x20a:16": "a713780a000000001200000000000000",
+    "0:0x429:8": "24bb010011000000",
+    "0:0x42a:8": "ead5010200100000",
+    "0:0x30a:32": "29ab79000400010500000c002c00a00f000000003f00003900001805210000fe",
+    "0:0x3aa:8": "ff00700054000000",
+    "0:0x225:16": "8a13b93ea8500b4041e80c0300f2ff07",
+    "0:0x4b4:8": "0000014010700400",
+    "0:0x90:32": "7e9e771700000000000000000000000000000000000000000000000000000000",
+    "0:0x235:32": "341c7900346c346c0015530000561b0000008900000000000000000001000000",
+    "0:0x2fa:32": "147079048917b6b60800161700008c5000000000001c10ea0000720100284003",
+    "0:0x1f5:32": "43a679000000000e2400500a0000000000ec049c040000000e01c8c814000e01",
+    "0:0x325:32": "7ac0791000000000000000000500006e500a0e01ffec0400c89c040000000000",
+    "0:0x25a:32": "4fab79404020000000002400cd35170000c800000080c0700f10050200000000",
+    "0:0x330:32": "5d0579f1c8a02c9770088403000000000000001c0c4020c8c80000001d901d90",
+    "0:0x360:32": "c313790000000000000000000000541408000000000001000004000017170019",
+    "0:0x2b0:32": "6f7b3b0000000002010000000000000000000000000000000000000000000000",
+    "0:0x4d8:8": "4010f0f040f21ecc",
+    "0:0x4dd:8": "0000fe0004000000",
+    "0:0x380:8": "3336011010101001",
+    "0:0x4df:8": "0000080000000000",
+    "0:0x4eb:8": "20801b0280000000",
+    "0:0x382:8": "8487020200040900",
+    "0:0x383:8": "cafe010001008000",
+    "0:0x3a6:8": "5d6142100c100006",
+    "0:0x384:8": "fa57020200ff0024",
+    "0:0x2aa:32": "03837affff00000000ffff000040005000014000ffffff0f0100ff3f01010000",
+    "0:0x2b5:32": "45f77a0100000040a800530c00040000cc610e00000000000a00000000000000",
+    "0:0x3b0:8": "7237ffc7000003c0",
+    "0:0x2c0:32": "c7c83d2100410000400000000000000000000000000000000000000000000000",
+    "0:0x2e0:32": "70db7a0000000040fd0000000014040400000000000072010f00000000000000",
+    "0:0x427:8": "bc80ff00840a0000",
+    "0:0x250:24": "6e1e7800000000000000000003000000000000525200803f",
+    "0:0x36f:8": "38d1010000000000",
+    "0:0x37f:8": "32c0522441020000",
+    "0:0x3b1:8": "6f7c014000202300",
+    "0:0x405:8": "1cb0000000010000",
+    "0:0x410:8": "fa305e3c576bffff",
+    "0:0x411:8": "7fb1505000000040",
+    "0:0x412:8": "b320000000000000",
+    "0:0x413:8": "a9e0000000000000",
+    "0:0x414:8": "a68000002c000000",
+    "0:0x416:8": "5500000000000000",
+    "0:0x417:8": "9180000000000000",
+    "0:0x418:8": "b0800000120c0000",
+    "0:0x419:8": "133005d5d1848500",
+    "0:0x3c1:8": "e860300000000000",
+    "0:0x3c2:8": "f060104000000000",
+    "0:0x448:8": "b9d0000000000000",
+    "0:0x8b:8": "3900000000000000",
+    "0:0x3a0:16": "064f1700ffffffff0000000000000000",
+    "0:0x401:8": "e740110000040000",
+    "0:0x386:8": "02e1000000a80200",
+    "0:0x2ff:8": "e20100f13f000000",
+    "0:0x315:16": "6a5f5c800a800a000000050000000000",
+    "0:0x38a:16": "c7fb5c00000003000000000000000000",
+    "0:0x472:8": "9d4200834842c044",
+    "0:0x473:8": "d27d001500000078",
+    "0:0x474:8": "9172000000000008",
+    "0:0x3ea:8": "0000fe00c0000055",
+    "0:0xff:8": "7e10000000000400",
+    "0:0x3e0:8": "c7a0010054030000",
+    "0:0x3e1:8": "9b30100000000000",
+    "0:0x3e2:8": "fe70000000000000",
+    "0:0x41a:8": "85a0120000000000",
+    "0:0x3e5:8": "8240020000000000",
+    "0:0x3e6:8": "7770000000000000",
+    "0:0x41b:8": "ae90000000000000",
+    "0:0x422:8": "fec0110000000400",
+    "0:0x425:8": "16a0000000000000",
+    "0:0x432:8": "2220021012000010",
+    "0:0x435:8": "49e0004000000000",
+    "0:0x442:8": "172010c100000000",
+    "0:0x444:8": "cdb0205055500000",
+    "0:0x445:8": "1d10000000000019",
+    "0:0x454:8": "0d10002402000000",
+    "0:0x3f5:32": "71527f110001000000de900000000000000086020000000000539600020d0000",
+    "0:0x4a3:8": "40009a093e000000",
+    "0:0x2d5:32": "59893b00000000000000000003000000000000000000383f0000000000000000",
+    "0:0x31a:32": "1dd872010a0000007eff00030364490400000000000000000000000000000000",
+    "0:0x34a:32": "238272b1980c4501000000000000000000000000000000000000000000000000",
+    "0:0x3f0:32": "fc1672ccff037b00497a00000000000000000000000000000000000000000000",
+    "0:0x41f:8": "000c000000000000",
+    "0:0x48f:8": "ad10410005000000",
+    "0:0x3ca:16": "1bef00f4000000013132343033303200",
+    "0:0x4f2:8": "01ffddff071100fa",
+    "0:0x4f3:8": "00000000f0000000",
+    "0:0x4fe:8": "69210001cf0144a8",
+    "0:0x7bb:8": "0759020992341309"
+  },
+  "actions": "Temporary ELM327 mode, power-save off, USB packet-tail reset, inactive Panda heartbeat, then restoration of original safety/param/power-save. Only identification/DTC/ISO-TP flow-control CAN writes. No ECU session change/reset, communication control, DTC clearing, actuator requests, firmware or heartbeat-policy change.",
+  "interpretation": {
+    "diagnostic_result": "Seven ADAS-related candidate endpoints did not respond to either identification DID or DTC list. HVAC reference returned the same raw 923413/status 09 record. No ADAS DTCs were obtained; timeouts do not establish zero faults or ECU absence.",
+    "selected_received_frame_counts": {
+      "0x12a": 0,
+      "0x1a0": 0,
+      "0x110": 0,
+      "0xcb": 0,
+      "0xea": 1875,
+      "0x161": 0,
+      "0x162": 0
+    },
+    "mdps_last_frame": {
+      "checksum_valid": true,
+      "raw_hex": "31efb2100101000000080f1000000001ccff000000000000",
+      "decoded_raw_fields": {
+        "MDPS_WrngLmpSta": 0,
+        "MDPS_LkaPlgInSta": 0,
+        "MDPS_LkaToiUnblSta": 0,
+        "MDPS_LkaToiFltSta": 0,
+        "MDPS_LkaFailSta": 0,
+        "MDPS_PaCanfltSta": 0
+      },
+      "scope": "Latest captured broadcast state only, not stored MDPS DTCs. Warning/LKA fault flags are zero in this frame."
+    },
+    "physical_controller_tx_deltas": [
+      22,
+      0,
+      0
+    ],
+    "physical_controller_rx_deltas": [
+      41450,
+      0,
+      0
+    ],
+    "logged_diagnostic_requests": 22,
+    "rx_overflow_delta": 26,
+    "capture_limit": "Nonzero RX overflow means the capture is not loss-free. Missing frames are a dated observation on this route, not proof of failed/unpowered ECUs or all-network absence.",
+    "endpoint_identity": "Pinned upstream Ioniq 5 FW records use forward camera 0x7C4 and radar 0x7D0; upstream 0x730 is an ADAS Driving candidate on LKA steering platforms. The local implementation's 0x730 camera-ownership assumption remains unverified. Neither 0x7C4 nor 0x730 responded here; no runtime endpoint change made.",
+    "next_diagnostic_focus": "Establish ADAS reachability: inspect camera/radar power and harness/network connection, and compare with a Hyundai-capable OBD/GDS all-system read. Present evidence does not distinguish ECU power/wiring, architecture/diagnostic routing, or ECU faults."
+  },
+  "sources": [
+    "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/values.py",
+    "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/car/hyundai/fingerprints.py",
+    "https://github.com/commaai/opendbc/blob/b72c1fd55ae7e84763e40912bbe06b8f533cb66b/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+    "Pinned opendbc hkg_can_fd_checksum and UdsClient; actual completed Panda USB/UDS query report"
+  ]
+}

@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "User is moving work to the vehicle computer and explicitly requested a vehicle-computer handoff document and Git push. Bundle the previously authorized local implementation/documentation so the transferred guide matches its source.",
+  "update_reason": "Prepared vehicle-computer handoff with verified local commands/configuration, current implementation revision and six content-identical dated evidence JSON files. Prior source changes committed; handoff/documentation commit and authorized Git push remain in progress.",
   "current_request": {
     "description": "Prepare and push the vehicle-computer handoff and current project source/context for Ubuntu 20.04 / ROS 1 Noetic.",
-    "status": "preparing_vehicle_computer_transfer",
+    "status": "vehicle_computer_handoff_prepared_pending_push",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -43,13 +43,13 @@
           0
         ],
         "selected_can_crc_failures": 0,
-        "source": "build/steering-readiness-20261006.json, read-only USB/CAN capture decoded with current pinned parser/checksum semantics.",
+        "source": "docs/evidence/2026-10-06/steering-readiness-20261006.json, read-only USB/CAN capture decoded with current pinned parser/checksum semantics.",
         "freshness": "Initial USB backlog can predate the sample. Latest frames after draining and increasing hardware RX counters establish ongoing reception; this is a dated observation, not continuing monitoring."
       },
       "actions": "Vendor control reads, bulk CAN IN and persistent-state update only. No control writes, heartbeat, CAN transmission, ECU diagnostics, steering, runtime/firmware/configuration changes, implementation tests or builds.",
       "later_prerequisite_observation": {
         "observed_on": "2026-10-06",
-        "source": "build/panda-post-fuse-20261006.json",
+        "source": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json",
         "detail": "After user-reported fuse replacement ignition_line is 1 and LFA/SCC traffic is present. The prior ignition blocker was a pre-replacement observation. No steering executed or newly authorized by this confirmation request."
       }
     }
@@ -84,8 +84,8 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "feat/initial-implementation",
-    "head": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
-    "head_subject": "Fix HDA1 longitudinal ownership and add vehicle handoff",
+    "head": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
+    "head_subject": "Add bounded steering recovery and persistent ECU restoration",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
@@ -97,14 +97,19 @@
       "preexisting_modified_tracked_files": 24,
       "preexisting_changes": "Local ROS integration, unfiltered-input behavior, SCC template handling, and split-brake firmware changes.",
       "changes_in_this_request": [
-        "Previously authorized local ECAN controller/recovery, firmware patch and documentation changes",
+        "docs/vehicle_computer_handoff.md",
+        "docs/evidence/2026-10-06/",
+        "README.md",
+        "docs/vehicle_handoff.md",
         "AGENTS.md",
-        "state.json",
-        "Vehicle-computer handoff document and preserved diagnostic evidence"
+        "state.json"
       ],
       "existing_work_preserved": true,
-      "commit_or_push_performed": false
-    }
+      "commit_or_push_performed": true,
+      "implementation_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
+      "push_status": "not_yet_pushed"
+    },
+    "head_scope": "Implementation commit verified before the following handoff/documentation commit; run git rev-parse HEAD for the containing checkout revision."
   },
   "project": {
     "objective": "Deliver the upstream controller's lateral and acceleration commands to the research vehicle through Red Panda ECAN, with a low-latency C++ runtime and YAML tuning.",
@@ -403,7 +408,7 @@
     "latest_observation": {
       "observed_on": "2026-10-06",
       "method": "Read-only USB health and 3-second passive CAN sample after one-second queue drain.",
-      "source": "build/panda-post-fuse-20261006.json",
+      "source": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json",
       "hardware_type": "0x07 / Red Panda",
       "firmware_marker": "IONIQ5ECAN-dd8a5b3d-DEBUG",
       "panda_uptime_s": 245,
@@ -525,7 +530,7 @@
         "rx_buffer_overflow_delta": 2,
         "freshness": "Initial queued frames can predate the sample. Increasing hardware RX counters and the latest MDPS after draining establish ongoing reception. No command acceptance or loss-free capture established.",
         "raw_fault_interpretation": "faults=16 is within the existing ECAN-only ignored non-ECAN mask (bits 3/4), yielding effective faults zero; raw fault_status and RX overflow are retained as observations.",
-        "observation_file": "build/vehicle-observation-20261006-mdps.json"
+        "observation_file": "docs/evidence/2026-10-06/vehicle-observation-20261006-mdps.json"
       },
       "mdps_observation": {
         "address": "0xEA",
@@ -606,7 +611,7 @@
         0,
         1
       ],
-      "output_file": "build/vehicle-dtcs-20261006.json",
+      "output_file": "docs/evidence/2026-10-06/vehicle-dtcs-20261006.json",
       "scratch_query_script": "build/dtc_query_20261006.py"
     },
     "transport_repairs": "Initial attempts encountered USB packet checksum failures and an ignition-off heartbeat timeout that reverted ELM327 to SILENT. The scratch adapter now uses bounded 512-byte reads, retains partial bytes exposed by USBErrorTimeout.received, resets Panda USB packet tails once before querying, and sends inactive heartbeat during the diagnostic session. This is not an ECU reset or a heartbeat-policy bypass. Prior failed attempts are archived under build/vehicle-dtcs-20261006-attempt*.json; no production transport changes made.",
@@ -823,7 +828,7 @@
       "date": "2026-10-06",
       "type": "post_fuse_passive_recovery_confirmed",
       "summary": "User-reported fuse replacement followed by NORMAL harness/ignition=1, LFA 100 Hz/SCC 50 Hz and valid CRC/counter reception. No transmission or settings changes; no DTC re-read.",
-      "source": "Direct user report and build/panda-post-fuse-20261006.json"
+      "source": "Direct user report and docs/evidence/2026-10-06/panda-post-fuse-20261006.json"
     }
   ],
   "ecu_recovery": {
@@ -1027,11 +1032,17 @@
       ],
       "ci_scope": "Hosted runners remain ubuntu-latest; ROS tests run inside ros:noetic-ros-base. Runner host version is separate from the ROS execution target.",
       "verification": "Command API verified against official versioned documentation and git diff --check; no full Ubuntu/ROS build or CI execution performed."
+    },
+    "vehicle_computer_transfer": {
+      "prepared_on": "2026-10-06",
+      "document": "docs/vehicle_computer_handoff.md",
+      "source_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
+      "scope": "Transfer guide, latest post-fuse README summary, evidence index and portable observation references."
     }
   },
   "adas_diagnostics": {
     "observed_on": "2026-10-06",
-    "source": "build/adas-diagnostics-20261006.json",
+    "source": "docs/evidence/2026-10-06/adas-diagnostics-20261006.json",
     "method": "UDS 22 F1 00 and 22 F1 10 identification, and 19 02 FF DTC status in the existing/default ECU session.",
     "scope": "ADAS-related physical-address candidates on existing ECAN only; HVAC is a transport reference.",
     "queries": [
@@ -1272,10 +1283,10 @@
     "observed_on": "2026-10-06",
     "authorization": "User explicitly requested one DTC initialization/clear followed by checking recurrence.",
     "scope": "One physical-address UDS 14 FF FF FF request per previously queried ADAS-related candidate and responding HVAC reference; no all-network scan.",
-    "source": "build/dtc-clear-20261006.json",
+    "source": "docs/evidence/2026-10-06/dtc-clear-20261006.json",
     "pre_clear_sources": [
-      "build/vehicle-dtcs-20261006.json",
-      "build/adas-diagnostics-20261006.json"
+      "docs/evidence/2026-10-06/vehicle-dtcs-20261006.json",
+      "docs/evidence/2026-10-06/adas-diagnostics-20261006.json"
     ],
     "queries": [
       {
@@ -1519,17 +1530,57 @@
     "fuse_identity": "Not supplied",
     "independently_verified": "Panda ignition detection and stock LFA/SCC reception returned after the reported replacement.",
     "verification_limits": "Passive CAN observation only; no DTC/ECU identification re-read and no independent physical fuse inspection.",
-    "passive_source": "build/panda-post-fuse-20261006.json"
+    "passive_source": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json"
   },
   "vehicle_computer_handoff": {
     "prepared_on": "2026-10-06",
     "authorization": "User explicitly requested the handoff document and push to the repository.",
     "target": "Ubuntu 20.04 / ROS 1 Noetic / C++17",
     "branch": "feat/initial-implementation",
-    "status": "preparing",
+    "status": "prepared_pending_push",
     "document": "docs/vehicle_computer_handoff.md",
     "delivery_scope": "Current project source, firmware patch source, aligned documentation, durable guidance/state, and selected dated JSON observation reports. No generated firmware binaries or automatic diagnostic/actuation scratch scripts.",
     "vehicle_actions_in_this_request": "None; local files and Git only.",
-    "remaining_target_work": "Vehicle-computer catkin build, fresh passive preflight/parser verification, installed split-brake firmware provenance and actual camera ownership endpoint identification. No new live actuation or ECU disable authorized by the transfer request."
+    "remaining_target_work": "Vehicle-computer catkin build, fresh passive preflight/parser verification, installed split-brake firmware provenance and actual camera ownership endpoint identification. No new live actuation or ECU disable authorized by the transfer request.",
+    "source_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
+    "checkout_commit_command": "git rev-parse HEAD",
+    "evidence_directory": "docs/evidence/2026-10-06/",
+    "evidence_files": [
+      {
+        "path": "docs/evidence/2026-10-06/adas-diagnostics-20261006.json",
+        "sha256": "4415b4ef07b801627c64036b851e1c249ff6cfe82cbd82f8a1b5200f3e3810cd",
+        "original_windows_sha256": "7ee67b6af06f340ace4532418cfacf35be9e837efac7658a38e16724954b4d47"
+      },
+      {
+        "path": "docs/evidence/2026-10-06/dtc-clear-20261006.json",
+        "sha256": "61308b75eb093bd75173f69603462aa04ba2d9d7dbf64e5d8b9d7f8365fec5d7",
+        "original_windows_sha256": "662d109e9034a38e8ebbba44d921f2985ecc3d58cefeaad58d6eb52723b8e7ed"
+      },
+      {
+        "path": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json",
+        "sha256": "8cd93e0fd83addb60975a3cae2d0ea7af729809df4fe597eccfc020b7884d3b0",
+        "original_windows_sha256": "ef281178a82c2aacd7f7fb6bebe1447d029128a160b59e83c7921e57ef81b5ea"
+      },
+      {
+        "path": "docs/evidence/2026-10-06/steering-readiness-20261006.json",
+        "sha256": "7ee8ece6b4b2ca52c5d5c5b6e3e6888df5086a24f8d94b645863661ca052640d",
+        "original_windows_sha256": "4c00ee3e0a77cc862051aaa2c05efc47c8b84c274385ca50bb746adf643287a9"
+      },
+      {
+        "path": "docs/evidence/2026-10-06/vehicle-dtcs-20261006.json",
+        "sha256": "a07b7549eba9f310357239026e304145c737e26794574b1bbaf1fb4fd3f6e39c",
+        "original_windows_sha256": "d72dbcd03329819cce5672eb9fa56a2487f1e78d01039ef45bc5f16eef642a23"
+      },
+      {
+        "path": "docs/evidence/2026-10-06/vehicle-observation-20261006-mdps.json",
+        "sha256": "1d6149ba1900ead502893401a9c5cd34182d394049e68add6318680031c15074",
+        "original_windows_sha256": "8257a089371d74ea1d0c50d162e6929ff6d88a1f21e3318abfcd0fae8a90d0fe"
+      }
+    ],
+    "verification": {
+      "scope": "Document/source/configuration read-back, relative links, JSON and Git whitespace checks. Six archived JSON datasets equal their originals; archived hashes use repository LF line endings and original Windows-byte hashes are retained separately.",
+      "implementation_testing": "No new implementation changes or repeated tests/builds for transfer. Prior core verification remains documented; native target ROS build still pending.",
+      "vehicle_actions": "None; no Panda/UDS/CAN/flash actions for this transfer."
+    }
   }
 }

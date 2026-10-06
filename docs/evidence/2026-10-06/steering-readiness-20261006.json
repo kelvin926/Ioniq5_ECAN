@@ -1,0 +1,81 @@
+{
+  "observed_on": "2026-10-06",
+  "read_only": true,
+  "sample_seconds": 2,
+  "health": {
+    "uptime_s": 511,
+    "voltage_mV": 5852,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 766507,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 0,
+    "safety_param": 0,
+    "fault_status": 1,
+    "power_save_enabled": 1,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.11077670007944107,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 76,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 35.15031814575195
+  },
+  "rx_delta_by_controller": [
+    4815,
+    0,
+    0
+  ],
+  "tx_delta_by_controller": [
+    0,
+    0,
+    0
+  ],
+  "frames_read": 8905,
+  "selected_crc_failures": 0,
+  "latest_crc_valid_signals": {
+    "0x125": {
+      "payload_hex": "1fe46df3ff0007000000000000000000",
+      "counter": 109,
+      "angle_deg": -1.3
+    },
+    "0xa0": {
+      "payload_hex": "7236ab50481c1a0000000000000000000040010000000000",
+      "counter": 171,
+      "wheel_speed_kph": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "0x35": {
+      "payload_hex": "fd88a151050025010a0000100040000004000000b03996d40500000000000000",
+      "counter": 161,
+      "accelerator_pedal": 0,
+      "gear_raw": 5
+    },
+    "0xea": {
+      "payload_hex": "b2479010010100000008f50f00000001f4ff000000000000",
+      "counter": 144,
+      "driver_torque_counts": -10,
+      "eps_fault": false
+    },
+    "0x175": {
+      "payload_hex": "b585d600ff0300000d0112000d000000df00000000000000",
+      "counter": 214,
+      "brake_pressed": true
+    }
+  },
+  "actions": "Vendor control reads and bulk IN only; no control writes, heartbeat, CAN TX, ECU diagnostics or actuation."
+}

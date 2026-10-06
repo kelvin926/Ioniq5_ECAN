@@ -7,6 +7,7 @@ Ubuntu 20.04 / ROS 1 Noetic에서 Red Panda와 Hyundai K 하네스를 통해 202
 > 15 km/h 가속 1회를 확인했지만, 간헐적 가속 실패는 아직 해결이 검증되지 않았습니다.
 > 최신 ROS 노드의 이중 ECU 수명주기, 일시 EPS 복귀와 통신 복구는 실차 재시험 전입니다.
 > 현재 상태와 과거 시험 기록은 [`docs/vehicle_handoff.md`](docs/vehicle_handoff.md)에 있습니다.
+> 차량 컴퓨터로 옮길 때는 [차량 컴퓨터 전달 문서](docs/vehicle_computer_handoff.md)를 먼저 읽습니다.
 >
 > 저장소의 기본 YAML은 요청한 폐쇄
 > 연구장 프로파일로 `allow_actuation`과 종방향 제어가 활성화되어 있습니다. 노드는
@@ -220,6 +221,7 @@ state.json             current decisions, observations, verification and open is
 
 | 문서 | 내용 |
 | --- | --- |
+| [차량 컴퓨터 전달](docs/vehicle_computer_handoff.md) | 가져올 브랜치, Ubuntu 20.04/Noetic 설치와 빌드, 최신 퓨즈 교체 후 관측, 다음 작업 |
 | [입력 계약](docs/input_contract.md) | 단위, 변환, watchdog, 상태 필드 |
 | [구조](docs/architecture.md) | 제어/RX 흐름과 ECU 소유권 |
 | [상태와 제한](docs/safety.md) | 채널 해제, 일시 복귀, hard fault 복구 |
@@ -232,9 +234,10 @@ state.json             current decisions, observations, verification and open is
 
 2026-10-06 native C++17 core smoke에서 3초 복귀 경계, 채널 유지, hard fault 우선순위와
 CRC/freshness를 확인했습니다. 전체 ROS Noetic 빌드, raw TX callback bench와 최신 경로의
-실차 fault injection은 미확인입니다. 당시 USB read snapshot에서 Panda는 application mode,
-하네스/ignition은 0이었으며 설치된 정확한 binary hash는 확인하지 않았습니다.
-marker만으로 현재 split-brake revision의 설치를 단정할 수 없습니다.
+실차 fault injection은 미확인입니다. 퓨즈 교체 후 최신 USB/CAN 관측에서는 하네스 정방향
+`NORMAL(1)`, ignition line=1과 순정 LFA 100 Hz/SCC 50 Hz 수신을 확인했습니다.
+설치된 정확한 binary hash는 읽지 않았고 marker만으로 split-brake revision의 설치를
+단정할 수 없습니다. 원본 기록은 [evidence 목록](docs/evidence/2026-10-06/README.md)에 있습니다.
 
 작업을 이어갈 때 [AGENTS.md](AGENTS.md)와 [state.json](state.json)을 먼저 읽습니다.
 중요한 변경에는 해당 문서와 state를 함께 갱신하고 과거 결과의 날짜를 보존합니다.

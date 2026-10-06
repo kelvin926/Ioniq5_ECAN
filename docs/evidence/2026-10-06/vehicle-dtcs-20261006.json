@@ -1,0 +1,479 @@
+{
+  "observed_on": "2026-10-06",
+  "bus": 0,
+  "method": "UDS 19 02 FF in the existing default ECU session, plus 19 01 FF for count/format when available.",
+  "scope": "Current ECAN-only connection; not an all-network vehicle scan.",
+  "queries": [
+    {
+      "ecu_label": "MDPS/EPS candidate",
+      "request_address": "0x7d4",
+      "response_address": "0x7dc",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "ABS/ESC candidate",
+      "request_address": "0x7d1",
+      "response_address": "0x7d9",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "Forward radar",
+      "request_address": "0x7d0",
+      "response_address": "0x7d8",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "Forward camera",
+      "request_address": "0x7c4",
+      "response_address": "0x7cc",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "ADAS/project ownership address",
+      "request_address": "0x730",
+      "response_address": "0x738",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "Instrument cluster",
+      "request_address": "0x7c6",
+      "response_address": "0x7ce",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "Parking ADAS candidate",
+      "request_address": "0x7b1",
+      "response_address": "0x7b9",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "HVAC",
+      "request_address": "0x7b3",
+      "response_address": "0x7bb",
+      "status": "positive_response",
+      "response_body_hex": "0992341309",
+      "status_availability_mask": 9,
+      "dtcs": [
+        {
+          "dtc_raw_hex": "923413",
+          "status_hex": "0x09",
+          "status_flags": [
+            "TEST_FAILED",
+            "CONFIRMED_DTC"
+          ]
+        }
+      ],
+      "count_query_error": "NegativeResponseError: READ_DTC_INFORMATION - sub-function not supported"
+    },
+    {
+      "ecu_label": "OBD powertrain candidate",
+      "request_address": "0x7e0",
+      "response_address": "0x7e8",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    },
+    {
+      "ecu_label": "OBD transmission candidate",
+      "request_address": "0x7e1",
+      "response_address": "0x7e9",
+      "status": "unreadable",
+      "error": "MessageTimeoutError: timeout waiting for response"
+    }
+  ],
+  "restoration_errors": [],
+  "health_before": {
+    "uptime_s": 2185,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 2307345,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 0,
+    "safety_param": 0,
+    "fault_status": 1,
+    "power_save_enabled": 1,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.07080578058958054,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 73,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 34.540306091308594
+  },
+  "can_health_before": [
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 0,
+      "last_stored_error": 1,
+      "last_data_error": 0,
+      "last_data_stored_error": 1,
+      "receive_error_count": 0,
+      "transmit_error_count": 0,
+      "total_error_count": 31,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 1,
+      "total_tx_count": 13,
+      "total_rx_count": 2355023,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 1,
+      "brs_enabled": 1,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 2428,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 7,
+      "last_stored_error": 1,
+      "last_data_error": 7,
+      "last_data_stored_error": 0,
+      "receive_error_count": 3,
+      "transmit_error_count": 0,
+      "total_error_count": 0,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 0,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 3
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 1,
+      "error_passive": 1,
+      "last_error": 7,
+      "last_stored_error": 2,
+      "last_data_error": 7,
+      "last_data_stored_error": 1,
+      "receive_error_count": 127,
+      "transmit_error_count": 0,
+      "total_error_count": 16403958,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 16037,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    }
+  ],
+  "health_diagnostic_mode": {
+    "uptime_s": 2185,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 2307372,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 3,
+    "safety_param": 1,
+    "fault_status": 1,
+    "power_save_enabled": 0,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.07080578058958054,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 73,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 34.540306091308594
+  },
+  "health_diagnostic_end": {
+    "uptime_s": 2192,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 2307373,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 3,
+    "safety_param": 1,
+    "fault_status": 1,
+    "power_save_enabled": 0,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.10804623365402222,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 73,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 36.06903839111328
+  },
+  "can_health_diagnostic_end": [
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 0,
+      "last_stored_error": 1,
+      "last_data_error": 0,
+      "last_data_stored_error": 1,
+      "receive_error_count": 0,
+      "transmit_error_count": 0,
+      "total_error_count": 31,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 1,
+      "total_tx_count": 24,
+      "total_rx_count": 2372793,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 1,
+      "brs_enabled": 1,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 2430,
+      "irq1_call_rate": 1,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 0,
+      "error_passive": 0,
+      "last_error": 7,
+      "last_stored_error": 1,
+      "last_data_error": 7,
+      "last_data_stored_error": 0,
+      "receive_error_count": 3,
+      "transmit_error_count": 0,
+      "total_error_count": 0,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 0,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 4
+    },
+    {
+      "bus_off": 0,
+      "bus_off_count": 0,
+      "error_warning": 1,
+      "error_passive": 1,
+      "last_error": 7,
+      "last_stored_error": 2,
+      "last_data_error": 7,
+      "last_data_stored_error": 1,
+      "receive_error_count": 127,
+      "transmit_error_count": 0,
+      "total_error_count": 16520485,
+      "total_tx_lost_count": 0,
+      "total_rx_lost_count": 0,
+      "total_tx_count": 0,
+      "total_rx_count": 0,
+      "total_forwarded_count": 0,
+      "total_tx_checksum_error_count": 0,
+      "can_speed_kbps": 500,
+      "can_data_speed_kbps": 2000,
+      "canfd_enabled": 0,
+      "brs_enabled": 0,
+      "canfd_non_iso": 0,
+      "irq0_call_rate": 16014,
+      "irq1_call_rate": 0,
+      "irq2_call_rate": 0,
+      "can_core_reset_count": 0
+    }
+  ],
+  "health_after": {
+    "uptime_s": 2192,
+    "voltage_mV": 14476,
+    "current_mA": 0,
+    "safety_tx_blocked": 0,
+    "safety_rx_invalid": 0,
+    "tx_buffer_overflow": 0,
+    "rx_buffer_overflow": 2307373,
+    "faults": 16,
+    "ignition_line": 0,
+    "ignition_can": 0,
+    "controls_allowed": 0,
+    "harness_status": 1,
+    "safety_mode": 0,
+    "safety_param": 0,
+    "fault_status": 1,
+    "power_save_enabled": 1,
+    "heartbeat_lost": 0,
+    "alternative_experience": 0,
+    "interrupt_load": 0.10804623365402222,
+    "fan_power": 0,
+    "safety_rx_checks_invalid": 0,
+    "spi_error_count": 0,
+    "sbu1_voltage_mV": 3228,
+    "sbu2_voltage_mV": 73,
+    "som_reset_triggered": 0,
+    "sound_output_level": 0,
+    "temperature_C": 36.37630844116211
+  },
+  "tx_log": [
+    {
+      "address": "0x7d4",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7d1",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7d0",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x730",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7c6",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7b3",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7b3",
+      "bus": 0,
+      "data": "031901ff00000000"
+    },
+    {
+      "address": "0x7e0",
+      "bus": 0,
+      "data": "031902ff00000000"
+    },
+    {
+      "address": "0x7e1",
+      "bus": 0,
+      "data": "031902ff00000000"
+    }
+  ],
+  "returned_frames": [
+    {
+      "address": "0x7d1",
+      "bus": 0
+    },
+    {
+      "address": "0x7d0",
+      "bus": 0
+    },
+    {
+      "address": "0x7c4",
+      "bus": 0
+    },
+    {
+      "address": "0x730",
+      "bus": 0
+    },
+    {
+      "address": "0x7c6",
+      "bus": 0
+    },
+    {
+      "address": "0x7b1",
+      "bus": 0
+    },
+    {
+      "address": "0x7b3",
+      "bus": 0
+    },
+    {
+      "address": "0x7b3",
+      "bus": 0
+    },
+    {
+      "address": "0x7e0",
+      "bus": 0
+    },
+    {
+      "address": "0x7e1",
+      "bus": 0
+    }
+  ],
+  "actions": "Temporary ELM327 mode/power-save changes, USB CAN packet-tail reset, and inactive Panda heartbeat during diagnostics; UDS ReadDTCInformation and ISO-TP flow control only. No ECU session change/reset, DTC clearing, communication-control service, actuator command, firmware or heartbeat-disable-policy change. Original mode/param and power saving restored."
+}
