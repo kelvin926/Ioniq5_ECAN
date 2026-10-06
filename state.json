@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-06",
   "timezone": "Asia/Seoul",
-  "update_reason": "User explicitly requested main-branch delivery. Fast-forwarded local main to the previously prepared source/handoff and changed the vehicle-computer checkout instructions to main; main push and remote verification are in progress.",
+  "update_reason": "User-requested main delivery completed. Current implementation, vehicle-computer guide and evidence are on origin/main; git ls-remote verified the main handoff commit. A state-only verification receipt follows.",
   "current_request": {
     "description": "Deliver the vehicle-computer handoff, current source and context on main, as explicitly requested by the user.",
-    "status": "main_handoff_prepared_pending_push",
+    "status": "main_handoff_pushed_and_remote_verified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -84,14 +84,14 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "e47a886e9a091d797d65b2c03ece2a503eef905d",
-    "head_subject": "Document vehicle computer handoff and preserve diagnostic evidence",
+    "head": "249427e6da53716a9ed642101b804e49ffb90fbb",
+    "head_subject": "Set main as the vehicle computer handoff branch",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
-      "origin_main": "e8c0b36372ef6d8776d59ff1a66ff9e48c68521b",
+      "origin_main": "249427e6da53716a9ed642101b804e49ffb90fbb",
       "origin_feature": "e47a886e9a091d797d65b2c03ece2a503eef905d",
-      "update_result": "Pushed implementation and handoff commits; git ls-remote confirmed the feature branch at the handoff commit and unchanged main. A state-only delivery receipt follows.",
-      "scope": "Remote verified before the following state-only receipt commit; not a continuing remote monitor."
+      "update_result": "Fast-forward push of current source, guide and evidence to main succeeded; git ls-remote matched main to the local handoff commit. A state-only receipt follows.",
+      "scope": "Remote verified before the following state-only receipt; exact checkout revision is git rev-parse HEAD."
     },
     "working_tree": {
       "observed_on": "2026-10-06",
@@ -108,10 +108,10 @@
       "existing_work_preserved": true,
       "commit_or_push_performed": true,
       "implementation_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
-      "push_status": "main_delivery_pending",
-      "document_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d"
+      "push_status": "main_handoff_pushed_remote_verified",
+      "document_commit": "249427e6da53716a9ed642101b804e49ffb90fbb"
     },
-    "head_scope": "Verified delivered source/documentation commit before the subsequent state-only delivery receipt. The exact containing checkout commit is git rev-parse HEAD."
+    "head_scope": "Verified main source/documentation revision before its state-only delivery receipt; git rev-parse HEAD returns the containing checkout revision."
   },
   "project": {
     "objective": "Deliver the upstream controller's lateral and acceleration commands to the research vehicle through Red Panda ECAN, with a low-latency C++ runtime and YAML tuning.",
@@ -837,6 +837,12 @@
       "type": "vehicle_computer_handoff_delivered",
       "summary": "Current implementation and vehicle-computer handoff/evidence pushed to feat/initial-implementation; main unchanged. Native Ubuntu/ROS build and fresh vehicle-computer checks remain target work.",
       "source": "Git push/ls-remote output, docs/vehicle_computer_handoff.md, source commit 7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6, handoff commit e47a886e9a091d797d65b2c03ece2a503eef905d"
+    },
+    {
+      "date": "2026-10-06",
+      "type": "vehicle_computer_handoff_promoted_to_main",
+      "summary": "User explicitly requested main. Source/handoff/evidence fast-forwarded to origin/main; clone/update instructions now use main and remote revision was verified.",
+      "source": "git push origin main and git ls-remote at 249427e6da53716a9ed642101b804e49ffb90fbb"
     }
   ],
   "ecu_recovery": {
@@ -1545,7 +1551,7 @@
     "authorization": "User requested handoff/push, then explicitly requested delivery on main.",
     "target": "Ubuntu 20.04 / ROS 1 Noetic / C++17",
     "branch": "main",
-    "status": "main_prepared_pending_push",
+    "status": "main_pushed_and_remote_verified",
     "document": "docs/vehicle_computer_handoff.md",
     "delivery_scope": "Current project source, firmware patch source, aligned documentation, durable guidance/state, and selected dated JSON observation reports. No generated firmware binaries or automatic diagnostic/actuation scratch scripts.",
     "vehicle_actions_in_this_request": "None; local files and Git only.",
@@ -1591,14 +1597,14 @@
       "vehicle_actions": "None; no Panda/UDS/CAN/flash actions for this transfer.",
       "status": "passed_for_document_and_evidence_scope"
     },
-    "document_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
+    "document_commit": "249427e6da53716a9ed642101b804e49ffb90fbb",
     "remote": "origin",
     "remote_branch": "main",
     "main_changed": true,
     "remote_verified_on": "2026-10-06",
-    "verification_method": "git push success and git ls-remote comparison to the local delivered handoff commit.",
+    "verification_method": "Successful fast-forward git push origin main and git ls-remote comparison to local main.",
     "document_url": "https://github.com/kelvin926/Ioniq5_ECAN/blob/main/docs/vehicle_computer_handoff.md",
-    "receipt_scope": "Main promotion includes the prior implementation/documentation and delivery receipt; exact main document commit will be recorded after remote verification.",
+    "receipt_scope": "This state-only delivery receipt is a child of the verified main document commit; it does not change source/document/evidence.",
     "previous_feature_delivery": {
       "branch": "feat/initial-implementation",
       "verified_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
