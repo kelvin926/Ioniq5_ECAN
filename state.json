@@ -2,7 +2,7 @@
   "schema_version": 1,
   "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "User authorized organizing and publishing ECAN analysis to the repository; current/historical entry points and publication checks prepared.",
+  "update_reason": "Organized ECAN research documents/evidence published to main; source SHA verified, state-only publication receipt follows.",
   "can_only_sensor_field_assessment": {
     "observed_on": "2026-10-07",
     "source": "Direct user scope correction; CAN-only cached original0x1A0 payloads in build/deep-ecan-20261007/arrays.npz, can-only-object-assessment.json and pinned Hyundai CAN-FD DBC.",
@@ -210,7 +210,7 @@
   },
   "current_request": {
     "description": "Organize the current ECAN field/bit and co-recorded-bag inference reports and publish scoped documentation/evidence/state to kelvin926/Ioniq5_ECAN main.",
-    "status": "organized_analysis_ready_for_publication",
+    "status": "organized_ecan_analysis_published",
     "user_facing_language": "Korean",
     "artifact_language": "Korean report and source signal identifiers; English JSON provenance",
     "further_implementation_requested": false,
@@ -462,8 +462,8 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "215059fb73bf1174c15c5051c6a0cd26ca0ff531",
-    "head_subject": "Record verified receive-only CAN logger delivery",
+    "head": "c7dd2add610a09d7f59229cb3be3f6613877d9b0",
+    "head_subject": "Document ECAN field inference and co-recorded sensor validation",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -480,7 +480,7 @@
       "commit_or_push_performed": true,
       "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
     },
-    "head_scope": "Verified pre-publication checkout snapshot2026-10-07; historical delivery records below remain dated. Publication receipt will identify the source-document commit separately from its state-only child.",
+    "head_scope": "Verified analysis source/document commit. This state-only publication receipt is its child; live git HEAD and origin/main identify the receipt commit.",
     "delivery_snapshot": {
       "observed_at": "2026-10-06T23:04:51+09:00",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -1741,6 +1741,11 @@
       "date": "2026-10-07",
       "type": "analysis_publication_preparation",
       "summary": "User requested repository publication. Added current analysis/evidence indices and README entry, labeled older research stages, checked scoped public text,15 JSON files/local links, identity omission and original-data exclusion."
+    },
+    {
+      "date": "2026-10-07",
+      "type": "analysis_publication_verified",
+      "summary": "Organized current605-row ECAN tables, standalone viewer, co-recorded sensor validation, historical snapshots and license published to main with30 scoped files. kelvin926 account and source remote SHA verified; runtime unchanged."
     }
   ],
   "ecu_recovery": {
@@ -3020,7 +3025,7 @@
   "ecan_analysis_publication": {
     "requested_on": "2026-10-07",
     "user_request": "레포에 정리해서 올려.",
-    "status": "prepared_for_main_publication",
+    "status": "published_source_remote_verified",
     "repository": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
     "base_head": "215059fb73bf1174c15c5051c6a0cd26ca0ff531",
@@ -3048,6 +3053,15 @@
     },
     "history_notes": "Older reports labeled dated stages; prior1AA unit and counter hypotheses remain provenance, current interpretations shown first. No history rewrite.",
     "authentication_policy": "Requested account kelvin926; one-time publication using verified requested-account credential in process memory, helpers disabled for write; no token storage/global credential changes.",
-    "verification_scope": "Documentation, JSON/link/redaction/field ownership and DOM-model verification. No repeated builds/tests or vehicle actions."
+    "verification_scope": "Documentation, JSON/link/redaction/field ownership and DOM-model verification. No repeated builds/tests or vehicle actions.",
+    "published_on": "2026-10-07",
+    "source_commit": "c7dd2add610a09d7f59229cb3be3f6613877d9b0",
+    "source_remote_verified": true,
+    "account": "kelvin926",
+    "forced": false,
+    "authentication": "Requested-account existing credential read once into process memory. Git credential helpers disabled for writes; no token/store/global-config changes.",
+    "verification": "Normal push succeeded; read-only git ls-remote refs/heads/main matched source commit.",
+    "receipt_scope": "State-only child records verified source delivery; its own final SHA is confirmed at session close and is not self-embedded.",
+    "committed_files": 30
   }
 }
