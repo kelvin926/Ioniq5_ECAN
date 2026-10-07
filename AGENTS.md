@@ -46,6 +46,10 @@
   route detailed setup, safety and firmware procedures to docs/.
 - On shared computers, use user-requested one-time Git authentication only. Do not save account
   tokens, change global Git credentials, or reuse another user's login; verify the requested account.
+- Keep personal Windows paths, Codex session/environment references and personal Codex settings
+  out of tracked files. Redact real device serials in published evidence and use local configuration.
+- After a privacy rewrite of main, preserve local work and use a fresh clone on other machines;
+  do not merge or push pre-redaction history back into the sanitized repository.
 
 ## Project baseline
 - Vehicle: research Hyundai Ioniq 5, model year 2022, HDA1, EV, radar-SCC.
@@ -57,7 +61,7 @@
 - Control path: physical CAN1 / Panda logical bus 0 / ECAN, 500/2000 kbps.
 - Current design is ECAN-only; camera bus 2 and non-ECAN forwarding are unused.
 - Distinguish logical CAN bus numbers from physical controller numbers.
-- Panda serial: `PANDA_SERIAL`.
+- Select the Panda serial locally; public examples use the `PANDA_SERIAL` placeholder.
 - Repository: `https://github.com/kelvin926/Ioniq5_ECAN`.
 - Current branch and commit belong in `state.json`, not this durable baseline.
 

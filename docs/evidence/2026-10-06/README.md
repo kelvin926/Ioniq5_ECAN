@@ -1,8 +1,9 @@
 # 2026-10-06 관측 기록
 
 Windows 노트북의 기존 원본 JSON과 이후 Ubuntu 차량 컴퓨터의 수신 검사 결과를 보존합니다.
-저장소 규칙에 맞춰 LF 개행을 사용합니다. 기존 원본과 전달 파일의 SHA-256은 state.json에
-각각 기록했습니다. 아래 순서는
+저장소 규칙에 맞춰 LF 개행을 사용합니다. 2026-10-07 사용자가 선택한 개인정보와 장치
+식별정보를 공개 사본에서 제거했습니다. CAN/UDS payload와 측정값은 유지했습니다.
+state.json의 현재 사본 SHA-256은 갱신했으며 기존 원본 hash는 별도 provenance입니다. 아래 순서는
 같은 날짜 안의 작업 순서이며, 서로 다른 Panda uptime/재연결 구간이 포함됩니다.
 차량 수신 검사 이후 Cabana는 사용자 요청으로 꺼진 상태를 확인했습니다. 최신 관측은
 사용자 승인으로 수행한 **수정 후 재연결/DTC 조회와 한 번의 삭제 후 재발 검사**입니다. 과거 값을 현재 상태로 취급하지
@@ -22,8 +23,9 @@ Windows 노트북의 기존 원본 JSON과 이후 Ubuntu 차량 컴퓨터의 수
 | 10 | [복구 수정/플래시](ecan-recovery-fix-20261006.json) | 첫 RX와 안전 tick 경쟁 재현/수정, host 초기 동기화/버튼 대기/2단계 복구. firmware 14개/host 18개 관련 테스트와 빌드, 새 앱 USB-only flash/서명 검증, preflight PASS/물리 TX 0. 수정 후 실차 ACTIVE와 ACC 해소 미확인 |
 | 11 | [수정 후 DTC 재발](post-fix-ecu-dtcs-20261006.json) | 재연결 ROS 수신/ready 정상, 무출력. 0x730/7D0 DTC 조회 및 승인된 0x730 1회 삭제는 54 수락. 2초 뒤 세 status89 기록 재발/ACCEnable3 유지, 추가 삭제/진단/제어 중단 |
 
-1~6은 원래 `build/` 아래에 있었던 기록입니다. JSON 내부의 Windows 경로와 원래 scratch script
-이름은 provenance이며 차량 컴퓨터의 실행 경로가 아닙니다. `build/` 임시 helper와 빌드
+1~6은 원래 `build/` 아래에 있었던 기록입니다. 개인 Windows 경로와 실제 장치 일련번호는
+공개 사본에서 제거했습니다. 남은 scratch script 이름은 provenance이며 실행 경로가 아닙니다.
+`build/` 임시 helper와 빌드
 산출물은 Git 전달에서 제외했습니다. 고장코드 삭제나 제어를 자동으로 다시 실행하는
 절차가 아닙니다. 9번 정차 시험은 UDS 통신 응답만 기록하며, 이후 DTC 재조회와 승인된
 한 번의 삭제/재발 결과는 11번에 별도로 보존했습니다.

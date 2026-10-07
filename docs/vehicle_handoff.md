@@ -13,7 +13,7 @@
 | 하네스 | Hyundai K camera harness, `harness_status=1` |
 | 제어 CAN | physical CAN1 / Panda logical bus 0 / ECAN 500/2000 kbps |
 | 비-ECAN | transceiver 및 forwarding 비활성화, camera bus 2 미사용 |
-| Panda | Red Panda, serial `PANDA_SERIAL` |
+| Panda | Red Panda, 일련번호는 로컬 설정 |
 | 명령 | `/ioniq5/actuation_command`, 기본 `lateral` deg/s + `acceleration` m/s² |
 | 차량 조향 출력 | LFA `0x12A` 토크 100 Hz, native angle 제어 미구현/차량 지원 미확인 |
 | 종방향 출력 | SCC `0x1A0` 및 FCA `0x160` 50 Hz |
@@ -272,23 +272,25 @@ helper에는 최신 ROS의 3초 EPS 복귀 및 지속 ECU retry 상태기계가 
 Panda를 점유하는 다른 프로그램과 동시에 실행하지 않습니다.
 
 ```bash
+# PANDA_SERIAL에는 실제 연결한 장치의 일련번호를 로컬에서 입력합니다.
+read -r -p 'Panda serial: ' PANDA_SERIAL
 # 이전 직선 가속/감속 helper
 python3 scripts/steering_sweep.py \
-  --serial PANDA_SERIAL \
+  --serial "$PANDA_SERIAL" \
   --target-speed-kph 15 --accel-max-mps2 0.7 --decel-max-mps2 0.7 \
   --rolling-test --rolling-min-kph 1 --rolling-max-kph 16 \
   --arm-timeout-s 60 --execute
 
 # 이전 저속 좌우 목표각 추종, LDA
 python3 scripts/steering_sweep.py \
-  --serial PANDA_SERIAL \
+  --serial "$PANDA_SERIAL" \
   --offset-deg 30 --timed-hold-s 3 --steering-cycles 1 \
   --rolling-test --rolling-min-kph 1 --rolling-max-kph 10 \
   --arm-timeout-s 60 --execute
 
 # 이전 combined 반복, SET. 반복 종료는 제어 해제이며 자동 정지 아님
 python3 scripts/steering_sweep.py \
-  --serial PANDA_SERIAL \
+  --serial "$PANDA_SERIAL" \
   --target-speed-kph 15 --accel-max-mps2 0.7 \
   --offset-deg 15 --combined-cycles 3 --combined-segment-s 2 \
   --rolling-test --rolling-min-kph 1 --rolling-max-kph 16 \
@@ -296,7 +298,7 @@ python3 scripts/steering_sweep.py \
 
 # 이전 정차 torque count 시험, 실제 MDPS 최대 구동력의 증명 아님
 python3 scripts/steering_sweep.py \
-  --serial PANDA_SERIAL \
+  --serial "$PANDA_SERIAL" \
   --torque-sweep --timed-hold-s 3 --steering-cycles 3 \
   --arm-timeout-s 60 --execute
 ```

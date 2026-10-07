@@ -149,7 +149,7 @@ Panda logical bus 0에 대응합니다.
 
 - 2026-10-06 I5R1 ARM DEBUG 빌드 signed 앱 SHA-256:
   `fbfcae2ee11daa9bdd38e407183aeb5de755f61e2d0c79b2373372b42c52cc7b`.
-- 별도 앱 flash 완료: serial `PANDA_SERIAL`, 하네스/ignition 0 확인 후 앱 영역만
+- 별도 앱 flash 완료: 장치 일련번호는 공개 기록에서 제외했으며, 하네스/ignition 0 확인 후 앱 영역만
   교체했고 `Panda.up_to_date` 서명 비교와 `0xB7` capability를 재검증했습니다.
   이전 앱 binary의 정확한 hash는 확보하지 않았습니다.
 - bootstub 후보 SHA-256:

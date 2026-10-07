@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "updated_on": "2026-10-06",
+  "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "Current scoped recovery fixes, firmware patch source, docs and three dated evidence files pushed to main as e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce; remote SHA verified with kelvin926 one-time public_repo auth. This state-only receipt follows that verified source commit. Ignition-cycle hypothesis/vehicle fault/ACTIVE remain unverified, tests stopped. No vehicle or unrelated changes for delivery.",
+  "update_reason": "User selected disclosure items 2, 5, 6 and 7 and explicitly requested removal from past commits too. Current files redact personal Windows paths, Codex session/environment references and personal settings, and the real device serial. Main history rewrite/verification/publication is in progress; source behavior and measurement values are retained.",
   "current_request": {
-    "description": "Commit and push the current ECAN startup/recovery fixes, firmware patch source, aligned documentation and dated evidence to kelvin926/Ioniq5_ECAN main. Keep actual tracking/fault resolution unverified and all vehicle tests stopped.",
-    "status": "source_fixes_and_evidence_pushed_main_remote_verified",
+    "description": "Remove selected disclosure items 2, 5, 6 and 7 from current tracked files and main-reachable history, then publish the verified sanitized main.",
+    "status": "selected_current_files_redacted_history_rewrite_in_progress",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -2222,17 +2222,17 @@
     "evidence_files": [
       {
         "path": "docs/evidence/2026-10-06/adas-diagnostics-20261006.json",
-        "sha256": "4415b4ef07b801627c64036b851e1c249ff6cfe82cbd82f8a1b5200f3e3810cd",
+        "sha256": "353f4a052a0fbb7e8ad1666ccf9d8886cad406280a0afe4c483ba21f17a4070d",
         "original_windows_sha256": "7ee67b6af06f340ace4532418cfacf35be9e837efac7658a38e16724954b4d47"
       },
       {
         "path": "docs/evidence/2026-10-06/dtc-clear-20261006.json",
-        "sha256": "61308b75eb093bd75173f69603462aa04ba2d9d7dbf64e5d8b9d7f8365fec5d7",
+        "sha256": "5ea8c04f630ac91d4d50f048f8626f95c6bcf9300d2588a250cd809232f2930e",
         "original_windows_sha256": "662d109e9034a38e8ebbba44d921f2985ecc3d58cefeaad58d6eb52723b8e7ed"
       },
       {
         "path": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json",
-        "sha256": "8cd93e0fd83addb60975a3cae2d0ea7af729809df4fe597eccfc020b7884d3b0",
+        "sha256": "43f4e2a87c3e929fa35241d359c413d6540e33c1e738045260cba0ce52a3146d",
         "original_windows_sha256": "ef281178a82c2aacd7f7fb6bebe1447d029128a160b59e83c7921e57ef81b5ea"
       },
       {
@@ -2242,17 +2242,17 @@
       },
       {
         "path": "docs/evidence/2026-10-06/vehicle-dtcs-20261006.json",
-        "sha256": "a07b7549eba9f310357239026e304145c737e26794574b1bbaf1fb4fd3f6e39c",
+        "sha256": "3983b7cc569a99cd3a7cf8cdb1df796a2b723de3a040e02453135605958e8e00",
         "original_windows_sha256": "d72dbcd03329819cce5672eb9fa56a2487f1e78d01039ef45bc5f16eef642a23"
       },
       {
         "path": "docs/evidence/2026-10-06/vehicle-observation-20261006-mdps.json",
-        "sha256": "1d6149ba1900ead502893401a9c5cd34182d394049e68add6318680031c15074",
+        "sha256": "38c19781f95c5ada4839978c99ec6648b2a30a9233ecb7cf553018f4dc091aa8",
         "original_windows_sha256": "8257a089371d74ea1d0c50d162e6929ff6d88a1f21e3318abfcd0fae8a90d0fe"
       }
     ],
     "verification": {
-      "scope": "Document/source/configuration read-back, relative links, JSON and Git whitespace checks. Six archived JSON datasets equal their originals; archived hashes use repository LF line endings and original Windows-byte hashes are retained separately.",
+      "scope": "Original transfer checks remain dated. Selected identifiers were removed from public archives on 2026-10-07 while retaining measurement/protocol values; current archived hashes are refreshed and original Windows hashes are separate provenance.",
       "implementation_testing": "No new implementation changes or repeated tests/builds for transfer. Prior core verification remains documented; native target ROS build still pending.",
       "vehicle_actions": "None; no Panda/UDS/CAN/flash actions for this transfer.",
       "status": "passed_for_document_and_evidence_scope"
@@ -2388,5 +2388,71 @@
       "push_exit_code": 0,
       "force_push": false
     }
+  },
+  "repository_disclosure_review": {
+    "audited_on": "2026-10-07",
+    "head": "0278df3b87d01d5de5825ebc414cc65dfefa9c35",
+    "branch": "main",
+    "visibility": "public",
+    "scope": "All main-reachable commit metadata and unique Git blob versions, plus current tracked tree. Ignored build/log files, other clones, server caches/forks and GitHub Actions logs are outside this scan.",
+    "commits": 24,
+    "unique_blob_versions": 331,
+    "current_tracked_files": 78,
+    "known_credential_pattern_candidates": 0,
+    "scan_limit": "Known credential patterns and literal-assignment heuristics only; not proof of absence of every secret or institutional confidential term.",
+    "local_report": "build/main-exposure-audit-20261007.json (ignored; not published)",
+    "finding_categories": [
+      "real-name/personal-email Git author metadata",
+      "personal and vehicle-computer filesystem paths",
+      "Codex session/environment references and unrelated settings",
+      "hardware identifiers and experiment/fault narratives",
+      "historical upstream-team terminology"
+    ],
+    "personal_email_commits": 20,
+    "current_source_or_history_redaction": "Not requested or performed",
+    "git_publication_in_this_review": "None",
+    "vehicle_actions": "None",
+    "primary_references": [
+      "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository",
+      "https://www.nvidia.com/en-us/solutions/autonomous-vehicles/alpamayo/"
+    ],
+    "selected_redaction": {
+      "items": [
+        2,
+        5,
+        6,
+        7
+      ],
+      "history_authorized": true,
+      "status": "current_tree_redacted_history_work_in_progress"
+    }
+  },
+  "privacy_redaction": {
+    "requested_on": "2026-10-07",
+    "selected_items": [
+      2,
+      5,
+      6,
+      7
+    ],
+    "scope": "Current tracked files and main commit history, explicitly selected by the user.",
+    "removed_categories": [
+      "personal Windows filesystem identifiers",
+      "Codex session/environment references and recovered-message counts",
+      "personal Codex settings",
+      "real Panda device serial"
+    ],
+    "retained_categories": [
+      "Git author name/email",
+      "Ubuntu paths and other project context",
+      "vehicle configuration/maintenance history",
+      "measurement/fault/operator/authentication narratives",
+      "historical upstream-team terminology"
+    ],
+    "status": "current_files_redacted_history_rewrite_prepared",
+    "runtime_changes": "None",
+    "history_publication": "Pending; use an exact expected-remote-SHA lease and stop if remote main changes.",
+    "artifact_integrity": "Current archived-evidence SHA-256 values reflect privacy-redacted copies. Original Windows-file hashes remain dated provenance, not hashes of current redacted files.",
+    "other_copies": "This operation targets main; other clones, private local recovery/app snapshots and GitHub cached/fork references are separate."
   }
 }

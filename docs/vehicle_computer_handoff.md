@@ -44,6 +44,12 @@ live 로그에서 ECAN 8,620개, LFA 100 Hz/SCC 50 Hz와 주요 7종 CRC 오류 
 
 ## 가져올 브랜치와 읽을 파일
 
+2026-10-07 사용자의 요청으로 `main` 이력에서 선택한 개인정보와 장치 식별정보를
+제거했습니다. 기존 clone의 `git pull`로 옛 이력을 병합하지 않습니다. 로컬 변경과
+관측 자료를 별도로 보존한 뒤 새 clone으로 이어갑니다. 옛 이력을 다시 merge/push하면
+제거한 내용이 재유입될 수 있습니다. 아래 새 clone 절차는 기존 폴더를 덮어쓰지 않는
+별도 위치에서 사용하고, 기존 workspace 변경은 사용자 승인 범위에서 진행합니다.
+
 - 저장소: `https://github.com/kelvin926/Ioniq5_ECAN`
 - 전달 브랜치: **`main`**. 사용자의 요청으로 최신 제어 코드와 전달 문서를 main에 반영합니다.
 - 제어 코드 기준 commit: `7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6`.
@@ -60,7 +66,8 @@ firmware binary와 임시 진단/고장코드 삭제 스크립트는 전달하�
 ## 현재 차량과 최신 확인 결과
 
 2022 Ioniq 5 HDA1 EV, radar-SCC, Hyundai K camera harness, Red Panda 구성입니다.
-Panda serial은 `PANDA_SERIAL`입니다. 물리 CAN1 = firmware controller index 0
+Panda 일련번호는 로컬에서 확인하고 `PANDA_SERIAL`에 입력합니다. 저장소에는 기록하지 않습니다.
+물리 CAN1 = firmware controller index 0
 = Panda logical bus 0(ECAN), nominal/data bitrate는 500/2000 kbps입니다.
 현재 firmware는 비-ECAN transceiver 및 forwarding을 비활성화합니다.
 
@@ -171,8 +178,9 @@ Panda를 점유하는 ROS node/Cabana/helper를 종료한 뒤 아래 명령을 �
 ```bash
 cd "$ECAN_REPO"
 mkdir -p log/vehicle_computer
+read -r -p 'Panda serial: ' PANDA_SERIAL
 python3 scripts/panda_preflight.py \
-  --serial PANDA_SERIAL --ecan-only --require-harness --json \
+  --serial "$PANDA_SERIAL" --ecan-only --require-harness --json \
   > log/vehicle_computer/preflight.json
 cat log/vehicle_computer/preflight.json
 ```
