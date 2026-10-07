@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "User requested publication of the implemented receive-only ROS RAW CAN logger to main. Preparing the logger, scoped launcher, installation/tests/docs and material project-state updates for a normal Git push. Six host mock tests passed earlier; target ROS/hardware capture remains unverified. Existing control behavior is preserved; no vehicle access or system changes.",
+  "update_reason": "Receive-only ROS RAW CAN logger, scoped launcher, installation/tests/docs and material project-state updates were committed as 9321a12d8279dbafdb44c4b19c01a29cbef2bfcb and normally pushed to main; remote SHA verified. This state-only receipt records source delivery. Six prior host mock tests pass; target ROS/hardware capture remains unverified. No vehicle access, system changes or saved authentication changes.",
   "current_request": {
     "description": "Publish the implemented receive-only ROS 1 RAW CAN logger, tests and documentation to main.",
-    "status": "receive_only_can_logger_publication_prepared_target_launch_unverified",
+    "status": "receive_only_can_logger_source_published_remote_verified_target_launch_unverified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -1304,7 +1304,7 @@
       "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
     }
   ],
-  "next_action": "Commit and normally push the completed receive-only logger to main, then verify the remote commit. Six host mock tests already passed; target Ubuntu 20.04/Noetic launch and live Panda capture remain unverified. No actuation, UDS, firmware/settings writes or system installation requested. Preserve other projects/global ROS/configuration.",
+  "next_action": "Source publication is verified; publish this state-only delivery receipt and verify final main. Target Ubuntu 20.04/Noetic launch and live Panda capture remain unverified. No further implementation, actuation, UDS, firmware/settings writes or system installation requested. Preserve other projects/global ROS/configuration.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -2603,7 +2603,18 @@
       "static": "Python 3.8 grammar, package/launch XML, shell syntax, message-field preservation and git whitespace checks passed.",
       "target_ros_vehicle": "Not run on Windows; real Noetic launch, live Panda capture and throughput remain unverified. No Panda/UDS/CAN/firmware actions performed for implementation."
     },
-    "git_publication": "Requested on 2026-10-07 for main. Preparing a normal fast-forward commit and push; remote delivery is not yet claimed. Logger script/helper retain executable file modes. Prior host verification is retained without repeated builds or vehicle access.",
+    "git_publication": {
+      "published_on": "2026-10-07",
+      "repository": "https://github.com/kelvin926/Ioniq5_ECAN",
+      "branch": "main",
+      "source_commit": "9321a12d8279dbafdb44c4b19c01a29cbef2bfcb",
+      "source_remote_verified": true,
+      "verification_source": "Normal git push exit 0 followed by git ls-remote refs/heads/main matching source commit; authenticated account verified as kelvin926.",
+      "forced": false,
+      "scope": "13 logger, installation, test, documentation and project-state files; script/helper executable modes retained. No repeated builds or vehicle access.",
+      "authentication": "Existing current-user kelvin926 credential read into process memory. Git write credential helpers disabled; no credential/token store or global config changes.",
+      "receipt_scope": "This state-only child records verified source delivery. Its final remote SHA is checked at session close, not pre-claimed here."
+    },
     "preserved": "Existing src/include/config/patches control behavior and prior uncommitted advisory guidance/state retained."
   }
 }
