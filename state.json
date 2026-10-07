@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "User selected disclosure items 2, 5, 6 and 7 and explicitly requested removal from past commits too. Current files redact personal Windows paths, Codex session/environment references and personal settings, and the real device serial. Main history rewrite/verification/publication is in progress; source behavior and measurement values are retained.",
+  "update_reason": "Selected disclosure items 2, 5, 6 and 7 removed from current files and main history. All 26 prepared main commits/341 blob versions scanned with zero selected matches; source and measurements retained, authors/emails unchanged. Exact-lease main force update succeeded and remote SHA matched. This state-only receipt follows.",
   "current_request": {
     "description": "Remove selected disclosure items 2, 5, 6 and 7 from current tracked files and main-reachable history, then publish the verified sanitized main.",
-    "status": "selected_current_and_main_history_redacted_verified_pending_publication",
+    "status": "selected_current_and_main_history_redaction_published_remote_verified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -2449,9 +2449,9 @@
       "measurement/fault/operator/authentication narratives",
       "historical upstream-team terminology"
     ],
-    "status": "current_and_history_redaction_verified_pending_publication",
+    "status": "current_and_main_history_published_remote_verified",
     "runtime_changes": "None",
-    "history_publication": "Explicitly authorized main-only force-with-lease; remote must still match the pre-rewrite snapshot.",
+    "history_publication": "Main-only force-with-lease succeeded; remote matched the verified sanitized main. No other remote refs changed.",
     "artifact_integrity": "Current archived-evidence SHA-256 values reflect privacy-redacted copies. Original Windows-file hashes remain dated provenance, not hashes of current redacted files.",
     "other_copies": "This operation targets main; other clones, private local recovery/app snapshots and GitHub cached/fork references are separate.",
     "history_verification": {
@@ -2463,6 +2463,20 @@
     },
     "private_recovery_copy": "Ignored build/privacy-history-20261007/original-main.git; not published.",
     "next_clone_action": "Preserve local work and use a fresh clone on the vehicle computer; do not merge/push old main history.",
-    "cache_limit": "Main-reachable history is sanitized. Existing private clones, forks and server cached views are outside this rewrite."
+    "cache_limit": "Main-reachable history is sanitized. Existing private clones, forks and server cached views are outside this rewrite.",
+    "published_commit": "02a90b338f8e8730e1355ed679319df9b5e0a413",
+    "published_on": "2026-10-07",
+    "remote_main_verified": "02a90b338f8e8730e1355ed679319df9b5e0a413",
+    "final_history_scan": {
+      "commits": 26,
+      "blob_versions": 341,
+      "selected_matches": 0,
+      "scope": "Prepared source/docs/evidence commit before this state-only receipt."
+    },
+    "verification": {
+      "runtime_source_files_unchanged": 48,
+      "measurement_datasets_preserved": 11,
+      "original_author_email_dates_preserved": true
+    }
   }
 }
