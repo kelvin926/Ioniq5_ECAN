@@ -2,7 +2,7 @@
   "observed_on": "2026-10-06",
   "timezone": "Asia/Seoul",
   "window": "22:09-22:17 KST",
-  "source_commit": "f2b6f0f6387471379fb146bd825585749f9025ab",
+  "source_commit": "8d9cb1347d8ce0270279612ba88e2b17ff4620f7",
   "runtime_source_or_config_changed": false,
   "firmware_flashed": false,
   "authorization": "User requested a stationary test, authorized generated ROS values, and confirmed brake held, D and clear surroundings. Current CAN prerequisites were checked separately before publication.",

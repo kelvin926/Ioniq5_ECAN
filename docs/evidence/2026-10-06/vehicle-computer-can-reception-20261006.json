@@ -1,7 +1,7 @@
 {
   "observed_on": "2026-10-06",
   "observed_at": "2026-10-06T20:51:21+09:00",
-  "source_head": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
+  "source_head": "48f9d210c08de1fba4508fee7879d278880a32c5",
   "scope": "User requested CAN reception verification, Cabana launch, then Cabana closure and application/desktop shortcuts.",
   "read_only_preflight": {
     "vid": "0x3801",

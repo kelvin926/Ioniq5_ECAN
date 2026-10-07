@@ -6,7 +6,7 @@
 ## 차량 컴퓨터의 설치 결과
 
 2026-10-06 사용자의 요청으로 Ouster 작업공간에서 아래 별도 작업공간으로 이전했습니다.
-Ioniq5 저장소는 최신 `main`의 `9aa0b8c86035a8888ab0c23c1feabc8874142a25`로
+Ioniq5 저장소는 최신 `main`의 `48f9d210c08de1fba4508fee7879d278880a32c5`로
 fast-forward 갱신했습니다. Cabana의 기존 openpilot revision과 로컬 CAN-FD 설정은 보존했습니다.
 
 | 용도 | 실제 경로 |
@@ -52,7 +52,7 @@ live 로그에서 ECAN 8,620개, LFA 100 Hz/SCC 50 Hz와 주요 7종 CRC 오류 
 
 - 저장소: `https://github.com/kelvin926/Ioniq5_ECAN`
 - 전달 브랜치: **`main`**. 사용자의 요청으로 최신 제어 코드와 전달 문서를 main에 반영합니다.
-- 제어 코드 기준 commit: `7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6`.
+- 제어 코드 기준 commit: `dc61647f00957e306a34a70ba99d38f7b6ac2bc3`.
   전달 문서와 evidence는 이 commit 다음의 문서 commit에 포함됩니다. 위 코드 commit만
   checkout하지 말고 전달 브랜치의 최신 내용을 가져옵니다.
 - 먼저 [AGENTS.md](../AGENTS.md), [state.json](../state.json), 이 문서를 읽습니다.

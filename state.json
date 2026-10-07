@@ -5,7 +5,7 @@
   "update_reason": "User selected disclosure items 2, 5, 6 and 7 and explicitly requested removal from past commits too. Current files redact personal Windows paths, Codex session/environment references and personal settings, and the real device serial. Main history rewrite/verification/publication is in progress; source behavior and measurement values are retained.",
   "current_request": {
     "description": "Remove selected disclosure items 2, 5, 6 and 7 from current tracked files and main-reachable history, then publish the verified sanitized main.",
-    "status": "selected_current_files_redacted_history_rewrite_in_progress",
+    "status": "selected_current_and_main_history_redacted_verified_pending_publication",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -253,13 +253,13 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
+    "head": "93d00526a2319a159f6ac0d8da09289756545df5",
     "head_subject": "Fix ECAN startup readiness and stock communication recovery",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
-      "origin_main": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
-      "origin_feature": "e47a886e9a091d797d65b2c03ece2a503eef905d",
-      "update_result": "Normal fast-forward push of scoped recovery fixes/evidence to main succeeded and git ls-remote matched e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce. Pre-delivery local/remote main were f2b6f0f6387471379fb146bd825585749f9025ab; no force push.",
+      "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
+      "origin_feature": "75a48afb06a279f18a8679f5a34ada43b5e79ab1",
+      "update_result": "Normal fast-forward push of scoped recovery fixes/evidence to main succeeded and git ls-remote matched 93d00526a2319a159f6ac0d8da09289756545df5. Pre-delivery local/remote main were 8d9cb1347d8ce0270279612ba88e2b17ff4620f7; no force push.",
       "scope": "Verified current source-delivery main snapshot. origin_feature remains a historical migration observation, not a current feature-branch query. A state-only child receipt may follow."
     },
     "working_tree": {
@@ -271,10 +271,10 @@
       "commit_or_push_performed": true,
       "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
     },
-    "head_scope": "Verified source-delivery commit e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce. This state-only child receipt does not change source/docs/evidence; git HEAD and live origin main are authoritative for the final receipt commit. Dated binary/test provenance is retained separately.",
+    "head_scope": "Verified source-delivery commit 93d00526a2319a159f6ac0d8da09289756545df5. This state-only child receipt does not change source/docs/evidence; git HEAD and live origin main are authoritative for the final receipt commit. Dated binary/test provenance is retained separately.",
     "delivery_snapshot": {
       "observed_at": "2026-10-06T23:04:51+09:00",
-      "origin_main": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
+      "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
       "account": "kelvin926",
       "authentication": "one-time device flow, no credential/token persistence",
       "source": "git push exit 0 and git ls-remote"
@@ -286,7 +286,7 @@
     "previous_workspace": "/home/ave/catkin_ws_ouster",
     "workspace": "/home/ave/catkin_ws_ioniq5",
     "package": "/home/ave/catkin_ws_ioniq5/src/ioniq5_ecan",
-    "source_head": "9aa0b8c86035a8888ab0c23c1feabc8874142a25",
+    "source_head": "48f9d210c08de1fba4508fee7879d278880a32c5",
     "environment": {
       "os": "Ubuntu 20.04.6 LTS",
       "ros": "ROS 1 Noetic",
@@ -1419,18 +1419,18 @@
       "date": "2026-10-06",
       "type": "vehicle_computer_handoff_delivered",
       "summary": "Current implementation and vehicle-computer handoff/evidence pushed to feat/initial-implementation; main unchanged. Native Ubuntu/ROS build and fresh vehicle-computer checks remain target work.",
-      "source": "Git push/ls-remote output, docs/vehicle_computer_handoff.md, source commit 7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6, handoff commit e47a886e9a091d797d65b2c03ece2a503eef905d"
+      "source": "Git push/ls-remote output, docs/vehicle_computer_handoff.md, source commit dc61647f00957e306a34a70ba99d38f7b6ac2bc3, handoff commit 75a48afb06a279f18a8679f5a34ada43b5e79ab1"
     },
     {
       "date": "2026-10-06",
       "type": "vehicle_computer_handoff_promoted_to_main",
       "summary": "User explicitly requested main. Source/handoff/evidence fast-forwarded to origin/main; clone/update instructions now use main and remote revision was verified.",
-      "source": "git push origin main and git ls-remote at 249427e6da53716a9ed642101b804e49ffb90fbb"
+      "source": "git push origin main and git ls-remote at 344a45d9be50ec8518c87aee991c7c17f76af37f"
     },
     {
       "date": "2026-10-06",
       "type": "vehicle_computer_workspace_migration",
-      "summary": "Moved Ioniq5 package, Cabana, runtime and logs out of Ouster into catkin_ws_ioniq5. Fetched latest main 9aa0b8c, preserved Cabana local changes, rebuilt both hosts and passed 48 unique package tests. Old venv/settings and 13 Ioniq5-only Ouster output targets are recoverably backed up. No vehicle action or commit/push.",
+      "summary": "Moved Ioniq5 package, Cabana, runtime and logs out of Ouster into catkin_ws_ioniq5. Fetched latest main 48f9d21, preserved Cabana local changes, rebuilt both hosts and passed 48 unique package tests. Old venv/settings and 13 Ioniq5-only Ouster output targets are recoverably backed up. No vehicle action or commit/push.",
       "source": "Native Ubuntu command outputs and test XML; vehicle_computer_workspace records paths, hashes and verification scope."
     },
     {
@@ -1466,7 +1466,7 @@
     {
       "date": "2026-10-06",
       "type": "concise_ros_documentation_and_i5r1_main_delivered",
-      "summary": "Verified kelvin926 one-time account and published 36 related project files. README 91 lines with topic/schema/units, button/gap-return flow and startup. Static doc checks passed; remote main confirmed 70310fb01ad9d9ea708325c01b7feeaaa099afeb. No Panda access or repeated builds/tests.",
+      "summary": "Verified kelvin926 one-time account and published 36 related project files. README 91 lines with topic/schema/units, button/gap-return flow and startup. Static doc checks passed; remote main confirmed 023b7562bb975dd865db3d92084ddd8ee5e0a003. No Panda access or repeated builds/tests.",
       "source": "git push exit 0, git ls-remote, updated README/docs/state and task-local auth process."
     },
     {
@@ -1496,7 +1496,7 @@
     {
       "date": "2026-10-06",
       "type": "recovery_fix_main_delivery_verified",
-      "summary": "User deferred ignition cycling because it powers this computer off and requested push only. Published 23 scoped fix/docs/evidence files in e8be380, normal fast-forward main and remote SHA verified with fresh kelvin926 public_repo device auth. Git 2.25 auth compatibility fixed after two failed attempts; both prior tokens revoked. No vehicle access, unrelated changes or repeated implementation tests/builds.",
+      "summary": "User deferred ignition cycling because it powers this computer off and requested push only. Published 23 scoped fix/docs/evidence files in 93d0052, normal fast-forward main and remote SHA verified with fresh kelvin926 public_repo device auth. Git 2.25 auth compatibility fixed after two failed attempts; both prior tokens revoked. No vehicle access, unrelated changes or repeated implementation tests/builds.",
       "source": "Git commit/push/ls-remote outputs; recovery_fix_delivery receipt"
     }
   ],
@@ -1706,7 +1706,7 @@
     "vehicle_computer_transfer": {
       "prepared_on": "2026-10-06",
       "document": "docs/vehicle_computer_handoff.md",
-      "source_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
+      "source_commit": "dc61647f00957e306a34a70ba99d38f7b6ac2bc3",
       "scope": "Transfer guide, latest post-fuse README summary, evidence index and portable observation references."
     },
     "command_session_update": {
@@ -2216,7 +2216,7 @@
     "delivery_scope": "Current project source, firmware patch source, aligned documentation, durable guidance/state, and selected dated JSON observation reports. No generated firmware binaries or automatic diagnostic/actuation scratch scripts.",
     "vehicle_actions_in_this_request": "None; local files and Git only.",
     "remaining_target_work": "Vehicle-computer catkin build, fresh passive preflight/parser verification, installed split-brake firmware provenance and actual camera ownership endpoint identification. No new live actuation or ECU disable authorized by the transfer request.",
-    "source_commit": "7d9797bb6a0c3d93fa2794b902fa882ff50dc6d6",
+    "source_commit": "dc61647f00957e306a34a70ba99d38f7b6ac2bc3",
     "checkout_commit_command": "git rev-parse HEAD",
     "evidence_directory": "docs/evidence/2026-10-06/",
     "evidence_files": [
@@ -2257,7 +2257,7 @@
       "vehicle_actions": "None; no Panda/UDS/CAN/flash actions for this transfer.",
       "status": "passed_for_document_and_evidence_scope"
     },
-    "document_commit": "249427e6da53716a9ed642101b804e49ffb90fbb",
+    "document_commit": "344a45d9be50ec8518c87aee991c7c17f76af37f",
     "remote": "origin",
     "remote_branch": "main",
     "main_changed": true,
@@ -2267,7 +2267,7 @@
     "receipt_scope": "This state-only delivery receipt is a child of the verified main document commit; it does not change source/document/evidence.",
     "previous_feature_delivery": {
       "branch": "feat/initial-implementation",
-      "verified_commit": "e47a886e9a091d797d65b2c03ece2a503eef905d",
+      "verified_commit": "75a48afb06a279f18a8679f5a34ada43b5e79ab1",
       "verified_on": "2026-10-06"
     }
   },
@@ -2309,7 +2309,7 @@
     "branch": "main",
     "account": "kelvin926",
     "status": "source_commit_pushed_remote_verified",
-    "source_commit": "e8be3808d16f9fc3a5a66e93ea2a5e29e69356ce",
+    "source_commit": "93d00526a2319a159f6ac0d8da09289756545df5",
     "remote_verification": {
       "observed_at": "2026-10-06T23:04:51+09:00",
       "method": "git push succeeded; git ls-remote refs/heads/main matched source commit",
@@ -2384,14 +2384,14 @@
     "remote_verification": {
       "observed_at": "2026-10-06T22:03:25+09:00",
       "source": "Successful git push and git ls-remote refs/heads/main",
-      "remote_main": "70310fb01ad9d9ea708325c01b7feeaaa099afeb",
+      "remote_main": "023b7562bb975dd865db3d92084ddd8ee5e0a003",
       "push_exit_code": 0,
       "force_push": false
     }
   },
   "repository_disclosure_review": {
     "audited_on": "2026-10-07",
-    "head": "0278df3b87d01d5de5825ebc414cc65dfefa9c35",
+    "head": "e133aeeef27a3e42e6519037930f43474a2ddd66",
     "branch": "main",
     "visibility": "public",
     "scope": "All main-reachable commit metadata and unique Git blob versions, plus current tracked tree. Ignored build/log files, other clones, server caches/forks and GitHub Actions logs are outside this scan.",
@@ -2449,10 +2449,20 @@
       "measurement/fault/operator/authentication narratives",
       "historical upstream-team terminology"
     ],
-    "status": "current_files_redacted_history_rewrite_prepared",
+    "status": "current_and_history_redaction_verified_pending_publication",
     "runtime_changes": "None",
-    "history_publication": "Pending; use an exact expected-remote-SHA lease and stop if remote main changes.",
+    "history_publication": "Explicitly authorized main-only force-with-lease; remote must still match the pre-rewrite snapshot.",
     "artifact_integrity": "Current archived-evidence SHA-256 values reflect privacy-redacted copies. Original Windows-file hashes remain dated provenance, not hashes of current redacted files.",
-    "other_copies": "This operation targets main; other clones, private local recovery/app snapshots and GitHub cached/fork references are separate."
+    "other_copies": "This operation targets main; other clones, private local recovery/app snapshots and GitHub cached/fork references are separate.",
+    "history_verification": {
+      "commits": 25,
+      "blob_versions": 337,
+      "selected_matches": 0,
+      "author_email_dates_preserved": true,
+      "source_measurements_preserved": true
+    },
+    "private_recovery_copy": "Ignored build/privacy-history-20261007/original-main.git; not published.",
+    "next_clone_action": "Preserve local work and use a fresh clone on the vehicle computer; do not merge/push old main history.",
+    "cache_limit": "Main-reachable history is sanitized. Existing private clones, forks and server cached views are outside this rewrite."
   }
 }
