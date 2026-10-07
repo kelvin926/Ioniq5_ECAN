@@ -1,0 +1,22 @@
+<launch>
+  <arg name="output_dir" default="$(find ioniq5_ecan)/log/can_logger" />
+  <arg name="serial" default="" />
+  <arg name="bus" default="0" />
+  <arg name="publish" default="true" />
+  <arg name="topic" default="/ioniq5/can_logger/rx" />
+  <arg name="duration_s" default="0" />
+  <arg name="fsync" default="false" />
+  <!-- This launch does not start the actuation node, a command publisher or Panda writer. -->
+  <node pkg="ioniq5_ecan" type="can_logger.py" name="ecan_can_logger" output="screen">
+    <env name="ROS_HOME" value="$(find ioniq5_ecan)/log/ros" />
+    <env name="ROS_LOG_DIR" value="$(find ioniq5_ecan)/log/ros/log" />
+    <env name="PYTHONDONTWRITEBYTECODE" value="1" />
+    <param name="output_dir" value="$(arg output_dir)" />
+    <param name="serial" value="$(arg serial)" />
+    <param name="bus" value="$(arg bus)" />
+    <param name="publish" value="$(arg publish)" />
+    <param name="topic" value="$(arg topic)" />
+    <param name="duration_s" value="$(arg duration_s)" />
+    <param name="fsync" value="$(arg fsync)" />
+  </node>
+</launch>

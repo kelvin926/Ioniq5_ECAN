@@ -2,10 +2,10 @@
   "schema_version": 1,
   "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "Selected disclosure items 2, 5, 6 and 7 removed from current files and main history. All 26 prepared main commits/341 blob versions scanned with zero selected matches; source and measurements retained, authors/emails unchanged. Exact-lease main force update succeeded and remote SHA matched. This state-only receipt follows.",
+  "update_reason": "User requested publication of the implemented receive-only ROS RAW CAN logger to main. Preparing the logger, scoped launcher, installation/tests/docs and material project-state updates for a normal Git push. Six host mock tests passed earlier; target ROS/hardware capture remains unverified. Existing control behavior is preserved; no vehicle access or system changes.",
   "current_request": {
-    "description": "Remove selected disclosure items 2, 5, 6 and 7 from current tracked files and main-reachable history, then publish the verified sanitized main.",
-    "status": "selected_current_and_main_history_redaction_published_remote_verified",
+    "description": "Publish the implemented receive-only ROS 1 RAW CAN logger, tests and documentation to main.",
+    "status": "receive_only_can_logger_publication_prepared_target_launch_unverified",
     "user_facing_language": "Korean",
     "artifact_language": "English",
     "further_implementation_requested": false,
@@ -24,7 +24,7 @@
       "fresh_usb_only_confirmation_received": true,
       "device_harness_and_ignition_zero_verified": true
     },
-    "historical_detail_notice": "Nested earlier actuation/configuration requests and prior delivery/flash records are historical. Current user authorization is Git delivery only, not further diagnostics/clear/reset/cycle/actuation/flash or unrelated changes. Earlier fresh USB-only authorization applied to the separately verified firmware flash.",
+    "historical_detail_notice": "Earlier vehicle/Git/Notion/power requests remain dated context. Current request authorizes Git publication of the completed logger and associated material project documentation/state, not vehicle actuation, UDS, settings/firmware writes or system installation.",
     "vehicle_actuation_decision": {
       "recorded_on": "2026-10-06",
       "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
@@ -1304,7 +1304,7 @@
       "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
     }
   ],
-  "next_action": "Report verified main delivery and close the one-time auth session after pushing this state-only receipt. No further vehicle work requested. Diagnostics/clear/reset/cycle/actuation remain stopped; await new user direction and do not claim tracking works or ignition cycling is proven necessary. Preserve other projects/global ROS/configuration.",
+  "next_action": "Commit and normally push the completed receive-only logger to main, then verify the remote commit. Six host mock tests already passed; target Ubuntu 20.04/Noetic launch and live Panda capture remain unverified. No actuation, UDS, firmware/settings writes or system installation requested. Preserve other projects/global ROS/configuration.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -2478,5 +2478,132 @@
       "measurement_datasets_preserved": 11,
       "original_author_email_dates_preserved": true
     }
+  },
+  "vehicle_feedback_assessment": {
+    "reviewed_on": "2026-10-07",
+    "status": "advisory_only_no_runtime_change",
+    "existing": {
+      "topic": "/ioniq5/vehicle_state",
+      "type": "ioniq5_ecan/VehicleState",
+      "publication_hz": 20,
+      "fields": [
+        "speed and four wheel speeds",
+        "yaw rate and lateral/longitudinal acceleration",
+        "steering angle/rate",
+        "driver torque counts and EPS output Nm",
+        "pedals/brake/gear/buttons",
+        "selected/active channels and fault/Panda status"
+      ],
+      "diagnostics": "/diagnostics already carries session readiness, command waiting, faults, rejected-frame address and ECU recovery flags."
+    },
+    "quality_limit": "VehicleState.stamp is ROS publication time; valid checks only steering/MDPS/wheel/TCS freshness. It does not guarantee all IMU/pedal fields are fresh. Steering rate sign is inferred from angle change; driver torque is counts and accelerator position is raw 0..255, not normalized percent.",
+    "priority_additions": [
+      "Typed requested/converted/sent actuation feedback, saturation/rejection and source command age/sequence",
+      "Per-signal validity, last host CAN receive time and age",
+      "Typed waiting/ready/physical selection/active/recovery status for the upper controller"
+    ],
+    "dbc_candidates_not_implemented": [
+      "ESP_STATUS 0x60: traction/stability state and brake pressure raw",
+      "BRAKE 0x65: brake position raw",
+      "DOORS_SEATBELTS 0x411: doors/seatbelts",
+      "BLINKERS 0x413: stalk/lamp state",
+      "SCC_CONTROL 0x1A0: cruise mode/set speed/object fields, meaningful only with confirmed source and availability"
+    ],
+    "candidate_limits": "DBC availability is not vehicle/bus/unit validation. SOC/battery temperature/TPMS/GNSS availability is not established for the current ECAN-only decoder. Host sent/returned frames are not ECU execution or measured-force acknowledgement.",
+    "rate_proposal": "For upper closed-loop feedback consider 50-100 Hz dynamics only within actual CAN source rates; use lower-rate typed status. Not implemented or benchmarked.",
+    "source": [
+      "msg/VehicleState.msg",
+      "src/node.cpp publish_status/createTimer/publish_diagnostics",
+      "src/vehicle_state_parser.cpp",
+      "Pinned opendbc b72c1fd55ae7e84763e40912bbe06b8f533cb66b Hyundai CAN-FD DBC"
+    ]
+  },
+  "power_startup_assessment": {
+    "recorded_on": "2026-10-07",
+    "user_report": {
+      "vehicle_powered_pc": true,
+      "pc_powered_after_vehicle_ready": true,
+      "comma_power_connected": false,
+      "panda_boot_later_statement": "User expects Panda to boot after PC; MCU power-on time versus USB enumeration has not been measured in this request."
+    },
+    "assessment": "Comma power supplies the harness from OBD. If that path powers this Red Panda independently of PC USB it can enable earlier MCU power-on; an OBD constant feed may power it before ignition. Actual board/harness supply path and this vehicle's off-state OBD feed are unverified.",
+    "boot_behavior": "Pinned Panda boot initializes stock-connected harness and SILENT. No-host heartbeat fallback is SILENT/power-save, not automatic vehicle takeover. Earlier MCU boot does not prevent later safety-mode RX reset, USB startup queue handling or ECU communication-control interruption.",
+    "vehicle_evidence": "2026-10-06 stationary test had valid CAN and acc_fault=false before ownership transition; post-disable readiness failed before ACTIVE and ACCEnable3 persisted after restoration. Later diagnosis reproduced a safety-tick/first-RX race at mode change and a separate USB startup packet-boundary issue. Exact original event attribution remains unconfirmed.",
+    "conclusion": "Independent Panda power is a plausible power/boot-order improvement, not a demonstrated fix for the recorded ECU faults. No comma-power comparison, power-cycle, wiring, Panda query or vehicle test performed.",
+    "sources": [
+      "https://comma.ai/shop/comma-power",
+      "https://github.com/commaai/openpilot/wiki/General-Terms",
+      "https://blog.comma.ai/our-hardware-future/",
+      "Pinned Panda dd8a5b3df77706337a11555377e7180c5adc8726 board/main.c and board/drivers/harness.h",
+      "docs/evidence/2026-10-06/stationary-ros-test-20261006.json",
+      "docs/evidence/2026-10-06/ecan-recovery-fix-20261006.json"
+    ]
+  },
+  "notion_ecan_publication": {
+    "published_on": "2026-10-07",
+    "page_title": "Ioniq5 E-CAN Based Control",
+    "page_url": "https://app.notion.com/p/3f200b419d0d806a8f26d91f540c6963",
+    "method": "Notion connector insert_content at page end; async completion succeeded; fetched page and compared every inventory row.",
+    "table_count": 4,
+    "summary_rows": 7,
+    "inventory_rows": 133,
+    "inventory_group_rows": [
+      38,
+      54,
+      41
+    ],
+    "inventory_source": "docs/evidence/2026-10-06/panda-post-fuse-20261006.json",
+    "inventory_source_sha256": "43f4e2a87c3e929fa35241d359c413d6540e33c1e738045260cba0ce52a3146d",
+    "inventory_frames": 8637,
+    "inventory_sample_seconds": 3.0,
+    "hardware_rx_delta_recorded_separately": 8636,
+    "summary_source": "docs/evidence/2026-10-06/vehicle-computer-can-reception-20261006.json",
+    "summary_frames": 8620,
+    "capture_relationship": "Different dated captures, explicitly separated on the page; counts not mixed.",
+    "dbc_pin": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
+    "dbc_id_size_matched": 33,
+    "dbc_unregistered": 99,
+    "dbc_size_mismatched": 1,
+    "crc_checked_ids_in_source": 7,
+    "name_semantics": "DBC candidates rather than verified ECU/field identity. Unknown IDs remain in the table.",
+    "verification": "Four native tables with 140 data rows plus four header rows. Full inventory has 133 unique IDs; each payload size, count, mean Hz and candidate name matches source-generated values; sum 8637; mismatch count 0.",
+    "preservation": "Existing page content and properties retained. No device serial or personal Windows/Codex references posted.",
+    "scope": "Notion content publication and local project-state update only; prior uncommitted advisory guidance/state retained."
+  },
+  "receive_only_can_logger": {
+    "implemented_on": "2026-10-07",
+    "script": "scripts/can_logger.py",
+    "launcher": "scripts/start_can_logger.sh",
+    "launch": "launch/can_logger.launch",
+    "documentation": "docs/can_logger.md",
+    "mode": "Direct Panda USB vendor/status IN and CAN bulk IN only, independent of the actuation node and Panda SDK constructor.",
+    "writes_to_vehicle": "None: no CAN TX, UDS, heartbeat, safety/bitrate/power-save/CAN reset or firmware API. Requires SILENT mode 0/controls_allowed=0; never forces it.",
+    "capture": "CSV RAW payload hex, all IDs on logical bus 0 by default; configurable bus -1 records all received buses without enabling transceivers. Preserve up to 64 bytes and fd/extended/returned/rejected flags.",
+    "timestamps": "Per USB-read completion Unix epoch ns/UTC, monotonic ns and ROS ns. Complete packets in one read share timestamps; not ECU/hardware arrival time. ROS clock may differ under simulation.",
+    "files": "Timestamped exclusive-create CSV and metadata under package log/can_logger; no device serial. Default flush 1 s, optional fsync; abrupt PC power-off may lose buffered/cache data and final metadata.",
+    "topic": {
+      "default": "/ioniq5/can_logger/rx",
+      "message": "ioniq5_ecan/RawCanFrame",
+      "optional": true,
+      "latched": false,
+      "stamp": "Host receive-batch ROS time, separate from control node publish-time convention; message fields unchanged."
+    },
+    "startup_runtime": "Wait for sole/locally selected app-mode Red Panda/pinned ABI/SILENT. Initial USB IN drain to successful short boundary, record discarded bytes. Preserve timeout partial data. Stop on runtime checksum/mode/USB/file failure without reset/resync. Close/flush on Ctrl+C or duration.",
+    "workspace_scope": "Source-checkout launcher sets ROS_HOME/ROS_LOG_DIR/TMPDIR inside package before roslaunch parent starts; node also keeps default ROS logs local. No global shell/ROS/package changes.",
+    "verification": {
+      "unit_tests": "test/test_can_logger.py: 6 tests passed with fake USB; all OUT methods fail the test transport.",
+      "cases": [
+        "Fragment completion timestamp",
+        "Unknown 29-bit CAN-FD 64-byte payload/flags",
+        "Checksum fail-stop",
+        "IN-only open/drain/partial timeout",
+        "Non-SILENT/control permission refusal",
+        "CSV ns round-trip/metadata no serial"
+      ],
+      "static": "Python 3.8 grammar, package/launch XML, shell syntax, message-field preservation and git whitespace checks passed.",
+      "target_ros_vehicle": "Not run on Windows; real Noetic launch, live Panda capture and throughput remain unverified. No Panda/UDS/CAN/firmware actions performed for implementation."
+    },
+    "git_publication": "Requested on 2026-10-07 for main. Preparing a normal fast-forward commit and push; remote delivery is not yet claimed. Logger script/helper retain executable file modes. Prior host verification is retained without repeated builds or vehicle access.",
+    "preserved": "Existing src/include/config/patches control behavior and prior uncommitted advisory guidance/state retained."
   }
 }

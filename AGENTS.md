@@ -19,6 +19,9 @@
 - Keep implementation QA minimal; avoid slow, broad, or repeated tests/builds
   unless failures or significant risk justify them.
 - Existing implementation limits are recorded facts, not additional work to perform.
+- Receive-only logging uses the standalone can_logger launch/helper, not the actuation node.
+- The logger uses USB IN only in SILENT; never add hidden mode/bitrate/reset/heartbeat/UDS writes.
+- Logger timestamps are host USB completion times, not hardware CAN arrival times.
 - For confirmation-only requests, inspect and report; do not implement changes.
 - Preserve existing uncommitted work. Do not discard it or overwrite unrelated files.
 
@@ -61,12 +64,16 @@
 - Control path: physical CAN1 / Panda logical bus 0 / ECAN, 500/2000 kbps.
 - Current design is ECAN-only; camera bus 2 and non-ECAN forwarding are unused.
 - Distinguish logical CAN bus numbers from physical controller numbers.
+- Distinguish Panda MCU boot, host USB enumeration and mode-change CAN initialization.
+- Independent Panda power does not establish ECU fault recovery; preserve stock passthrough before takeover.
 - Select the Panda serial locally; public examples use the `PANDA_SERIAL` placeholder.
 - Repository: `https://github.com/kelvin926/Ioniq5_ECAN`.
 - Current branch and commit belong in `state.json`, not this durable baseline.
 
 ## Input and engagement behavior
 - Command topic: `/ioniq5/actuation_command`.
+- Existing feedback: `/ioniq5/vehicle_state` at 20 Hz; `stamp` is publication time.
+- Its `valid` checks steering/MDPS/wheel/TCS freshness, not every optional signal.
 - Required input values: `lateral` and `acceleration`.
 - Agreed upstream contract: `lateral` is steering-wheel angle rate in deg/s (not yaw rate
   or target angle), and `acceleration` is longitudinal acceleration in m/s^2.
@@ -168,6 +175,7 @@
 - `src/node.cpp`: ROS, USB, engagement, and ECU lifecycle.
 - `src/safety_supervisor.cpp`: existing channel engagement behavior.
 - `scripts/steering_sweep.py`: earlier vehicle control examples.
+- `scripts/can_logger.py` and `docs/can_logger.md`: standalone USB-IN-only ROS RAW recorder.
 - `patches/opendbc-hyundai-canfd-split-arm.patch`: custom channel semantics.
 - `patches/panda-ecan-only.patch`: ECAN-only firmware behavior.
 - `docs/vehicle_handoff.md`: current handoff and dated historical evidence; consult verification scope.

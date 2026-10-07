@@ -15,6 +15,10 @@ ECAN-only firmware에서는 실제 차량 RX가 bus 0에만 들어옵니다. ret
 Panda 송신 결과 metadata이며 순정 ECU 메시지 재개 증거로 사용하지 않습니다.
 `stamp`는 ROS publish 시각으로, 하드웨어 CAN 수신 timestamp가 아닙니다.
 
+독립 수신 전용 기록기는 [can_logger.md](can_logger.md)에 있습니다. USB IN만 사용하여
+CSV로 기록하고 `/ioniq5/can_logger/rx`에 발행할 수 있으며, 그 `stamp`는 host USB read 시점입니다.
+기존 제어 노드를 실행하지 않아도 되며 동일 Panda를 동시에 점유하지 않습니다.
+
 ```bash
 rostopic echo /ioniq5/can0/rx
 rosbag record /ioniq5/can_rx /ioniq5/vehicle_state /ioniq5/actuation_command /diagnostics

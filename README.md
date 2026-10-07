@@ -58,6 +58,15 @@ I5R1 확장 펌웨어가 필요하며, 실제 출력은 채널 허가와 ECU 소
 
 ## 실행
 
+CAN을 송신하지 않고 RAW 데이터만 저장하려면 제어 실행기와 별도로 다음을 사용합니다.
+CSV와 timestamp를 저장하고 선택적으로 `/ioniq5/can_logger/rx`에 발행합니다.
+
+```bash
+./scripts/start_can_logger.sh
+```
+
+[수신 전용 기록기](docs/can_logger.md)의 시작 조건과 시각 의미를 참고하십시오.
+
 이 차량 컴퓨터에 설치된 한 줄 명령입니다. `source`하지 말고 실행합니다.
 
 ```bash

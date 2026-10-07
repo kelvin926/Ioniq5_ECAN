@@ -19,6 +19,7 @@
 | 2026-10-06 | Ubuntu 20.04/GCC 9.4/ROS Noetic에서 전체 catkin Release 빌드 및 core 36개, Panda protocol 5개, preflight unit test 7개 통과 | 새 작업공간의 호스트 검증, 차량 수신/송신과 firmware flash 미실시 |
 | 2026-10-06 빌드 이후 | Cabana live 로그의 ECAN 8,620개/약 3초, LFA 100 Hz/SCC 50 Hz, 주요 7종 CRC 오류 0, 별도 health 관측 중 TX/overflow 증가 0 확인 | 누적 overflow로 엄격한 preflight는 FAIL; 비-ECAN 오류 유지, actuator/ECU 검증 아님; 이후 Cabana 종료 |
 | 2026-10-06 | native Zig 0.16 C++17 core 및 `core_smoke`, `-Wall -Wextra -Wpedantic -Werror` 통과 | ROS node/USB/ECU 통합 빌드가 아님 |
+| 2026-10-07 | 수신 전용 CAN logger 모의 USB/분할/timeout/64-byte/CSV timestamp 테스트 6개 통과 | Windows host 테스트, 실제 Noetic launch/차량 기록 미실시 |
 | 2026-10-06 | ECU retry deadline/backoff cap, fault latch 및 명시적 재arm core smoke 통과 | 실제 UDS 복구 및 USB fault injection 미실시 |
 | 2026-10-06 | EPS 일시 복귀, 2999/3000 ms 경계, 반복 오류 deadline 유지, 새 오류 창, 정상 종방향 유지, 목표각 초기화, Panda 허가, brake/CANCEL/disarm, hard fault 우선순위, CRC/freshness core smoke 통과 | 실차 MDPS 복귀와 ROS raw callback 미시험 |
 | 2026-08-21 기록 | codec/checksum, SCC template 보존, 무평활 입력, split-brake, custom Panda host safety 5개, ARM firmware 빌드 | 당시 소스/후보 기준, 현재 설치 image와 동일하다고 단정 불가 |
