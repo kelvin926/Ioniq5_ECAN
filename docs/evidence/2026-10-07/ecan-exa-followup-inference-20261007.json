@@ -1,0 +1,2347 @@
+{
+  "observed_on": "2026-10-07",
+  "scope": "CAN only, no other sensor topics/fields",
+  "input_frames": 1914473,
+  "new_fields": [
+    {
+      "name": "WHEEL_ROTATION_ACCUMULATOR_24",
+      "start_bit": 24,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "can_id": "0x0A0",
+      "address": 160,
+      "label_ko": "왼쪽 앞바퀴 회전 누적값 후보",
+      "basis_ko": "0~254 순환 누적값. 50프레임 증가량이 대응 CAN 바퀴속도 적분과 연동. 독립 5개 캡처 r=0.999992. 물리 거리와 바퀴 위치의 독립 검증 없음.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "순환 카운트",
+      "unit_ko": "순환 카운트",
+      "stats": {
+        "records": 65685,
+        "available_records": 65685,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 254,
+        "value_min": 0.0,
+        "value_max": 254.0,
+        "unique_values": 255,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "start_bit": 24,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 64,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 46.04991226686524,
+        "train": {
+          "n": 25424,
+          "r": 0.9998596131576766,
+          "rmse": 0.41626204757258056
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999918369548442,
+          "rmse": 0.530606813385078
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.9998997277632521,
+            "rmse": 0.4237308017470413
+          },
+          {
+            "n": 16033,
+            "r": 0.9998133969729812,
+            "rmse": 0.41182447893092555
+          },
+          {
+            "n": 14822,
+            "r": 0.9998280171069391,
+            "rmse": 0.40942476956520923
+          },
+          {
+            "n": 1540,
+            "r": 0.9999199064561776,
+            "rmse": 0.5096575121373784
+          },
+          {
+            "n": 730,
+            "r": 0.8837009283765085,
+            "rmse": 0.47438399092658307
+          },
+          {
+            "n": 19030,
+            "r": 0.9999923154684777,
+            "rmse": 0.5539668110876104
+          },
+          {
+            "n": 3789,
+            "r": 0.9999782885192998,
+            "rmse": 0.787184109238053
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      }
+    },
+    {
+      "name": "WHEEL_ROTATION_ACCUMULATOR_32",
+      "start_bit": 32,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "can_id": "0x0A0",
+      "address": 160,
+      "label_ko": "오른쪽 앞바퀴 회전 누적값 후보",
+      "basis_ko": "0~254 순환 누적값. 50프레임 증가량이 대응 CAN 바퀴속도 적분과 연동. 독립 5개 캡처 r=0.999992. 물리 거리와 바퀴 위치의 독립 검증 없음.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "순환 카운트",
+      "unit_ko": "순환 카운트",
+      "stats": {
+        "records": 65685,
+        "available_records": 65685,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 254,
+        "value_min": 0.0,
+        "value_max": 254.0,
+        "unique_values": 255,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "start_bit": 32,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 80,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 46.05008277810077,
+        "train": {
+          "n": 25424,
+          "r": 0.9998639302144505,
+          "rmse": 0.42239580554657374
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999917419276451,
+          "rmse": 0.5346637890379616
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.999903664379201,
+            "rmse": 0.4268771409299842
+          },
+          {
+            "n": 16033,
+            "r": 0.9998187796693087,
+            "rmse": 0.41974873724814066
+          },
+          {
+            "n": 14822,
+            "r": 0.999851500330174,
+            "rmse": 0.4199513439135599
+          },
+          {
+            "n": 1540,
+            "r": 0.9999194590512879,
+            "rmse": 0.5129454261567248
+          },
+          {
+            "n": 730,
+            "r": 0.8935766598739502,
+            "rmse": 0.5158151315843681
+          },
+          {
+            "n": 19030,
+            "r": 0.9999923488570849,
+            "rmse": 0.5521171585698404
+          },
+          {
+            "n": 3789,
+            "r": 0.9999778694286154,
+            "rmse": 0.7950057196672626
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      }
+    },
+    {
+      "name": "WHEEL_ROTATION_ACCUMULATOR_40",
+      "start_bit": 40,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47
+      ],
+      "can_id": "0x0A0",
+      "address": 160,
+      "label_ko": "왼쪽 뒷바퀴 회전 누적값 후보",
+      "basis_ko": "0~254 순환 누적값. 50프레임 증가량이 대응 CAN 바퀴속도 적분과 연동. 독립 5개 캡처 r=0.999989. 물리 거리와 바퀴 위치의 독립 검증 없음.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "순환 카운트",
+      "unit_ko": "순환 카운트",
+      "stats": {
+        "records": 65685,
+        "available_records": 65685,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 254,
+        "value_min": 0.0,
+        "value_max": 254.0,
+        "unique_values": 255,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "start_bit": 40,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 96,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 40.73692164268207,
+        "train": {
+          "n": 25424,
+          "r": 0.9997838661699738,
+          "rmse": 0.46135526201214805
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999893283300826,
+          "rmse": 0.522352088699787
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.9998213589794486,
+            "rmse": 0.5051489693118191
+          },
+          {
+            "n": 16033,
+            "r": 0.9997405780019669,
+            "rmse": 0.4336549587195895
+          },
+          {
+            "n": 14822,
+            "r": 0.9997591248009928,
+            "rmse": 0.4376856162915016
+          },
+          {
+            "n": 1540,
+            "r": 0.9998914387179157,
+            "rmse": 0.4891476747758631
+          },
+          {
+            "n": 730,
+            "r": 0.8042117402662193,
+            "rmse": 0.5301345885921157
+          },
+          {
+            "n": 19030,
+            "r": 0.9999904020315862,
+            "rmse": 0.5255911624467252
+          },
+          {
+            "n": 3789,
+            "r": 0.9999735842810462,
+            "rmse": 0.7654040462736089
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      }
+    },
+    {
+      "name": "WHEEL_ROTATION_ACCUMULATOR_48",
+      "start_bit": 48,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55
+      ],
+      "can_id": "0x0A0",
+      "address": 160,
+      "label_ko": "오른쪽 뒷바퀴 회전 누적값 후보",
+      "basis_ko": "0~254 순환 누적값. 50프레임 증가량이 대응 CAN 바퀴속도 적분과 연동. 독립 5개 캡처 r=0.999989. 물리 거리와 바퀴 위치의 독립 검증 없음.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "순환 카운트",
+      "unit_ko": "순환 카운트",
+      "stats": {
+        "records": 65685,
+        "available_records": 65685,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 254,
+        "value_min": 0.0,
+        "value_max": 254.0,
+        "unique_values": 255,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "start_bit": 48,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 112,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 40.73669363699677,
+        "train": {
+          "n": 25424,
+          "r": 0.9998060678173647,
+          "rmse": 0.4509003423891444
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999888227579175,
+          "rmse": 0.5347987732189552
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.9998767555442625,
+            "rmse": 0.43220364196416133
+          },
+          {
+            "n": 16033,
+            "r": 0.9997254577639596,
+            "rmse": 0.46149991761113
+          },
+          {
+            "n": 14822,
+            "r": 0.9997863695619955,
+            "rmse": 0.4561690929161362
+          },
+          {
+            "n": 1540,
+            "r": 0.9998702200461131,
+            "rmse": 0.5236825066192026
+          },
+          {
+            "n": 730,
+            "r": 0.8529187578603378,
+            "rmse": 0.5035134660424168
+          },
+          {
+            "n": 19030,
+            "r": 0.9999900146727921,
+            "rmse": 0.5327709335040967
+          },
+          {
+            "n": 3789,
+            "r": 0.9999724360077872,
+            "rmse": 0.7827724500140888
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      }
+    },
+    {
+      "name": "ALIVE_COUNTER_MOD15",
+      "start_bit": 12,
+      "bits": 4,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "can_id": "0x36F",
+      "address": 879,
+      "label_ko": "메시지 생존번호 후보",
+      "basis_ko": "15 제외, 0~14 순환. 동일 payload 반복은 분리. 독립 캡처 +1 전이율 99.95%.",
+      "confidence_ko": "순차 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "0~14 순환",
+      "unit_ko": "0~14 순환",
+      "stats": {
+        "records": 6561,
+        "available_records": 6561,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 14,
+        "value_min": 0.0,
+        "value_max": 14.0,
+        "unique_values": 15,
+        "counts": {
+          "0": 440,
+          "1": 431,
+          "2": 435,
+          "3": 441,
+          "4": 432,
+          "5": 439,
+          "6": 441,
+          "7": 436,
+          "8": 436,
+          "9": 442,
+          "10": 434,
+          "11": 436,
+          "12": 442,
+          "13": 436,
+          "14": 440
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x36F",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 2465,
+        "holdout_changing_transitions": 3989,
+        "train_plus_one_fraction": 0.9671399594320487,
+        "holdout_plus_one_fraction": 0.9994986212083229,
+        "duplicate_payload_transitions": 100,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    },
+    {
+      "name": "ALIVE_COUNTER_MOD15",
+      "start_bit": 12,
+      "bits": 4,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "can_id": "0x37F",
+      "address": 895,
+      "label_ko": "메시지 생존번호 후보",
+      "basis_ko": "15 제외, 0~14 순환. 동일 payload 반복은 분리. 독립 캡처 +1 전이율 99.875%.",
+      "confidence_ko": "순차 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "0~14 순환",
+      "unit_ko": "0~14 순환",
+      "stats": {
+        "records": 6561,
+        "available_records": 6561,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 14,
+        "value_min": 0.0,
+        "value_max": 14.0,
+        "unique_values": 15,
+        "counts": {
+          "0": 438,
+          "1": 436,
+          "2": 437,
+          "3": 438,
+          "4": 438,
+          "5": 437,
+          "6": 437,
+          "7": 437,
+          "8": 438,
+          "9": 439,
+          "10": 438,
+          "11": 438,
+          "12": 436,
+          "13": 438,
+          "14": 436
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x37F",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 2550,
+        "holdout_changing_transitions": 4004,
+        "train_plus_one_fraction": 0.9996078431372549,
+        "holdout_plus_one_fraction": 0.9987512487512488,
+        "duplicate_payload_transitions": 0,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    },
+    {
+      "name": "ALIVE_COUNTER_MOD15",
+      "start_bit": 12,
+      "bits": 4,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "can_id": "0x412",
+      "address": 1042,
+      "label_ko": "메시지 생존번호 후보",
+      "basis_ko": "15 제외, 0~14 순환. 동일 payload 반복은 분리. 독립 캡처 +1 전이율 100.0%.",
+      "confidence_ko": "순차 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "0~14 순환",
+      "unit_ko": "0~14 순환",
+      "stats": {
+        "records": 3385,
+        "available_records": 3385,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 14,
+        "value_min": 0.0,
+        "value_max": 14.0,
+        "unique_values": 15,
+        "counts": {
+          "0": 254,
+          "1": 242,
+          "2": 350,
+          "3": 57,
+          "4": 169,
+          "5": 15,
+          "6": 363,
+          "7": 87,
+          "8": 491,
+          "9": 92,
+          "10": 418,
+          "11": 214,
+          "12": 181,
+          "13": 143,
+          "14": 309
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x412",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 23,
+        "holdout_changing_transitions": 17,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 3338,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    },
+    {
+      "name": "ALIVE_COUNTER_MOD15",
+      "start_bit": 12,
+      "bits": 4,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "can_id": "0x418",
+      "address": 1048,
+      "label_ko": "메시지 생존번호 후보",
+      "basis_ko": "15 제외, 0~14 순환. 동일 payload 반복은 분리. 독립 캡처 +1 전이율 100.0%.",
+      "confidence_ko": "순차 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "0~14 순환",
+      "unit_ko": "0~14 순환",
+      "stats": {
+        "records": 3384,
+        "available_records": 3384,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 14,
+        "value_min": 0.0,
+        "value_max": 14.0,
+        "unique_values": 15,
+        "counts": {
+          "0": 98,
+          "1": 269,
+          "2": 242,
+          "3": 250,
+          "4": 121,
+          "5": 244,
+          "6": 506,
+          "7": 100,
+          "8": 314,
+          "9": 107,
+          "10": 470,
+          "11": 75,
+          "12": 124,
+          "13": 132,
+          "14": 332
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x418",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 23,
+        "holdout_changing_transitions": 17,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 3337,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    },
+    {
+      "name": "ALIVE_COUNTER_MOD15",
+      "start_bit": 12,
+      "bits": 4,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "can_id": "0x419",
+      "address": 1049,
+      "label_ko": "메시지 생존번호 후보",
+      "basis_ko": "15 제외, 0~14 순환. 동일 payload 반복은 분리. 독립 캡처 +1 전이율 100.0%.",
+      "confidence_ko": "순차 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "0~14 순환",
+      "unit_ko": "0~14 순환",
+      "stats": {
+        "records": 10840,
+        "available_records": 10840,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 14,
+        "value_min": 0.0,
+        "value_max": 14.0,
+        "unique_values": 15,
+        "counts": {
+          "0": 717,
+          "1": 666,
+          "2": 728,
+          "3": 746,
+          "4": 696,
+          "5": 725,
+          "6": 725,
+          "7": 713,
+          "8": 740,
+          "9": 696,
+          "10": 733,
+          "11": 728,
+          "12": 708,
+          "13": 758,
+          "14": 761
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x419",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 2039,
+        "holdout_changing_transitions": 2304,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 6490,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    },
+    {
+      "name": "ALIVE_COUNTER_MOD15",
+      "start_bit": 12,
+      "bits": 4,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "can_id": "0x435",
+      "address": 1077,
+      "label_ko": "메시지 생존번호 후보",
+      "basis_ko": "15 제외, 0~14 순환. 동일 payload 반복은 분리. 독립 캡처 +1 전이율 99.619%.",
+      "confidence_ko": "순차 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "0~14 순환",
+      "unit_ko": "0~14 순환",
+      "stats": {
+        "records": 5361,
+        "available_records": 5361,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 14,
+        "value_min": 0.0,
+        "value_max": 14.0,
+        "unique_values": 15,
+        "counts": {
+          "0": 353,
+          "1": 354,
+          "2": 375,
+          "3": 360,
+          "4": 337,
+          "5": 318,
+          "6": 361,
+          "7": 340,
+          "8": 322,
+          "9": 411,
+          "10": 373,
+          "11": 371,
+          "12": 368,
+          "13": 383,
+          "14": 335
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x435",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 310,
+        "holdout_changing_transitions": 525,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 0.9961904761904762,
+        "duplicate_payload_transitions": 4519,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    },
+    {
+      "name": "CRC8_1D_EQUIVALENT_CANDIDATE",
+      "start_bit": 0,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "can_id": "0x36F",
+      "address": 879,
+      "label_ko": "CRC8 무결성 값 후보",
+      "basis_ko": "poly 0x1D, 초기값 0 등가식 XOR 0xe5에서 전체 수신 기록 일치. 고유 본문 15개. 임의 본문과 원래 초기값 검증 없음.",
+      "confidence_ko": "구조 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "CRC8 후보",
+      "unit_ko": "CRC8 후보",
+      "stats": {
+        "records": 6561,
+        "available_records": 6561,
+        "excluded_placeholders": 0,
+        "raw_min": 32,
+        "raw_max": 254,
+        "value_min": 32.0,
+        "value_max": 254.0,
+        "unique_values": 15,
+        "counts": {
+          "32": 432,
+          "40": 441,
+          "48": 434,
+          "56": 436,
+          "71": 431,
+          "79": 441,
+          "95": 436,
+          "129": 442,
+          "137": 436,
+          "145": 435,
+          "153": 439,
+          "230": 442,
+          "238": 440,
+          "246": 436,
+          "254": 440
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x36F",
+        "start_bit": 0,
+        "bits": 8,
+        "polynomial": "0x1D",
+        "zero_init_equivalent_xor": "0xe5",
+        "records_matched": 6561,
+        "unique_bodies": 15,
+        "captures_with_body_variation": 7,
+        "limit": "Fixed length does not identify init/xorout/data-ID separately. Low body variation does not establish response to arbitrary payload changes."
+      }
+    },
+    {
+      "name": "CRC8_1D_EQUIVALENT_CANDIDATE",
+      "start_bit": 0,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "can_id": "0x37F",
+      "address": 895,
+      "label_ko": "CRC8 무결성 값 후보",
+      "basis_ko": "poly 0x1D, 초기값 0 등가식 XOR 0xfb에서 전체 수신 기록 일치. 고유 본문 15개. 임의 본문과 원래 초기값 검증 없음.",
+      "confidence_ko": "구조 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "CRC8 후보",
+      "unit_ko": "CRC8 후보",
+      "stats": {
+        "records": 6561,
+        "available_records": 6561,
+        "excluded_placeholders": 0,
+        "raw_min": 34,
+        "raw_max": 252,
+        "value_min": 34.0,
+        "value_max": 252.0,
+        "unique_values": 15,
+        "counts": {
+          "34": 437,
+          "42": 437,
+          "50": 436,
+          "58": 438,
+          "69": 437,
+          "77": 438,
+          "85": 439,
+          "93": 436,
+          "131": 438,
+          "139": 438,
+          "147": 438,
+          "155": 438,
+          "236": 438,
+          "244": 436,
+          "252": 437
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x37F",
+        "start_bit": 0,
+        "bits": 8,
+        "polynomial": "0x1D",
+        "zero_init_equivalent_xor": "0xfb",
+        "records_matched": 6561,
+        "unique_bodies": 15,
+        "captures_with_body_variation": 7,
+        "limit": "Fixed length does not identify init/xorout/data-ID separately. Low body variation does not establish response to arbitrary payload changes."
+      }
+    },
+    {
+      "name": "CRC8_1D_EQUIVALENT_CANDIDATE",
+      "start_bit": 0,
+      "bits": 8,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "can_id": "0x3E5",
+      "address": 997,
+      "label_ko": "CRC8 무결성 값 후보",
+      "basis_ko": "poly 0x1D, 초기값 0 등가식 XOR 0xd0에서 전체 수신 기록 일치. 고유 본문 4개. 임의 본문과 원래 초기값 검증 없음.",
+      "confidence_ko": "구조 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "CRC8 후보",
+      "unit_ko": "CRC8 후보",
+      "stats": {
+        "records": 3288,
+        "available_records": 3288,
+        "excluded_placeholders": 0,
+        "raw_min": 138,
+        "raw_max": 253,
+        "value_min": 138.0,
+        "value_max": 253.0,
+        "unique_values": 4,
+        "counts": {
+          "138": 1074,
+          "146": 193,
+          "154": 1549,
+          "253": 472
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x3E5",
+        "start_bit": 0,
+        "bits": 8,
+        "polynomial": "0x1D",
+        "zero_init_equivalent_xor": "0xd0",
+        "records_matched": 3288,
+        "unique_bodies": 4,
+        "captures_with_body_variation": 0,
+        "limit": "Fixed length does not identify init/xorout/data-ID separately. Low body variation does not establish response to arbitrary payload changes."
+      }
+    },
+    {
+      "name": "MOTOR_LOAD_DETAIL_12BIT",
+      "start_bit": 192,
+      "bits": 12,
+      "endian": "little",
+      "signed": true,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203
+      ],
+      "can_id": "0x10A",
+      "address": 266,
+      "label_ko": "후륜 구동부하 상세값 후보",
+      "basis_ko": "같은 CAN의 40:10 부하와 연동. 학습 이득 5.50792, 독립 캡처 r=0.9999882. 12/14비트 정의의 값 동일, Nm 또는 A 단위와 요청/측정 구분 미확정.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "원시값",
+      "unit_ko": "원시값",
+      "stats": {
+        "records": 65685,
+        "available_records": 65685,
+        "excluded_placeholders": 0,
+        "raw_min": -1039,
+        "raw_max": 1184,
+        "value_min": -1039.0,
+        "value_max": 1184.0,
+        "unique_values": 2147,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x10A",
+        "start_bit": 192,
+        "bits": 12,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          5.507917195507871,
+          0.4398192306153789
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999625612104261,
+          "rmse": 2.1698997556540776
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999882190229367,
+          "rmse": 2.4800209573204453
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      "layout_alternative_group": "266/motor-load-detail"
+    },
+    {
+      "name": "MOTOR_LOAD_DETAIL_14BIT",
+      "start_bit": 192,
+      "bits": 14,
+      "endian": "little",
+      "signed": true,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205
+      ],
+      "can_id": "0x10A",
+      "address": 266,
+      "label_ko": "후륜 구동부하 상세값 후보",
+      "basis_ko": "같은 CAN의 40:10 부하와 연동. 학습 이득 5.50792, 독립 캡처 r=0.9999882. 12/14비트 정의의 값 동일, Nm 또는 A 단위와 요청/측정 구분 미확정.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "원시값",
+      "unit_ko": "원시값",
+      "stats": {
+        "records": 65685,
+        "available_records": 65685,
+        "excluded_placeholders": 0,
+        "raw_min": -1039,
+        "raw_max": 1184,
+        "value_min": -1039.0,
+        "value_max": 1184.0,
+        "unique_values": 2147,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x10A",
+        "start_bit": 192,
+        "bits": 14,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          5.507917195507871,
+          0.4398192306153789
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999625612104261,
+          "rmse": 2.1698997556540776
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999882190229367,
+          "rmse": 2.4800209573204453
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      "layout_alternative_group": "266/motor-load-detail"
+    },
+    {
+      "name": "MOTOR_LOAD_DETAIL_12BIT",
+      "start_bit": 192,
+      "bits": 12,
+      "endian": "little",
+      "signed": true,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203
+      ],
+      "can_id": "0x120",
+      "address": 288,
+      "label_ko": "전륜 구동부하 상세값 후보",
+      "basis_ko": "같은 CAN의 40:10 부하와 연동. 학습 이득 4.09583, 독립 캡처 r=0.9999799. 12/14비트 정의의 값 동일, Nm 또는 A 단위와 요청/측정 구분 미확정.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "원시값",
+      "unit_ko": "원시값",
+      "stats": {
+        "records": 65687,
+        "available_records": 65687,
+        "excluded_placeholders": 0,
+        "raw_min": -572,
+        "raw_max": 1066,
+        "value_min": -572.0,
+        "value_max": 1066.0,
+        "unique_values": 1006,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x120",
+        "start_bit": 192,
+        "bits": 12,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          4.095825133613642,
+          0.06597644865613121
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999246967113758,
+          "rmse": 0.9883332269299728
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999798575606349,
+          "rmse": 0.8378967628800684
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      "layout_alternative_group": "288/motor-load-detail"
+    },
+    {
+      "name": "MOTOR_LOAD_DETAIL_14BIT",
+      "start_bit": 192,
+      "bits": 14,
+      "endian": "little",
+      "signed": true,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205
+      ],
+      "can_id": "0x120",
+      "address": 288,
+      "label_ko": "전륜 구동부하 상세값 후보",
+      "basis_ko": "같은 CAN의 40:10 부하와 연동. 학습 이득 4.09583, 독립 캡처 r=0.9999799. 12/14비트 정의의 값 동일, Nm 또는 A 단위와 요청/측정 구분 미확정.",
+      "confidence_ko": "연동 후보",
+      "source_url": "",
+      "role": "followup_inferred",
+      "unit": "원시값",
+      "unit_ko": "원시값",
+      "stats": {
+        "records": 65687,
+        "available_records": 65687,
+        "excluded_placeholders": 0,
+        "raw_min": -572,
+        "raw_max": 1066,
+        "value_min": -572.0,
+        "value_max": 1066.0,
+        "unique_values": 1006,
+        "counts": null
+      },
+      "placeholder": false,
+      "redacted": false,
+      "validation": {
+        "can_id": "0x120",
+        "start_bit": 192,
+        "bits": 14,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          4.095825133613642,
+          0.06597644865613121
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999246967113758,
+          "rmse": 0.9883332269299728
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999798575606349,
+          "rmse": 0.8378967628800684
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      "layout_alternative_group": "288/motor-load-detail"
+    },
+    {
+      "name": "IMU_YAW_FAILURE_FLAG",
+      "start_bit": 24,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        24
+      ],
+      "can_id": "0x04A",
+      "address": 74,
+      "label_ko": "요레이트 고장 비트",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L756",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65686,
+        "available_records": 65686,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65686
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "IMU_YawSigSta"
+    },
+    {
+      "name": "IMU_YAW_INITIALIZATION_FLAG",
+      "start_bit": 25,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        25
+      ],
+      "can_id": "0x04A",
+      "address": 74,
+      "label_ko": "요레이트 초기화 비트",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L756",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65686,
+        "available_records": 65686,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65686
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "IMU_YawSigSta"
+    },
+    {
+      "name": "IMU_LATERAL_FAILURE_FLAG",
+      "start_bit": 28,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        28
+      ],
+      "can_id": "0x04A",
+      "address": 74,
+      "label_ko": "횡가속도 고장 비트",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L757",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65686,
+        "available_records": 65686,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65686
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "IMU_LatAccelSigSta"
+    },
+    {
+      "name": "IMU_LATERAL_INITIALIZATION_FLAG",
+      "start_bit": 29,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        29
+      ],
+      "can_id": "0x04A",
+      "address": 74,
+      "label_ko": "횡가속도 초기화 비트",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L757",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65686,
+        "available_records": 65686,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65686
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "IMU_LatAccelSigSta"
+    },
+    {
+      "name": "IMU_RESET_FLAG",
+      "start_bit": 44,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        44
+      ],
+      "can_id": "0x04A",
+      "address": 74,
+      "label_ko": "IMU 재설정 비트",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L758",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65686,
+        "available_records": 65686,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65686
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "IMU_AcuRstSta"
+    },
+    {
+      "name": "NAVI_STUB_REQUEST_FLAG",
+      "start_bit": 96,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        96
+      ],
+      "can_id": "0x11A",
+      "address": 282,
+      "label_ko": "내비 분기정보 요청",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L834",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65676,
+        "available_records": 65676,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65676
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "FR_CMR_ReqADASMapMsgVal"
+    },
+    {
+      "name": "NAVI_CURVATURE_REQUEST_FLAG",
+      "start_bit": 97,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        97
+      ],
+      "can_id": "0x11A",
+      "address": 282,
+      "label_ko": "내비 곡률정보 요청",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L834",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65676,
+        "available_records": 65676,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65676
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "FR_CMR_ReqADASMapMsgVal"
+    },
+    {
+      "name": "NAVI_OTHER_PROFILE_REQUEST_FLAG",
+      "start_bit": 98,
+      "bits": 1,
+      "endian": "little",
+      "signed": false,
+      "factor": 1.0,
+      "offset": 0.0,
+      "physical_bits": [
+        98
+      ],
+      "can_id": "0x11A",
+      "address": 282,
+      "label_ko": "내비 부가프로파일 요청",
+      "basis_ko": "고정 커밋의 원본 DBC 주석에 비트별 의미 정의. 캡처 값 0 고정, 실제 작동 검증 없음.",
+      "confidence_ko": "소스 정의",
+      "source_url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc#L834",
+      "role": "followup_inferred",
+      "unit": "0/1 코드",
+      "unit_ko": "0/1 코드",
+      "stats": {
+        "records": 65676,
+        "available_records": 65676,
+        "excluded_placeholders": 0,
+        "raw_min": 0,
+        "raw_max": 0,
+        "value_min": 0.0,
+        "value_max": 0.0,
+        "unique_values": 1,
+        "counts": {
+          "0": 65676
+        }
+      },
+      "placeholder": false,
+      "redacted": false,
+      "parent_name": "FR_CMR_ReqADASMapMsgVal"
+    }
+  ],
+  "checks": {
+    "wheel_front_left_right_differential": {
+      "gain": 45.95937124771026,
+      "train": {
+        "n": 25124,
+        "r": 0.9992974945191114,
+        "rmse": 0.5786951637389774
+      },
+      "holdout": {
+        "n": 39161,
+        "r": 0.9978184881917763,
+        "rmse": 0.5710242930104229
+      }
+    },
+    "wheel_rear_left_right_differential": {
+      "gain": 40.65283433521226,
+      "train": {
+        "n": 25124,
+        "r": 0.9989300627433941,
+        "rmse": 0.6381909585841907
+      },
+      "holdout": {
+        "n": 39161,
+        "r": 0.9971236573771993,
+        "rmse": 0.5868783819246324
+      }
+    },
+    "wheel_rotation_accumulators": [
+      {
+        "start_bit": 24,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 64,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 46.04991226686524,
+        "train": {
+          "n": 25424,
+          "r": 0.9998596131576766,
+          "rmse": 0.41626204757258056
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999918369548442,
+          "rmse": 0.530606813385078
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.9998997277632521,
+            "rmse": 0.4237308017470413
+          },
+          {
+            "n": 16033,
+            "r": 0.9998133969729812,
+            "rmse": 0.41182447893092555
+          },
+          {
+            "n": 14822,
+            "r": 0.9998280171069391,
+            "rmse": 0.40942476956520923
+          },
+          {
+            "n": 1540,
+            "r": 0.9999199064561776,
+            "rmse": 0.5096575121373784
+          },
+          {
+            "n": 730,
+            "r": 0.8837009283765085,
+            "rmse": 0.47438399092658307
+          },
+          {
+            "n": 19030,
+            "r": 0.9999923154684777,
+            "rmse": 0.5539668110876104
+          },
+          {
+            "n": 3789,
+            "r": 0.9999782885192998,
+            "rmse": 0.787184109238053
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      },
+      {
+        "start_bit": 32,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 80,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 46.05008277810077,
+        "train": {
+          "n": 25424,
+          "r": 0.9998639302144505,
+          "rmse": 0.42239580554657374
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999917419276451,
+          "rmse": 0.5346637890379616
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.999903664379201,
+            "rmse": 0.4268771409299842
+          },
+          {
+            "n": 16033,
+            "r": 0.9998187796693087,
+            "rmse": 0.41974873724814066
+          },
+          {
+            "n": 14822,
+            "r": 0.999851500330174,
+            "rmse": 0.4199513439135599
+          },
+          {
+            "n": 1540,
+            "r": 0.9999194590512879,
+            "rmse": 0.5129454261567248
+          },
+          {
+            "n": 730,
+            "r": 0.8935766598739502,
+            "rmse": 0.5158151315843681
+          },
+          {
+            "n": 19030,
+            "r": 0.9999923488570849,
+            "rmse": 0.5521171585698404
+          },
+          {
+            "n": 3789,
+            "r": 0.9999778694286154,
+            "rmse": 0.7950057196672626
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      },
+      {
+        "start_bit": 40,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 96,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 40.73692164268207,
+        "train": {
+          "n": 25424,
+          "r": 0.9997838661699738,
+          "rmse": 0.46135526201214805
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999893283300826,
+          "rmse": 0.522352088699787
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.9998213589794486,
+            "rmse": 0.5051489693118191
+          },
+          {
+            "n": 16033,
+            "r": 0.9997405780019669,
+            "rmse": 0.4336549587195895
+          },
+          {
+            "n": 14822,
+            "r": 0.9997591248009928,
+            "rmse": 0.4376856162915016
+          },
+          {
+            "n": 1540,
+            "r": 0.9998914387179157,
+            "rmse": 0.4891476747758631
+          },
+          {
+            "n": 730,
+            "r": 0.8042117402662193,
+            "rmse": 0.5301345885921157
+          },
+          {
+            "n": 19030,
+            "r": 0.9999904020315862,
+            "rmse": 0.5255911624467252
+          },
+          {
+            "n": 3789,
+            "r": 0.9999735842810462,
+            "rmse": 0.7654040462736089
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      },
+      {
+        "start_bit": 48,
+        "bits": 8,
+        "modulus": 255,
+        "wheel_speed_reference_bit": 112,
+        "window_frames": 50,
+        "nominal_frame_period_s": 0.01,
+        "nominal_counts_per_metre_train": 40.73669363699677,
+        "train": {
+          "n": 25424,
+          "r": 0.9998060678173647,
+          "rmse": 0.4509003423891444
+        },
+        "holdout": {
+          "n": 39911,
+          "r": 0.9999888227579175,
+          "rmse": 0.5347987732189552
+        },
+        "per_capture": [
+          {
+            "n": 9391,
+            "r": 0.9998767555442625,
+            "rmse": 0.43220364196416133
+          },
+          {
+            "n": 16033,
+            "r": 0.9997254577639596,
+            "rmse": 0.46149991761113
+          },
+          {
+            "n": 14822,
+            "r": 0.9997863695619955,
+            "rmse": 0.4561690929161362
+          },
+          {
+            "n": 1540,
+            "r": 0.9998702200461131,
+            "rmse": 0.5236825066192026
+          },
+          {
+            "n": 730,
+            "r": 0.8529187578603378,
+            "rmse": 0.5035134660424168
+          },
+          {
+            "n": 19030,
+            "r": 0.9999900146727921,
+            "rmse": 0.5327709335040967
+          },
+          {
+            "n": 3789,
+            "r": 0.9999724360077872,
+            "rmse": 0.7827724500140888
+          }
+        ],
+        "limit": "Nominal period and CAN wheel speed; no hardware timing, tyre geometry, or absolute distance reference."
+      }
+    ],
+    "mod15_counters": [
+      {
+        "can_id": "0x1CF",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 12760,
+        "holdout_changing_transitions": 20076,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 0,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x36F",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 2465,
+        "holdout_changing_transitions": 3989,
+        "train_plus_one_fraction": 0.9671399594320487,
+        "holdout_plus_one_fraction": 0.9994986212083229,
+        "duplicate_payload_transitions": 100,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x37F",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 2550,
+        "holdout_changing_transitions": 4004,
+        "train_plus_one_fraction": 0.9996078431372549,
+        "holdout_plus_one_fraction": 0.9987512487512488,
+        "duplicate_payload_transitions": 0,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x412",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 23,
+        "holdout_changing_transitions": 17,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 3338,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x413",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 127,
+        "holdout_changing_transitions": 107,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 3624,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x418",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 23,
+        "holdout_changing_transitions": 17,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 3337,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x419",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 2039,
+        "holdout_changing_transitions": 2304,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 6490,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x41C",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 3037,
+        "holdout_changing_transitions": 4107,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 1.0,
+        "duplicate_payload_transitions": 5459,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      },
+      {
+        "can_id": "0x435",
+        "start_bit": 12,
+        "bits": 4,
+        "modulus": 15,
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "train_changing_transitions": 310,
+        "holdout_changing_transitions": 525,
+        "train_plus_one_fraction": 1.0,
+        "holdout_plus_one_fraction": 0.9961904761904762,
+        "duplicate_payload_transitions": 4519,
+        "limit": "Progression of received distinct broadcasts; repeated payloads and skipped source updates can occur. Not proof of original ECU update frequency."
+      }
+    ],
+    "crc8_candidates": [
+      {
+        "can_id": "0x36F",
+        "start_bit": 0,
+        "bits": 8,
+        "polynomial": "0x1D",
+        "zero_init_equivalent_xor": "0xe5",
+        "records_matched": 6561,
+        "unique_bodies": 15,
+        "captures_with_body_variation": 7,
+        "limit": "Fixed length does not identify init/xorout/data-ID separately. Low body variation does not establish response to arbitrary payload changes."
+      },
+      {
+        "can_id": "0x37F",
+        "start_bit": 0,
+        "bits": 8,
+        "polynomial": "0x1D",
+        "zero_init_equivalent_xor": "0xfb",
+        "records_matched": 6561,
+        "unique_bodies": 15,
+        "captures_with_body_variation": 7,
+        "limit": "Fixed length does not identify init/xorout/data-ID separately. Low body variation does not establish response to arbitrary payload changes."
+      },
+      {
+        "can_id": "0x3E5",
+        "start_bit": 0,
+        "bits": 8,
+        "polynomial": "0x1D",
+        "zero_init_equivalent_xor": "0xd0",
+        "records_matched": 3288,
+        "unique_bodies": 4,
+        "captures_with_body_variation": 0,
+        "limit": "Fixed length does not identify init/xorout/data-ID separately. Low body variation does not establish response to arbitrary payload changes."
+      }
+    ],
+    "joint_load_scan": {
+      "tested_fields": 2691,
+      "matches": [
+        {
+          "can_id": "0x10A",
+          "start_bit": 190,
+          "bits": 14,
+          "signed": true,
+          "coefficients_front_rear_offset": [
+            0.05339002039905383,
+            22.02356310191437,
+            1.2971828985959526
+          ],
+          "train_nrmse": 0.008597460102490292,
+          "holdout_nrmse": 0.005752319401396746,
+          "status": "multi_input_load_relation_not_unique_physical_meaning"
+        },
+        {
+          "can_id": "0x10A",
+          "start_bit": 188,
+          "bits": 16,
+          "signed": true,
+          "coefficients_front_rear_offset": [
+            0.21356008159619222,
+            88.09425240765742,
+            8.188731594383711
+          ],
+          "train_nrmse": 0.008597460102490295,
+          "holdout_nrmse": 0.00575231940139638,
+          "status": "multi_input_load_relation_not_unique_physical_meaning"
+        },
+        {
+          "can_id": "0x10A",
+          "start_bit": 190,
+          "bits": 16,
+          "signed": true,
+          "coefficients_front_rear_offset": [
+            0.05339002039905383,
+            22.02356310191437,
+            1.2971828985959526
+          ],
+          "train_nrmse": 0.008597460102490292,
+          "holdout_nrmse": 0.005752319401396746,
+          "status": "multi_input_load_relation_not_unique_physical_meaning"
+        }
+      ]
+    },
+    "motor_load_detail": [
+      {
+        "can_id": "0x10A",
+        "start_bit": 192,
+        "bits": 12,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          5.507917195507871,
+          0.4398192306153789
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999625612104261,
+          "rmse": 2.1698997556540776
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999882190229367,
+          "rmse": 2.4800209573204453
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      {
+        "can_id": "0x10A",
+        "start_bit": 192,
+        "bits": 14,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          5.507917195507871,
+          0.4398192306153789
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999625612104261,
+          "rmse": 2.1698997556540776
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999882190229367,
+          "rmse": 2.4800209573204453
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      {
+        "can_id": "0x120",
+        "start_bit": 192,
+        "bits": 12,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          4.095825133613642,
+          0.06597644865613121
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999246967113758,
+          "rmse": 0.9883332269299728
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999798575606349,
+          "rmse": 0.8378967628800684
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      },
+      {
+        "can_id": "0x120",
+        "start_bit": 192,
+        "bits": 14,
+        "reference": "same-CAN signed 10-bit load at40:10",
+        "gain_and_offset_train": [
+          4.095825133613642,
+          0.06597644865613121
+        ],
+        "train": {
+          "n": 2554,
+          "r": 0.9999246967113758,
+          "rmse": 0.9883332269299728
+        },
+        "holdout": {
+          "n": 4017,
+          "r": 0.9999798575606349,
+          "rmse": 0.8378967628800684
+        },
+        "limit": "12/14-bit signed decodes identical on this capture; bit width and Nm/A units unverified. Source/load relationship alone is not a unique sensor/command identity."
+      }
+    ],
+    "new_load_sign_bit_scan": {
+      "tested_bits": 1096,
+      "matches": []
+    }
+  },
+  "rejected": [],
+  "elapsed_s": 14.25
+}

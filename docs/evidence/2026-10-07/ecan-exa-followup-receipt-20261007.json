@@ -1,0 +1,945 @@
+{
+  "observed_on": "2026-10-07",
+  "scope": "CAN only; interpreted-only display requested by user",
+  "search": {
+    "queries": 14,
+    "workstreams": 6,
+    "requested_results": 140,
+    "unique_urls": 76
+  },
+  "audited_ids": 138,
+  "audited_bits": 17920,
+  "displayed_ids": 97,
+  "displayed_bits": 3886,
+  "displayed_layout_rows": 602,
+  "new_layout_rows": 25,
+  "removed_prior_field_rows": 150,
+  "excluded_whole_ids": 41,
+  "excluded_bit_positions": 14034,
+  "removed_fields": [
+    {
+      "can_id": "0x0EA",
+      "field_key": "0x0EA/002",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x0EA",
+      "field_key": "0x0EA/003",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x0EA",
+      "field_key": "0x0EA/004",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x0EA",
+      "field_key": "0x0EA/013",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x0EA",
+      "field_key": "0x0EA/014",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x0EA",
+      "field_key": "0x0EA/015",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x12A",
+      "field_key": "0x12A/010",
+      "name": "VALUE63",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x12A",
+      "field_key": "0x12A/011",
+      "name": "VALUE64",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x12A",
+      "field_key": "0x12A/012",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/003",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/004",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/005",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/006",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/007",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/008",
+      "name": "SET_ME_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/009",
+      "name": "SET_ME_FF",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/010",
+      "name": "SET_ME_FC",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/011",
+      "name": "SET_ME_9",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/012",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x160",
+      "field_key": "0x160/013",
+      "name": "NEW_SIGNAL_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/002",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/003",
+      "name": "NEW_SIGNAL_9",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/005",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/007",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/011",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/016",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/017",
+      "name": "NEW_SIGNAL_21",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/019",
+      "name": "NEW_SIGNAL_20",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/020",
+      "name": "NEW_SIGNAL_11",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/022",
+      "name": "NEW_SIGNAL_10",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/024",
+      "name": "NEW_SIGNAL_12",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/027",
+      "name": "NEW_SIGNAL_13",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/028",
+      "name": "NEW_SIGNAL_14",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/029",
+      "name": "NEW_SIGNAL_15",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/030",
+      "name": "NEW_SIGNAL_16",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/031",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/032",
+      "name": "NEW_SIGNAL_17",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/033",
+      "name": "NEW_SIGNAL_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/034",
+      "name": "PROBABLY_EQUIP",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/035",
+      "name": "NEW_SIGNAL_18",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/036",
+      "name": "NEW_SIGNAL_19",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/037",
+      "name": "NEW_SIGNAL_8",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/038",
+      "name": "EQUIP_MAYBE",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/039",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/040",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/041",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x175",
+      "field_key": "0x175/042",
+      "name": "AEB_EQUIP_MAYBE",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/005",
+      "name": "ZEROS_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/026",
+      "name": "CRUSE_INFO_SET_2",
+      "reason_ko": "크루즈 코드의 구체적 의미 근거 부족"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/028",
+      "name": "ZEROS_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/029",
+      "name": "ZEROS",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/031",
+      "name": "SET_ME_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/033",
+      "name": "SET_ME_TMP_64",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/034",
+      "name": "ZEROS_9",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/036",
+      "name": "ZEROS_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/038",
+      "name": "ZEROS_8",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/039",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/040",
+      "name": "SET_ME_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/041",
+      "name": "ZEROS_10",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/042",
+      "name": "ZEROS_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/043",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/044",
+      "name": "NEW_SIGNAL_8",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/046",
+      "name": "ZEROS_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1A0",
+      "field_key": "0x1A0/048",
+      "name": "ZEROS_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/002",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/003",
+      "name": "SET_ME_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/005",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/007",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/010",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/012",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/013",
+      "name": "SET_ME_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/014",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/015",
+      "name": "BYTE6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/016",
+      "name": "BYTE7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/018",
+      "name": "BYTE9",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/019",
+      "name": "BYTE10",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/020",
+      "name": "BYTE11",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/021",
+      "name": "BYTE12",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/022",
+      "name": "BYTE13",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/023",
+      "name": "BYTE14",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1AA",
+      "field_key": "0x1AA/024",
+      "name": "BYTE15",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1CF",
+      "field_key": "0x1CF/008",
+      "name": "SET_ME_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1CF",
+      "field_key": "0x1CF/009",
+      "name": "SET_ME_1_",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1DA",
+      "field_key": "0x1DA/002",
+      "name": "SET_ME_22",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1DA",
+      "field_key": "0x1DA/003",
+      "name": "SET_ME_41",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E0",
+      "field_key": "0x1E0/013",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E0",
+      "field_key": "0x1E0/014",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E0",
+      "field_key": "0x1E0/015",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E0",
+      "field_key": "0x1E0/017",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/003",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/004",
+      "name": "NEW_SIGNAL_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/005",
+      "name": "NEW_SIGNAL_8",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/006",
+      "name": "NEW_SIGNAL_9",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/007",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/008",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/009",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1E5",
+      "field_key": "0x1E5/010",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/002",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/003",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/004",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/005",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/008",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/011",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/020",
+      "name": "SET_ME_FF",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/032",
+      "name": "NEW_SIGNAL_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/033",
+      "name": "SET_ME_1C",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/034",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/035",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/036",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/037",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/038",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/039",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/040",
+      "name": "NEW_SIGNAL_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/041",
+      "name": "NEW_SIGNAL_8",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/042",
+      "name": "NEW_SIGNAL_9",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/043",
+      "name": "NEW_SIGNAL_10",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/044",
+      "name": "NEW_SIGNAL_11",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/045",
+      "name": "NEW_SIGNAL_12",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/046",
+      "name": "NEW_SIGNAL_13",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/047",
+      "name": "NEW_SIGNAL_14",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/048",
+      "name": "NEW_SIGNAL_16",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/049",
+      "name": "NEW_SIGNAL_15",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/050",
+      "name": "NEW_SIGNAL_17",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/051",
+      "name": "NEW_SIGNAL_18",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/052",
+      "name": "NEW_SIGNAL_19",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/053",
+      "name": "SET_ME_TMP_F",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1EA",
+      "field_key": "0x1EA/054",
+      "name": "SET_ME_TMP_F_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1FA",
+      "field_key": "0x1FA/007",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1FA",
+      "field_key": "0x1FA/010",
+      "name": "NEW_SIGNAL_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1FA",
+      "field_key": "0x1FA/011",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1FA",
+      "field_key": "0x1FA/012",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x1FA",
+      "field_key": "0x1FA/015",
+      "name": "NEW_SIGNAL_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x200",
+      "field_key": "0x200/002",
+      "name": "SET_ME_E1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x200",
+      "field_key": "0x200/004",
+      "name": "NEW_SIGNAL_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x200",
+      "field_key": "0x200/005",
+      "name": "NEW_SIGNAL_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x200",
+      "field_key": "0x200/007",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x200",
+      "field_key": "0x200/008",
+      "name": "SET_ME_3A",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x345",
+      "field_key": "0x345/002",
+      "name": "SET_ME_15",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4A3",
+      "field_key": "0x4A3/008",
+      "name": "NEW_SIGNAL_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/000",
+      "name": "BYTE_1",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/001",
+      "name": "BYTE_2",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/002",
+      "name": "BYTE_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/003",
+      "name": "BYTE_4",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/004",
+      "name": "BYTE_5",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/005",
+      "name": "BYTE_6",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/006",
+      "name": "BYTE_7",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4B9",
+      "field_key": "0x4B9/007",
+      "name": "BYTE_8",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    },
+    {
+      "can_id": "0x4BA",
+      "field_key": "0x4BA/002",
+      "name": "PROSHORT_CYCLIC_COUNTER",
+      "reason_ko": "유효 형태 고정 0, 순환번호 의미 미확정"
+    },
+    {
+      "can_id": "0x4BA",
+      "field_key": "0x4BA/009",
+      "name": "TAIL_FLAG_UNRESOLVED",
+      "reason_ko": "상태 비트의 구체적 기능 미확정"
+    },
+    {
+      "can_id": "0x4EB",
+      "field_key": "0x4EB/003",
+      "name": "NEW_SIGNAL_3",
+      "reason_ko": "의미 없는 원시 컨테이너 또는 임시 이름"
+    }
+  ],
+  "full_audit_preserved": {
+    "path": "docs/evidence/2026-10-07/ecan-korean-bit-dictionary-20261007.json",
+    "sha256": "0a5f5012866f6d975c800a4e0fb552c5ebdd21626e9e8330104b65386528d360"
+  },
+  "new_candidates": "CAN-supported hypotheses and source-comment refinements, with alternate widths retained. Not finalized runtime decoders.",
+  "artifacts": [
+    "docs/ecan_korean_bit_fields_20261007.md",
+    "docs/ecan_bit_viewer_20261007.html",
+    "docs/ecan_followup_inference_20261007.md",
+    "docs/evidence/2026-10-07/ecan-interpreted-bit-dictionary-20261007.json"
+  ],
+  "verification": {
+    "data": "97 displayed IDs, 602 field-layout rows and3886 unique bit positions checked; every displayed bit has a retained field owner; no placeholder/unnamed rows.",
+    "counts": "Per-bit zero/one sums and retained bit totals agree; source identity64-bit values/statistics omitted.",
+    "preservation": "Original full1914473-frame/138-ID/17920-bit audit JSON SHA256 unchanged.",
+    "viewer": "Node DOM-model checks passed for interpreted-only IDs, sparse matrices, per-bit rows, search, variable filter and redacted details. No actual browser rendering claim.",
+    "scope": "CAN only; no runtime/config/device/diagnostic/system/Git publication changes."
+  },
+  "artifacts_sha256": {
+    "docs/ecan_korean_bit_fields_20261007.md": "573698eb55ced26e4692f92a31d6049497839069c2ea1410599592c9b5c99aef",
+    "docs/ecan_bit_viewer_20261007.html": "ecd677111dcaa900ec29eeefe8891ba756122df2fc373498e0ee6c35ef816f27",
+    "docs/ecan_followup_inference_20261007.md": "6404432be5aaeba046e35910b402c57b2ba4fdda4c5cde2147ffa62bfef9b7b3",
+    "docs/evidence/2026-10-07/ecan-interpreted-bit-dictionary-20261007.json": "420a8fb80fac5ef11a21e3df49bd7a1795239e0773ca50895b2986b0d375ed71"
+  }
+}

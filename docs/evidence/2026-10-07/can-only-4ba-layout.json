@@ -1,0 +1,357 @@
+{
+  "address": "0x4BA",
+  "payload_bytes": 8,
+  "frames": 873,
+  "fields": [
+    {
+      "name": "PROSHORT_OFFSET",
+      "start_bit": 0,
+      "bits": 13,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "m",
+      "min": 71,
+      "max": 8191,
+      "unique_values": 97,
+      "counts": null
+    },
+    {
+      "name": "PROSHORT_PATH_INDEX",
+      "start_bit": 13,
+      "bits": 6,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "",
+      "min": 8,
+      "max": 63,
+      "unique_values": 2,
+      "counts": {
+        "8": 436,
+        "63": 437
+      }
+    },
+    {
+      "name": "PROSHORT_CYCLIC_COUNTER",
+      "start_bit": 19,
+      "bits": 2,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "",
+      "min": 0,
+      "max": 3,
+      "unique_values": 2,
+      "counts": {
+        "0": 436,
+        "3": 437
+      }
+    },
+    {
+      "name": "PROSHORT_ACCURACY",
+      "start_bit": 21,
+      "bits": 2,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "",
+      "min": 0,
+      "max": 3,
+      "unique_values": 2,
+      "counts": {
+        "0": 436,
+        "3": 437
+      }
+    },
+    {
+      "name": "PROSHORT_DISTANCE",
+      "start_bit": 23,
+      "bits": 10,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "m",
+      "min": 0,
+      "max": 1023,
+      "unique_values": 16,
+      "counts": {
+        "0": 3,
+        "5": 300,
+        "10": 33,
+        "15": 21,
+        "20": 21,
+        "25": 12,
+        "30": 14,
+        "35": 5,
+        "40": 6,
+        "45": 3,
+        "96": 3,
+        "482": 3,
+        "734": 3,
+        "735": 3,
+        "800": 6,
+        "1023": 437
+      }
+    },
+    {
+      "name": "PROSHORT_VALUE_0",
+      "start_bit": 33,
+      "bits": 10,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "",
+      "min": 3,
+      "max": 1023,
+      "unique_values": 124,
+      "counts": null
+    },
+    {
+      "name": "PROSHORT_VALUE_1",
+      "start_bit": 43,
+      "bits": 10,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "",
+      "min": 0,
+      "max": 1023,
+      "unique_values": 6,
+      "counts": {
+        "0": 418,
+        "2": 9,
+        "8": 3,
+        "11": 3,
+        "26": 3,
+        "1023": 437
+      }
+    },
+    {
+      "name": "PROSHORT_PROFILE_TYPE",
+      "start_bit": 53,
+      "bits": 5,
+      "endian": "little",
+      "signed": false,
+      "factor": 1,
+      "offset": 0,
+      "unit": "",
+      "min": 1,
+      "max": 31,
+      "unique_values": 3,
+      "counts": {
+        "1": 415,
+        "16": 21,
+        "31": 437
+      }
+    }
+  ],
+  "samples": [
+    {
+      "profile_type": 1,
+      "capture_index": 1,
+      "stamp_ns": 1791351334226029872,
+      "data_hex": "d4 00 81 02 84 01 20 60",
+      "decoded": {
+        "PROSHORT_OFFSET": 212,
+        "PROSHORT_PATH_INDEX": 8,
+        "PROSHORT_CYCLIC_COUNTER": 0,
+        "PROSHORT_ACCURACY": 0,
+        "PROSHORT_DISTANCE": 5,
+        "PROSHORT_VALUE_0": 194,
+        "PROSHORT_VALUE_1": 0,
+        "PROSHORT_PROFILE_TYPE": 1
+      }
+    },
+    {
+      "profile_type": 1,
+      "capture_index": 5,
+      "stamp_ns": 1791351912041929483,
+      "data_hex": "c3 07 81 02 ae 00 20 60",
+      "decoded": {
+        "PROSHORT_OFFSET": 1987,
+        "PROSHORT_PATH_INDEX": 8,
+        "PROSHORT_CYCLIC_COUNTER": 0,
+        "PROSHORT_ACCURACY": 0,
+        "PROSHORT_DISTANCE": 5,
+        "PROSHORT_VALUE_0": 87,
+        "PROSHORT_VALUE_1": 0,
+        "PROSHORT_PROFILE_TYPE": 1
+      }
+    },
+    {
+      "profile_type": 1,
+      "capture_index": 6,
+      "stamp_ns": 1791352111777790784,
+      "data_hex": "11 07 81 02 8e 07 20 60",
+      "decoded": {
+        "PROSHORT_OFFSET": 1809,
+        "PROSHORT_PATH_INDEX": 8,
+        "PROSHORT_CYCLIC_COUNTER": 0,
+        "PROSHORT_ACCURACY": 0,
+        "PROSHORT_DISTANCE": 5,
+        "PROSHORT_VALUE_0": 967,
+        "PROSHORT_VALUE_1": 0,
+        "PROSHORT_PROFILE_TYPE": 1
+      }
+    },
+    {
+      "profile_type": 16,
+      "capture_index": 1,
+      "stamp_ns": 1791351333722228527,
+      "data_hex": "47 00 01 f1 06 40 00 62",
+      "decoded": {
+        "PROSHORT_OFFSET": 71,
+        "PROSHORT_PATH_INDEX": 8,
+        "PROSHORT_CYCLIC_COUNTER": 0,
+        "PROSHORT_ACCURACY": 0,
+        "PROSHORT_DISTANCE": 482,
+        "PROSHORT_VALUE_0": 3,
+        "PROSHORT_VALUE_1": 8,
+        "PROSHORT_PROFILE_TYPE": 16
+      }
+    },
+    {
+      "profile_type": 16,
+      "capture_index": 5,
+      "stamp_ns": 1791351939942035913,
+      "data_hex": "56 0c 01 90 07 10 00 62",
+      "decoded": {
+        "PROSHORT_OFFSET": 3158,
+        "PROSHORT_PATH_INDEX": 8,
+        "PROSHORT_CYCLIC_COUNTER": 0,
+        "PROSHORT_ACCURACY": 0,
+        "PROSHORT_DISTANCE": 800,
+        "PROSHORT_VALUE_0": 3,
+        "PROSHORT_VALUE_1": 2,
+        "PROSHORT_PROFILE_TYPE": 16
+      }
+    },
+    {
+      "profile_type": 16,
+      "capture_index": 6,
+      "stamp_ns": 1791352112268796920,
+      "data_hex": "b2 0d 01 6f 07 d0 00 6e",
+      "decoded": {
+        "PROSHORT_OFFSET": 3506,
+        "PROSHORT_PATH_INDEX": 8,
+        "PROSHORT_CYCLIC_COUNTER": 0,
+        "PROSHORT_ACCURACY": 0,
+        "PROSHORT_DISTANCE": 734,
+        "PROSHORT_VALUE_0": 3,
+        "PROSHORT_VALUE_1": 26,
+        "PROSHORT_PROFILE_TYPE": 16
+      }
+    },
+    {
+      "profile_type": 31,
+      "capture_index": 1,
+      "stamp_ns": 1791351333853735685,
+      "data_hex": "ff ff ff ff ff ff ff ff",
+      "decoded": {
+        "PROSHORT_OFFSET": 8191,
+        "PROSHORT_PATH_INDEX": 63,
+        "PROSHORT_CYCLIC_COUNTER": 3,
+        "PROSHORT_ACCURACY": 3,
+        "PROSHORT_DISTANCE": 1023,
+        "PROSHORT_VALUE_0": 1023,
+        "PROSHORT_VALUE_1": 1023,
+        "PROSHORT_PROFILE_TYPE": 31
+      }
+    },
+    {
+      "profile_type": 31,
+      "capture_index": 5,
+      "stamp_ns": 1791351912657086610,
+      "data_hex": "ff ff ff ff ff ff ff ff",
+      "decoded": {
+        "PROSHORT_OFFSET": 8191,
+        "PROSHORT_PATH_INDEX": 63,
+        "PROSHORT_CYCLIC_COUNTER": 3,
+        "PROSHORT_ACCURACY": 3,
+        "PROSHORT_DISTANCE": 1023,
+        "PROSHORT_VALUE_0": 1023,
+        "PROSHORT_VALUE_1": 1023,
+        "PROSHORT_PROFILE_TYPE": 31
+      }
+    },
+    {
+      "profile_type": 31,
+      "capture_index": 6,
+      "stamp_ns": 1791352112379273891,
+      "data_hex": "ff ff ff ff ff ff ff ff",
+      "decoded": {
+        "PROSHORT_OFFSET": 8191,
+        "PROSHORT_PATH_INDEX": 63,
+        "PROSHORT_CYCLIC_COUNTER": 3,
+        "PROSHORT_ACCURACY": 3,
+        "PROSHORT_DISTANCE": 1023,
+        "PROSHORT_VALUE_0": 1023,
+        "PROSHORT_VALUE_1": 1023,
+        "PROSHORT_PROFILE_TYPE": 31
+      }
+    }
+  ],
+  "scope": "Recorded CAN payload0x4BA only; no other sensor topics.",
+  "reference_dbc_pin": "ajouatom/openpilot ab696d049e3d6d0fd3bde51c233ee81f736415be",
+  "unmapped_bits_58_to_63_counts": {
+    "24": 113,
+    "25": 104,
+    "26": 108,
+    "27": 111,
+    "63": 437
+  },
+  "additional_observed_fields": [
+    {
+      "start_bit": 58,
+      "bits": 2,
+      "name": "HEADER_COUNTER_CANDIDATE",
+      "counts_non_ff": {
+        "0": 113,
+        "1": 104,
+        "2": 108,
+        "3": 111
+      },
+      "transition_steps_non_ff": {
+        "0": 293,
+        "1": 132,
+        "2": 3,
+        "3": 3
+      },
+      "meaning": "Counter-like variation; repeated packets and missed/skipped steps. Not the DBC19:2 field."
+    },
+    {
+      "start_bit": 60,
+      "bits": 1,
+      "name": "UNKNOWN_FLAG",
+      "counts_non_ff": {
+        "0": 436
+      }
+    },
+    {
+      "start_bit": 61,
+      "bits": 3,
+      "name": "MESSAGE_TYPE_CODE_CANDIDATE",
+      "counts_non_ff": {
+        "3": 436
+      },
+      "meaning": "Observed3, not official ADASISv2.0.2 PROFILE_SHORT code4; vehicle format/version mapping unresolved."
+    }
+  ],
+  "standard_comparison": {
+    "source": "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.2-D2.2-ADASIS_v2_Specification.0.pdf",
+    "sha256": "6a93d6016c9e7629212b46f1798f22df83f37f7b1064126db6443ecab6a242be",
+    "reviewed_pages": "66-72 text; 66 and72 rendered/visually checked",
+    "logical_shape": "PROFILE SHORT contains two10-bit values at Offset and Offset+Distance1. Offset is path-start-relative modulo8191, not automatically remaining vehicle distance.",
+    "profile_type1": "Standard type1 is curvature with nonlinear10-bit coding; vehicle meaning/packing version not fully validated.",
+    "profile_type16": "Standard SHORT types16..31 are system-specific. Do not reuse LONG-type16 camera/bump rules.",
+    "conflicts": "Vehicle DBC little-endian packing differs from standard CAN table. DBC labels19:2 cyclic counter, but non-FF value always0 while58:2 cycles. Additional header semantic labels remain hypotheses."
+  }
+}

@@ -97,4 +97,5 @@ Ctrl+C로 종료합니다. 실행기는 자기 프로세스에만 Noetic/이 작
 - [상태와 제어 제한](docs/safety.md), [구조](docs/architecture.md), [raw CAN](docs/raw_can.md)
 - [Panda 펌웨어 빌드/flash](docs/panda_firmware.md), [upstream 근거](docs/upstream.md)
 - [실차 이력](docs/vehicle_handoff.md), [날짜별 관측](docs/evidence/2026-10-06/README.md)
+- [실차 ECAN 필드/비트 분석](docs/ecan_analysis_20261007.md): 한국어 표, 비트 검색표, 동시 기록 센서 검증
 - 작업 인수인계: [AGENTS.md](AGENTS.md), [state.json](state.json)

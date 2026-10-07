@@ -1,0 +1,76 @@
+{
+  "observed_on": "2026-10-07",
+  "status": "bag_reference_inference_complete",
+  "previous_interpreted_dictionary_sha256": "420a8fb80fac5ef11a21e3df49bd7a1795239e0773ca50895b2986b0d375ed71",
+  "can_payload_ids": 138,
+  "can_payload_frames": 1914473,
+  "displayed_ids": 97,
+  "displayed_field_layout_rows": 605,
+  "displayed_bit_positions": 3892,
+  "changes": [
+    {
+      "can_id": "0x4B4",
+      "kind": "counter_layout_correction",
+      "old_start_bit": 19,
+      "new_start_bit": 18,
+      "bits": 2
+    },
+    {
+      "can_id": "0x4B8",
+      "kind": "new_counter_candidate",
+      "start_bit": 45,
+      "bits": 2
+    },
+    {
+      "can_id": "0x4B9",
+      "kind": "new_counter_candidate",
+      "start_bit": 45,
+      "bits": 2
+    },
+    {
+      "can_id": "0x4BE",
+      "kind": "counter_layout_correction",
+      "old_start_bit": 45,
+      "new_start_bit": 59,
+      "bits": 2
+    },
+    {
+      "can_id": "0x4BF",
+      "kind": "new_counter_candidate",
+      "start_bit": 56,
+      "bits": 2
+    },
+    {
+      "can_id": "0x1AA",
+      "kind": "speed_unit_hypothesis_revision",
+      "start_bit": 48,
+      "bits": 8,
+      "old_factor": 0.125,
+      "old_unit": "m/s",
+      "new_factor": 0.5,
+      "new_unit": "km/h",
+      "meaning": "Bias/display-speed candidate supported by co-recorded references; actual dashboard display not independently checked."
+    }
+  ],
+  "record_integrity": "Every extracted reference record count matched available connection/chunk indices. Last damaged bag prefix recovered missing later connection definitions; original file unchanged.",
+  "source_evidence": "docs/evidence/2026-10-07/ecan-bag-reference-inference-20261007.json",
+  "artifacts": [
+    "docs/ecan_korean_bit_fields_20261007.md",
+    "docs/ecan_bit_viewer_20261007.html",
+    "docs/ecan_bag_reference_inference_20261007.md",
+    "docs/evidence/2026-10-07/ecan-interpreted-bit-dictionary-20261007.json"
+  ],
+  "verification": {
+    "reference_records": "All co-recorded reference connection counts equal available validated chunk indices; later prefix connection definitions recovered without bag edits.",
+    "tables": "97 displayed IDs,605 layout rows and3892 owned bit positions checked. No unidentified rows restored; identity64-bit values/counts remain omitted.",
+    "viewer": "Node DOM-model checks passed for97 IDs and sparse bit tables, search/filter, matrices and redaction; actual browser rendering not asserted.",
+    "scope": "No runtime/source-control/firmware, USB/CAN TX/UDS, package/system settings, original bag modifications or Git publication.",
+    "quantity_semantics": "Cross-quantity regressions do not report physically meaningless identity differences between RPM/angle and speed/curvature."
+  },
+  "artifact_sha256": {
+    "docs/ecan_korean_bit_fields_20261007.md": "1ef30fb696a01c2dd6edb559c7fa4d89495675e4c984507f9a5ad6d1382b479b",
+    "docs/ecan_bit_viewer_20261007.html": "ddac78df64e4bd1d624478393ac1ad414db363fd3a177eb7d5b95e9bb3b79157",
+    "docs/ecan_bag_reference_inference_20261007.md": "1349dc0f47718bd151c7c02f5d459dd04606b77b3a2d4d242030f1cc5a3ba445",
+    "docs/evidence/2026-10-07/ecan-interpreted-bit-dictionary-20261007.json": "89bcd1077b92ea27d620b762bb1818139aa445737776588aac88f4e4c57b107f"
+  }
+}

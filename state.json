@@ -2,12 +2,217 @@
   "schema_version": 1,
   "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "Receive-only ROS RAW CAN logger, scoped launcher, installation/tests/docs and material project-state updates were committed as 9321a12d8279dbafdb44c4b19c01a29cbef2bfcb and normally pushed to main; remote SHA verified. This state-only receipt records source delivery. Six prior host mock tests pass; target ROS/hardware capture remains unverified. No vehicle access, system changes or saved authentication changes.",
+  "update_reason": "User authorized organizing and publishing ECAN analysis to the repository; current/historical entry points and publication checks prepared.",
+  "can_only_sensor_field_assessment": {
+    "observed_on": "2026-10-07",
+    "source": "Direct user scope correction; CAN-only cached original0x1A0 payloads in build/deep-ecan-20261007/arrays.npz, can-only-object-assessment.json and pinned Hyundai CAN-FD DBC.",
+    "scope": "Inspect/use CAN frames and their decoded fields only. Do not inspect/use any other sensor ROS topics or their fields. Earlier out-of-scope sensor-derived studies remain historical artifacts, not authorized input for subsequent analysis.",
+    "gps": "No verified CAN latitude, longitude or altitude mapping found. Navigation profile/offset fields do not establish GPS coordinates; unknown CAN fields may remain.",
+    "navigation_candidates": {
+      "observed_on": "2026-10-07",
+      "source": "CAN-only raw arrays for0x4A3/0x4B4/0x4B9/0x4BA/0x4BE, build/deep-ecan-20261007/can-only-navigation-assessment.json, ajouatom/openpilot ab696d049e3d6d0fd3bde51c233ee81f736415be DBC and carstate navigation classification.",
+      "ids_and_counts": {
+        "0x4A3": 3253,
+        "0x4B4": 6419,
+        "0x4B9": 120,
+        "0x4BA": 873,
+        "0x4BE": 66
+      },
+      "hda_info": "0x4A3 source-named speed limit0/50, speed-unit code1, country410, map-source1/2, toll0, tunnel0/1. CAN0x4D8 and0x1AA distance-unit values0 match metric definitions.",
+      "position_profile": "0x4B4 source position offset0..17m; average-speed field0. 0x4B9 segment/path/route/road-class fields and0x4BA short-profile fields exist; not GPS coordinates or a complete route polyline.",
+      "long_profile": "0x4BE: type16 in32 frames, type31 in34; values6,119,176 and0xFFFFFFFF. Pinned source rules classify15 bump,11 30kmh-zone and6 50kmh-camera candidate frames.",
+      "event_examples": "Bump offsets11,160,178,619,787m; speed-zone30kmh offset0; camera50kmh offsets1997/1998m; classified path_index8.",
+      "limits": "Source classification is not actual-road confirmation. Repeated frames do not count distinct road features. 0x4B9 calculated-route codes0/2/3, whereas source route gate expects1; route applicability unverified. 8191/31/0xFFFFFFFF placeholders excluded where source guards require. Offset origin and remaining distance need verification.",
+      "implementation": "Navigation fields are not currently decoded/published by VehicleState. Confirmation-only, no implementation, vehicle actions or external publication."
+    },
+    "navigation_4ba_layout": {
+      "observed_on": "2026-10-07",
+      "source": "Original CAN0x4BA arrays, docs/evidence/2026-10-07/can-only-4ba-layout.json; ajouatom DBC ab696d049e3d6d0fd3bde51c233ee81f736415be; official ADASISv2.0.2 pp66-72.",
+      "transport": "8-byte payload, observed standard CAN ID on logical bus0; stored CAN-FD flag from capture inventory.",
+      "records": 873,
+      "non_ff_records": 436,
+      "all_ff_records": 437,
+      "dbc_little_endian_fields": "Offset0:13,Path13:6,DBC_counter19:2,Accuracy21:2,Distance23:10,Value0_33:10,Value1_43:10,ProfileType53:5; unsigned/raw factor1 definitions.",
+      "profile_types": {
+        "1": 415,
+        "16": 21,
+        "31": 437
+      },
+      "raw_example": "d4 00 81 02 84 01 20 60 -> Offset212,Path8,DBC_counter0,Accuracy0,Distance5,Value0_194,Value1_0,ProfileType1; extra bits58:2=0,60:1=0,61:3=3.",
+      "extra_bits": "Bits58..63 are not unused:58:2 varies0..3, counter-like candidate;60:1=0;61:3=3 on all non-FF frames.",
+      "standard_comparison": "Logical two-point profile interpretation:Offset and Offset+Distance1. Offset is path-start-relative modulo8191, not directly remaining distance. Standard SHORT type1 is nonlinear-coded curvature;16..31 system-specific. Vehicle packing/header code differs from standard table/code4, so no blind standard application.",
+      "counter_limit": "DBC19:2 is0 on every non-FF packet; its counter name is not independently verified. Bits58:2 show changes and repeated packets; exact semantics not finalized.",
+      "semantic_limits": "Value0/Value1 meaning and scale depend on profile type. Do not use0x4BE LONG-type16 camera/bump rules on0x4BA SHORT-type16. No physical curve/event validation or runtime decoder change."
+    },
+    "object_candidates": {
+      "address": "0x1A0 SCC_CONTROL",
+      "records": 32841,
+      "fields": "ACC_ObjDist m, ACC_ObjRelSpd m/s, ObjValid and SCC_ObjSta candidates from DBC; not a decoded raw radar-object list.",
+      "observed_total_ranges": "7.7..204.6m distance, -12.8..34.6m/s relative speed.",
+      "objvalid_counts": {
+        "0": 2920,
+        "1": 29921
+      },
+      "repeated_placeholder_pair": "29921 records have204.6m/34.6mps, exactly the records with ObjValid1. Likely unavailable/default pair; do not assume1 means a real usable lead.",
+      "other_candidate_records": 2920,
+      "other_candidate_ranges": "Excluding that repeated pair: distance7.7..87.1m and relative speed-12.8..7.0mps. These are decoded candidates, not verified usable radar leads.",
+      "scc_object_state": "Always0 in the captured records; pinned enum labels0 as no in-path object.",
+      "acc_mode": "Always0; object association/freshness and flag semantics remain unverified.",
+      "publication": "Current VehicleState parser only uses SCC mode for cruise_engaged; object fields are not published yet. Advisory only."
+    },
+    "actions": "CAN-only read/decoding and project guidance/state update. No other topic inspection after the correction; no actuation/UDS/USB, runtime implementation, tests/builds or external publication.",
+    "scope_notice": "Historical CAN-only assessment. User explicitly authorized co-recorded sensor-topic references on2026-10-07 for current inference; preserve actual CAN/reference distinction."
+  },
+  "deep_ecan_inference": {
+    "observed_on": "2026-10-07",
+    "source": "User-provided 20261007_* sensor_suite.bag files and docs/evidence/2026-10-07/ecan-deep-inference-20261007.json; exact available CAN index/record provenance from earlier inventory retained.",
+    "user_request": "Persistently inspect correlations and all Internet materials, infer every observed ID and decode its values.",
+    "status": "all_id_hypothesis_catalog_and_numeric_values_delivered_physical_unknowns_explicit",
+    "ids_reviewed_and_exported": 138,
+    "readable_records_exported": 1914473,
+    "internet": {
+      "requested_result_slots": 160,
+      "search_angles": 16,
+      "unique_result_urls": 99,
+      "new_pinned_repositories": 8,
+      "interpretation": "Search slots and URLs are discovery counts, not counts of independently validated primary sources. Relevant original code/DBC and papers were reviewed; ID-only cross-platform/UDS matches not blindly applied."
+    },
+    "research_pins": {
+      "Sterlingarcher2525/ioniq5-can": "8351cc0317e6cd45a286c2ed9b3d64f65336f666",
+      "dragz/egmpdbc": "b234d7e0ff5ba881f80087580d6e86cf8af447f1",
+      "tylerharvey/Ioniq5_CAN": "2c08cf388ae6c8a16f32f30867b8003661bb8d79",
+      "dragz/explorationsincarhacking": "fddf8095e902b3e8718bb668a232912320e22926",
+      "L1Z3/wicant-i-precondition": "2693a4e94196b2e8d796c222dd2928d1bfb1ee56",
+      "dalathegreat/Battery-Emulator": "ef6a1b2d716c8b46e0c134d7a236afe96dd620a2",
+      "sunnypilot/opendbc": "b2acec1dc7f15cfb258aa48415168485e29cc4ff",
+      "openvehicles/Open-Vehicle-Monitoring-System-3": "7c877840706624e76b8f20f9100a6dba5220342f"
+    },
+    "analysis": {
+      "first_integer_layouts": 132334,
+      "secondary_integer_layouts": 132334,
+      "discrete_fields": 11127,
+      "heldout_relations_with_reference_aliases": [
+        43,
+        11,
+        2
+      ],
+      "curated_inferred_fields_including_unit_hypotheses": 30,
+      "crc16_all_record_matching_ids": 67,
+      "new_crc8_equivalent_all_record_matching_ids": 8,
+      "cyclic_motion_hypotheses_tested": 902,
+      "cyclic_motion_hypotheses_accepted": 0,
+      "independent_sensor": "NavSatFix records extracted without other sensor payloads. Valid fix/above5kmh per-capture GNSS-versus-wheel gains approximately0.996..1.009. No absolute coordinates exported.",
+      "validation_split": "First two captures choose integer/status hypotheses and lag; later five hold out. First differences, phase-shift controls and per-capture gains retained. Positive reported lag means payload(t) compared with reference(t-lag), not hardware CAN arrival delay."
+    },
+    "findings": {
+      "motor_speed_candidates": "0x10A and 0x120 signed16@24 align with public rear/front motor RPM definitions; ranges -33..5097 and -29..3862. Front zero while rear moves does not establish exact clutch state.",
+      "speed_candidate": "0x0DA uint16@64 times0.01m/s matches wheel speed with approximately0.294kmh overall RMSE. 0x1AA byte6 and 0x435 byte7 are lagged speed-copy candidates.",
+      "load_fields": "0x035/0x0DA carry distinct front/rear signed load-like channels. 0x0F5 has two identical24-bit words, each decomposed into candidate front/rear signed12-bit fields; all65686 pairs identical. Do not treat the packed word as one physical scalar or certify Nm.",
+      "voltage_candidates": "0x10A/0x120 uint16@128=683..702V using source mapping. 0x235 uint16@104/10 and 0x255 uint16@136/10 are related high-voltage hypotheses with offsets and unknown sensor locations.",
+      "electrical_load_candidates": "0x250 signed10@168 and 0x2FA signed16@64 track power/current-like load. kW and raw/10A are joint working unit hypotheses, not independently calibrated readings.",
+      "rejected_energy_assumption": "Torque=1Nm/count plus current=0.1A/count produced drive-side electrical power below the mechanical proxy. That combined model was not certified.",
+      "source_conflicts": "Old wheel-RPM scale conflicts with GNSS-validated wheel-kph scale. 0x435 public Power_State meaning conflicts with changing speed-like values. 0x412 public byte6 brake field unexcited while known braking changes. TPMS physical wheel order remains conflicted.",
+      "unexcited_nonprotocol_bodies": 57,
+      "all_unique_physical_meanings_established": false,
+      "all_observed_ids_given_numeric_values_and_explicit_hypotheses": true
+    },
+    "artifacts": [
+      "docs/ecan_inference_20261007.md",
+      "docs/ecan_inference_all_ids_20261007.md",
+      "docs/evidence/2026-10-07/ecan-deep-inference-20261007.json",
+      "docs/evidence/2026-10-07/ecan-internet-source-audit-20261007.json",
+      "docs/evidence/2026-10-07/ecan-value-export-receipt-20261007.json",
+      "docs/evidence/2026-10-07/ecan-inference-evidence.png"
+    ],
+    "local_value_bundle": {
+      "path": "build/deep-ecan-20261007/ecan_decoded_values_20261007.zip",
+      "bytes": 37842820,
+      "sha256": "e71fdeafd0e8916e62eaa3e43d5ef0dd664011da7381060b3a1ce6c82858cd95",
+      "format": "138 per-ID NPZ files, schema JSON and read_values.py; exact int64 host ROS stamps and capture indexes. Source candidates, inferred fields and raw bytes coexist.",
+      "privacy": "Ignored local bundle, no Git/external publication. Known IMU identifier field/bytes16..23 omitted; no GNSS absolute coordinates. Conditional navigation-event values masked outside source conditions."
+    },
+    "verification": "All138 NPZ shapes, column schemas, int64 stamps, identifier omission and summed1914473 rows checked. Selected value reader run; evidence figure visually inspected. No broad implementation build/tests.",
+    "remaining_information_gaps": "Exact physical meanings for constant/unexcited bodies, sender identity, torque/current absolute calibration, TPMS position order and some bit-width/sign/role alternatives. Vehicle RWD/AWD, tire specification and annotated operation windows were requested optionally but not supplied during this analysis.",
+    "actions": "Offline reads, workspace-local analysis caches/reports/state and local value export only. No CAN/USB/UDS/actuation/firmware/runtime changes, original bag writes, global packages/settings, Git commit/push or external application publication."
+  },
+  "offline_ecan_capture_analysis": {
+    "observed_on": "2026-10-07",
+    "source": "User-provided 20261007_* sensor_suite.bag files; exact-topic connection metadata, ROS1 chunk indices and parsed CAN payloads. docs/evidence/2026-10-07/ecan-structure-20261007.json and ecan-fields-20261007.json.",
+    "request": "Show real-vehicle ECAN structure and interpret as many fields as possible with ajouatom/openpilot, including IDs missing from the current DBC.",
+    "status": "offline_field_catalog_complete_available_source_semantics_and_unknowns_recorded",
+    "source_checkout_snapshot": {
+      "observed_on": "2026-10-07",
+      "branch": "main",
+      "head": "215059fb73bf1174c15c5051c6a0cd26ca0ff531",
+      "worktree": "Analysis reports/evidence/state added locally; runtime source untouched. No commit/push."
+    },
+    "topic": "/ioniq5/can_logger/rx",
+    "message_type": "ioniq5_ecan/RawCanFrame",
+    "read_frames": 1914473,
+    "unique_ids": 138,
+    "sum_read_capture_duration_s": 656.831032,
+    "bus": 0,
+    "flags": "All read frames fd=true, extended/returned/rejected=false; this does not establish all vehicle TX behavior.",
+    "payload_bytes": [
+      8,
+      16,
+      24,
+      32
+    ],
+    "complete_indexed_bags": 6,
+    "partial_bag": {
+      "capture": "20261007_144810",
+      "read_frames": 111898,
+      "read_duration_s": 38.391025,
+      "readable_indexed_chunks": 1538,
+      "observation": "Header end-index and EOF samples are zero-filled. First zero record at byte 3890955933; exclude the final unindexed chunk and later bytes. No original-file repair/reindex. Cause and total intended capture count unknown."
+    },
+    "research_snapshot": {
+      "repository": "https://github.com/ajouatom/openpilot",
+      "branch_observed": "carrot-wip",
+      "commit": "ab696d049e3d6d0fd3bde51c233ee81f736415be",
+      "source_verification": "Downloaded source blob hashes matched the GitHub commit tree. Runtime opendbc files matched pinned upstream after newline normalization.",
+      "runtime_pins_changed": false
+    },
+    "results": {
+      "old_dbc_matching_ids": 33,
+      "added_matching_ids": [
+        "0x3A0",
+        "0x41C",
+        "0x4A3",
+        "0x4B4",
+        "0x4B9",
+        "0x4BA",
+        "0x4BE"
+      ],
+      "combined_matching_ids": 40,
+      "semantically_unresolved_ids": 98,
+      "field_layouts_including_raw_placeholders_conflicts_and_code_fields": 601,
+      "crc16_hypothesis_matching_all_read_frames_ids": 67,
+      "byte2_counter_candidates_ids": 59,
+      "exploratory_correlations": "0x0DA bits 60:16 and 0x10A bits 24:16 track speed; 0x2B5 byte 6 tracks pedal. First two captures train and later captures hold out; meanings/scales/ECU identity not established.",
+      "pedal_candidate": "Nearest host-stamp pairing within 20 ms: 6567 pairs, 82.78 percent exactly equal, mean absolute raw error 0.1785. Candidate only.",
+      "scc_observation": "All observed 0x1A0 ACCMode/aReqRaw/aReqValue were zero; not a measurement of actual vehicle acceleration.",
+      "conflicts": "Preserved differing wheel-speed 14/16-bit widths, MDPS angle signs and state-bit layouts. 0x180 observed 8 B differs from CAM_0x180 32 B; 0x380 observed 8 B differs from newer navigation 24 B. Other-bus/classic/radar ID matches are not applied without platform evidence.",
+      "all_payload_bits_cataloged_structurally": true,
+      "all_payload_semantics_verified": false
+    },
+    "verification_limits": "Counts matched available exact-topic indices, message conn/time/size assertions, all catalog bit bounds, selected CRC and observed values checked. Rates are recorded ROS-message rates, not hardware CAN timing or lossless proof. Other sensor payloads/full-file hashes and exact logger executable provenance not verified.",
+    "artifacts": [
+      "docs/ecan_capture_structure_20261007.md",
+      "docs/ecan_fields_20261007.md",
+      "docs/evidence/2026-10-07/ecan-structure-20261007.json",
+      "docs/evidence/2026-10-07/ecan-fields-20261007.json",
+      "docs/evidence/2026-10-07/DBC_SOURCE_LICENSE.txt"
+    ],
+    "privacy": "Published artifacts omit original RAW examples, serial/identifier values and personal local paths; analysis-only raw spools remain ignored under build.",
+    "actions": "Offline reads and scoped project analysis artifacts/state only. No USB/CAN/UDS, runtime/config/firmware changes, packages/system settings, bag edits, Git commit/push or external application writes."
+  },
   "current_request": {
-    "description": "Publish the implemented receive-only ROS 1 RAW CAN logger, tests and documentation to main.",
-    "status": "receive_only_can_logger_source_published_remote_verified_target_launch_unverified",
+    "description": "Organize the current ECAN field/bit and co-recorded-bag inference reports and publish scoped documentation/evidence/state to kelvin926/Ioniq5_ECAN main.",
+    "status": "organized_analysis_ready_for_publication",
     "user_facing_language": "Korean",
-    "artifact_language": "English",
+    "artifact_language": "Korean report and source signal identifiers; English JSON provenance",
     "further_implementation_requested": false,
     "current_constraints": {
       "recorded_on": "2026-10-06",
@@ -24,7 +229,7 @@
       "fresh_usb_only_confirmation_received": true,
       "device_harness_and_ignition_zero_verified": true
     },
-    "historical_detail_notice": "Earlier vehicle/Git/Notion/power requests remain dated context. Current request authorizes Git publication of the completed logger and associated material project documentation/state, not vehicle actuation, UDS, settings/firmware writes or system installation.",
+    "historical_detail_notice": "Current request explicitly authorizes repository commit/push of organized analysis. Vehicle actuation, diagnostics, firmware/settings changes and unrelated external publication remain outside scope.",
     "vehicle_actuation_decision": {
       "recorded_on": "2026-10-06",
       "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
@@ -98,7 +303,11 @@
     "proven_race": "A 1 Hz safety tick before first RX after a mode reset permanently aborts I5R1 intent; fresh RX before tick passes. Original vehicle tick phase was not captured, so exact occurrence attribution remains an inference.",
     "firmware_fix": "Only unseen RX gets 100 ms initialization grace. Ready/TX still needs every newly received fresh valid mandatory message. Bad received CAN, timeout, relay/heartbeat and runtime faults still cancel.",
     "host_fix": "Startup-only plain-NO_OUTPUT drain to successful short USB boundary; idle unarmed listener recovery; restore both ECU communications before fresh stock confirmation; richer error diagnostics.",
-    "tests": {"custom_firmware": 14, "targeted_host": 18, "failed": 0},
+    "tests": {
+      "custom_firmware": 14,
+      "targeted_host": 18,
+      "failed": 0
+    },
     "build": "Noetic affected node/tests and signed Red Panda ARM application passed; no broad rerun.",
     "flash": "Completed USB-only and installed signature/capability verified. Bootstub unchanged, no DFU.",
     "usb_checks": "Preflight PASS, standby 3/3 requests rejected, physical TX delta [0,0,0], controls0.",
@@ -253,8 +462,8 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "93d00526a2319a159f6ac0d8da09289756545df5",
-    "head_subject": "Fix ECAN startup readiness and stock communication recovery",
+    "head": "215059fb73bf1174c15c5051c6a0cd26ca0ff531",
+    "head_subject": "Record verified receive-only CAN logger delivery",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -271,7 +480,7 @@
       "commit_or_push_performed": true,
       "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
     },
-    "head_scope": "Verified source-delivery commit 93d00526a2319a159f6ac0d8da09289756545df5. This state-only child receipt does not change source/docs/evidence; git HEAD and live origin main are authoritative for the final receipt commit. Dated binary/test provenance is retained separately.",
+    "head_scope": "Verified pre-publication checkout snapshot2026-10-07; historical delivery records below remain dated. Publication receipt will identify the source-document commit separately from its state-only child.",
     "delivery_snapshot": {
       "observed_at": "2026-10-06T23:04:51+09:00",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -706,11 +915,19 @@
       "safety_param": 0,
       "faults": 24,
       "ignored_faults": 24,
-      "physical_tx_delta": [8, 0, 0],
+      "physical_tx_delta": [
+        8,
+        0,
+        0
+      ],
       "tx_scope": "Authorized diagnostic session/read/receive flow-control and one clear only, no actuator CAN",
       "acc_enable_raw": 3,
       "mdps_fault_raw": 0,
-      "recurrent_730_dtc_raw": ["588186/89", "56b881/89", "563881/89"],
+      "recurrent_730_dtc_raw": [
+        "588186/89",
+        "56b881/89",
+        "563881/89"
+      ],
       "interpretation": "Recurrent ECU records/ACC fault persist despite successful single clear. Further diagnostics and control tests stopped. No physical-damage/root-cause claim or ACTIVE proof."
     },
     "current_installed_application": {
@@ -736,7 +953,13 @@
       "ecan_tx_delta": 0,
       "ecan_tx_total": 13,
       "ecan_new_error_delta": 0,
-      "stock_post_drain_frame_counts": {"TCS": 50, "LFA": 100, "SCC": 50, "accelerator": 100, "MDPS": 100},
+      "stock_post_drain_frame_counts": {
+        "TCS": 50,
+        "LFA": 100,
+        "SCC": 50,
+        "accelerator": 100,
+        "MDPS": 100
+      },
       "selected_crc_failures": 0,
       "acc_enable_raw": 3,
       "mdps_eps_fault_raw": 0,
@@ -1304,7 +1527,7 @@
       "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
     }
   ],
-  "next_action": "Source publication is verified; publish this state-only delivery receipt and verify final main. Target Ubuntu 20.04/Noetic launch and live Panda capture remain unverified. No further implementation, actuation, UDS, firmware/settings writes or system installation requested. Preserve other projects/global ROS/configuration.",
+  "next_action": "Report0x4BA eight-byte layout, actual decoded example, all-FF placeholder and unresolved header/profile semantics. No other sensor data, runtime implementation or publication requested.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -1498,6 +1721,26 @@
       "type": "recovery_fix_main_delivery_verified",
       "summary": "User deferred ignition cycling because it powers this computer off and requested push only. Published 23 scoped fix/docs/evidence files in 93d0052, normal fast-forward main and remote SHA verified with fresh kelvin926 public_repo device auth. Git 2.25 auth compatibility fixed after two failed attempts; both prior tokens revoked. No vehicle access, unrelated changes or repeated implementation tests/builds.",
       "source": "Git commit/push/ls-remote outputs; recovery_fix_delivery receipt"
+    },
+    {
+      "date": "2026-10-07",
+      "type": "can_only_bit_dictionary",
+      "summary": "Audited all 138 ECAN IDs and17920 physical bits; published local Korean noun-label field table and per-bit viewer with727 layouts/alternatives, per-bit counts/transitions, nine new structural/unit candidates and redacted IMU identity. Runtime unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "type": "exa_can_bit_followup",
+      "summary": "Exa6-angle140-result/76-URL follow-up plus CAN-only accumulator/counter/CRC/multi-input inference; added25 layouts/sub-bit meanings, removed150 raw/uninterpretable rows, current display97 IDs/602 rows/3886 bits. Original full audit preserved; runtime unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "type": "bag_reference_can_inference",
+      "summary": "Verified all co-recorded GNSS/radar records and media headers; split dual radar publishers and corrected camera clock basis. Revised1AA speed hypothesis, corrected/added navigation counter locations, independently supported speed/yaw/steering feedback sign and175 basis. Current97-ID605-row3892-bit view; runtime unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "type": "analysis_publication_preparation",
+      "summary": "User requested repository publication. Added current analysis/evidence indices and README entry, labeled older research stages, checked scoped public text,15 JSON files/local links, identity omission and original-data exclusion."
     }
   ],
   "ecu_recovery": {
@@ -2482,6 +2725,18 @@
   "vehicle_feedback_assessment": {
     "reviewed_on": "2026-10-07",
     "status": "advisory_only_no_runtime_change",
+    "capture_based_priority_proposal": {
+      "observed_on": "2026-10-07",
+      "source": "Current msg/VehicleState.msg, src/node.cpp publish_status/createTimer and src/vehicle_state_parser.cpp; docs/evidence/2026-10-07/ecan-deep-inference-20261007.json. Read-only assessment.",
+      "core_motion": "Prefer current wheel-derived speed, steering-wheel angle, yaw rate, measured longitudinal/lateral acceleration and four wheel speeds. Existing deg/deg_s fields retained; source/vehicle sign and bias remain integration checks.",
+      "operator_and_control_state": "Gear/standstill, brake/gas and raw pedal, driver torque counts, channel selection/output permission, EPS LKA/ACC broadcast fault status and control reason. Active fields report permission, not physical ECU execution.",
+      "quality_priority": "Per-signal valid, last host receive time, age and source/estimated status. Current overall valid covers steering/MDPS/wheel/TCS only; IMU/pedal/gear/SCC freshness is not guaranteed and message stamp is publication time.",
+      "command_feedback_proposal": "Keep requested input, converted/clamped/quantized CAN requests, transmit/reject status and measured response distinct. A typed command feedback message is not currently implemented; sent or returned CAN is not ECU execution acknowledgement.",
+      "new_inferred_monitoring_candidates": "Motor RPM and DC/HV voltage may be useful for monitoring after decoder/vehicle checks; absent from current VehicleState parser. Motor load Nm and electrical current/power units remain unresolved/working hypotheses, not primary closed-loop feedback.",
+      "scc_vs_motion": "0x04A acceleration is decoded motion feedback. 0x1A0 aReqRaw/aReqValue are SCC request values, not measured longitudinal acceleration.",
+      "rate": "Current source publishes VehicleState at 20Hz. Match an agreed upstream cadence; consider 50Hz motion feedback only if measured latency/control needs justify it, without interpreting faster publication as fresher measurements.",
+      "adoption_status": "Recommendation only, not a finalized upstream interface or implemented change. No source/config/message modifications, builds, hardware access or publication."
+    },
     "existing": {
       "topic": "/ioniq5/vehicle_state",
       "type": "ioniq5_ecan/VehicleState",
@@ -2616,5 +2871,183 @@
       "receipt_scope": "This state-only child records verified source delivery. Its final remote SHA is checked at session close, not pre-claimed here."
     },
     "preserved": "Existing src/include/config/patches control behavior and prior uncommitted advisory guidance/state retained."
+  },
+  "ecan_bit_dictionary": {
+    "observed_on": "2026-10-07",
+    "status": "co_recorded_sensor_reference_tables_complete",
+    "source": "Cached validated CAN-only extraction from seven user-provided captures; prior pinned-source field/header/correlation evidence plus current bit audit. docs/evidence/2026-10-07/ecan-bit-audit-receipt-20261007.json",
+    "scope": "CAN payload interpretation using explicitly authorized co-recorded bag reference topics. Final field tables remain actual CAN payload fields and candidates; other-topic values are references only.",
+    "frames": 1914473,
+    "ids": 138,
+    "physical_bit_positions": 17920,
+    "field_layout_and_alternative_rows": 605,
+    "variable_bits": 3968,
+    "fixed_zero_bits": 12184,
+    "fixed_one_bits": 1704,
+    "identity_bits_redacted": 64,
+    "meaning_limit": "All original bits were audited, but current display contains only assignable fields/candidates. Omitted portions remain in the preserved audit; candidate semantics and absolute units are not all vehicle-validated.",
+    "new_candidates": {
+      "count": 9,
+      "status": "Working/structural candidates, not certified physical decoders",
+      "IMU_04A": "208:16 vertical acceleration candidate replaces neither existing 208:8 source definition nor runtime; matching other acceleration scale yields about 1 g median. Unit/axis independent validation pending.",
+      "3B5": "128:16 voltage candidate 683..699; source emulator uses 120:16 which produces 43903..47999 here. Five-capture holdout correlation to 0x255 voltage candidate 0.9951; absolute V calibration unverified.",
+      "4BA": "58:2 tail cyclic-counter candidate; 60:1 unresolved fixed flag; 61:3 message-code candidate =3 on non-FF packets vs official SHORT code4. Source 19:2 counter definition fixed0 on non-FF packets.",
+      "4B8_4BF": "0:13 offset and 13:6 path-index structural candidates from adjacent navigation-frame morphology, without certified units or detailed attributes."
+    },
+    "verified_CAN_only_relationships": {
+      "steering": "Same-sign scaling of 0x125 and MDPS 0x0EA angle magnitudes: holdout r=0.9999003, direct RMSE0.7218deg. Physical left/right sign remains unverified.",
+      "camera_curvature": "Quality3 and speed>5m/s camera curvature vs yaw/speed has weak training and only moderate holdout correlation (~-0.61/-0.63). Not direct steering or roadway curvature proof.",
+      "acceleration": "CAN IMU acceleration, wheel-speed derivative and ESC basis show related dynamics but nonunity calibration gains; no independent sensor validation."
+    },
+    "official_protocol_source": {
+      "url": "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.4-D2.2-ADASIS_v2_Specification.0.pdf",
+      "sha256": "c56c9592518e5ab67824289d77bfb611e200c63bfc8107fa488c6b16d2d1ec1d",
+      "pages_checked": [
+        47,
+        51,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79
+      ],
+      "finding": "Intel conversion allowed, but Hyundai packet fields and short-message tail code not validated as the specified layout."
+    },
+    "presentation": {
+      "field_table": "docs/ecan_korean_bit_fields_20261007.md",
+      "bit_viewer": "docs/ecan_bit_viewer_20261007.html",
+      "dictionary": "docs/evidence/2026-10-07/ecan-interpreted-bit-dictionary-20261007.json",
+      "receipt": "docs/evidence/2026-10-07/ecan-bit-audit-receipt-20261007.json",
+      "full_audit_dictionary_preserved": "docs/evidence/2026-10-07/ecan-korean-bit-dictionary-20261007.json",
+      "followup_report": "docs/ecan_followup_inference_20261007.md",
+      "followup_receipt": "docs/evidence/2026-10-07/ecan-exa-followup-receipt-20261007.json",
+      "bag_reference_report": "docs/ecan_bag_reference_inference_20261007.md",
+      "bag_reference_receipt": "docs/evidence/2026-10-07/ecan-bag-reference-receipt-20261007.json"
+    },
+    "verification": {
+      "coverage": "138 unique IDs and all 17920 physical bit indices; no gaps or duplicates",
+      "statistics": "Bit zero/one counts, per-capture sums, within-capture transition bounds checked against 1914473 CAN frames",
+      "privacy": "IMU identity bits 128..191 contain no value/count/transition statistics",
+      "viewer": "Node DOM-model check: all ID field/bit rendering, matrix cells, search, variable filter, redacted detail. Actual browser rendering not asserted.",
+      "scope": "No other sensor topic/field data used; no runtime/config/device/system/Git publication changes"
+    },
+    "audited_field_layout_and_alternative_rows_before_followup": 727,
+    "displayed_ids": 97,
+    "displayed_physical_bits": 3892,
+    "excluded_physical_bits_from_view": 14028,
+    "exa_followup": {
+      "observed_on": "2026-10-07",
+      "source": "Direct user Exa invocation; docs/evidence/2026-10-07/ecan-exa-followup-sources-20261007.json and ecan-exa-followup-inference-20261007.json",
+      "search": {
+        "workstreams": 6,
+        "queries": 14,
+        "requested_results": 140,
+        "unique_result_urls": 76
+      },
+      "display_policy": "Retain source-defined meanings or supported CAN/protocol hypotheses with uncertainty. Omit unnamed/raw placeholder fields and unassignable bits; omit41 IDs without retained fields. Original full audit evidence remains unchanged.",
+      "new_layout_rows": 25,
+      "removed_previous_rows": 150,
+      "total_visible_rows": 602,
+      "new_wheel_accumulators": "0x0A0 unsigned8-bit fields at24/32/40/48 cycle0..254;50-frame increments track corresponding wheel-speed integrals. Holdout left/right differential r0.997818/0.997124 supports relative channel assignment. Nominal10ms sample period; physical pulse distance and absolute odometry origin unverified.",
+      "new_motor_load_detail": "0x10A/0x120 signed12/14-bit alternatives at192 have identical observed values; same-CAN40:10 load relation holdout r0.9999882/0.9999799. Nm/A units, exact width and requested-versus-measured identity remain unverified.",
+      "new_counters": "0..14 modulo15 fields at12:4 in0x36F/0x37F/0x412/0x418/0x419/0x435; existing1CF/413/41C counter meanings refined. Distinct broadcasts with duplicate payloads excluded; skips do not prove hardware frame loss.",
+      "new_crc8": "Poly0x1D zero-init equivalent XOR0xE5/0xFB/0xD0 matches all observed0x36F/0x37F/0x3E5. Unique bodies15/15/4; initial value, xorout/data-ID and general response to arbitrary data unresolved, especially3E5.",
+      "source_comment_refinements": "Pinned sunnypilot DBC comments define IMU failure/initialization/reset flags and0x11A map-request bits96/97/98. All observed zero; no vehicle-operation verification.",
+      "additional_search_limits": "2691 unresolved numeric spans tested for joint front/rear load models;1096 unresolved changing bits tested against new load-sign classes. No new load-sign bits passed thresholds. Diagnostic/PID layouts and virtual/other-platform CAN matrices excluded.",
+      "verification": {
+        "data": "97 displayed IDs, 602 field-layout rows and3886 unique bit positions checked; every displayed bit has a retained field owner; no placeholder/unnamed rows.",
+        "counts": "Per-bit zero/one sums and retained bit totals agree; source identity64-bit values/statistics omitted.",
+        "preservation": "Original full1914473-frame/138-ID/17920-bit audit JSON SHA256 unchanged.",
+        "viewer": "Node DOM-model checks passed for interpreted-only IDs, sparse matrices, per-bit rows, search, variable filter and redacted details. No actual browser rendering claim.",
+        "scope": "CAN only; no runtime/config/device/diagnostic/system/Git publication changes."
+      }
+    }
+  },
+  "bag_reference_inference": {
+    "observed_on": "2026-10-07",
+    "status": "complete",
+    "authorization": "Direct user message: 같이 기록한 bag 파일 내용들도 같이 보면서 CAN 데이터 추론해.",
+    "scope": "Offline reads of co-recorded bag topics and current CAN captures; other-topic prohibition superseded for this inference task. No hardware, control/runtime, diagnostics, system changes or external publication.",
+    "presentation": {
+      "ids": 97,
+      "layout_rows": 605,
+      "bit_positions": 3892,
+      "unknown_rows_excluded": true,
+      "reference_sensor_values_not_added_as_CAN_fields": true
+    },
+    "source_evidence": "docs/evidence/2026-10-07/ecan-bag-reference-inference-20261007.json",
+    "report": "docs/ecan_bag_reference_inference_20261007.md",
+    "source_inventory": {
+      "bag_files": 7,
+      "types": [
+        "NavSatFix",
+        "ReceiverState_V2_6_5",
+        "MFI920ScanArray",
+        "MFI920TrackArray",
+        "CompressedImage",
+        "PointCloud2"
+      ],
+      "camera_topics": 7,
+      "radar_publishers": 2,
+      "all_reference_connection_counts_verified": true,
+      "no_separate_imu_topic": true
+    },
+    "clock_findings": {
+      "camera": "Header clock about72692790sec before record clock; scenes selected by bag record time. No hardware timing claim.",
+      "lidar": "Header typically0.10..0.13sec before bag receipt; sensor-frame geometry inspected, extrinsics absent.",
+      "radar": "Shared topic and frame_id split by caller/connection; raw Doppler speed model independently compared to GNSS.",
+      "damaged_bag": "Recovered8 later connection definitions within the already validated1538-chunk prefix. No repair/reindex or new unindexed bytes admitted."
+    },
+    "findings": {
+      "1AA_speed": "48:8 revised from0.125mps working hypothesis to0.5kmh biased/display-speed candidate. Empirical D=v+min(.12v,2.5) fit on first2 captures, independent GPS RMSE.310kmh and left/right radar RMSE.284/.280kmh. No actual dashboard/OEM formula observation.",
+      "0DA_speed": "0.01mps candidate independently agrees with GNSS and raw radar motion; holdout GPS r.9996615,RMSE.07848mps.",
+      "04A_yaw": "0.005deg/s/LSB minus163.84 independently agrees with GNSS ENU course-rate; holdout r.9921457,RMSE.6131deg/s.",
+      "125_feedback_sign": "Forward-turn recording supports positive raw*.1 left-turn sign;468 training and280 independent large-turn bins agree. Not upstream command/torque sign validation.",
+      "175_basis": "32:11*.01-10.23 mps2 is a basis longitudinal-acceleration candidate; GPS holdout r.9184,gain.9850,RMSE.1711mps2. Internal sensor/filter source unverified.",
+      "navigation_counters": "4B4 counter18:2 and4BE counter59:2 replace source19:2/45:2 hypotheses. Added4B8/4B9 counter45:2,4BF counter56:2. FF/repeats excluded; small samples remain structural candidates.",
+      "unresolved": "17710 integer layouts plus IEEE754 direct coordinate models,104 circular heading models and1560 FF-excluded direct navigation coordinate models did not establish new absolute coordinates. SCC/external object joint match88/506 bins insufficient for unique target/list proof. CAN IMU-vs-GNSS acceleration nonunity not used to silently rescale."
+    },
+    "verification": {
+      "reference_records": "All co-recorded reference connection counts equal available validated chunk indices; later prefix connection definitions recovered without bag edits.",
+      "tables": "97 displayed IDs,605 layout rows and3892 owned bit positions checked. No unidentified rows restored; identity64-bit values/counts remain omitted.",
+      "viewer": "Node DOM-model checks passed for97 IDs and sparse bit tables, search/filter, matrices and redaction; actual browser rendering not asserted.",
+      "scope": "No runtime/source-control/firmware, USB/CAN TX/UDS, package/system settings, original bag modifications or Git publication.",
+      "quantity_semantics": "Cross-quantity regressions do not report physically meaningless identity differences between RPM/angle and speed/curvature."
+    }
+  },
+  "ecan_analysis_publication": {
+    "requested_on": "2026-10-07",
+    "user_request": "레포에 정리해서 올려.",
+    "status": "prepared_for_main_publication",
+    "repository": "https://github.com/kelvin926/Ioniq5_ECAN",
+    "branch": "main",
+    "base_head": "215059fb73bf1174c15c5051c6a0cd26ca0ff531",
+    "current_entry": "docs/ecan_analysis_20261007.md",
+    "current_fields": "docs/ecan_korean_bit_fields_20261007.md",
+    "content": "Current Korean605-row field table, standalone bit viewer, bag-reference validation, dated research snapshots/evidence/license, README entry and project guidance/state.",
+    "display_counts": {
+      "ids": 97,
+      "field_layout_rows": 605,
+      "owned_bit_positions": 3892
+    },
+    "audit_counts": {
+      "ids": 138,
+      "can_frames": 1914473,
+      "physical_bits": 17920
+    },
+    "publication_checks": {
+      "JSON_files_parsed": 15,
+      "broken_local_markdown_links": 0,
+      "selected_personal_windows_session_secret_matches": 0,
+      "known_IMU_identifier_values_and_statistics_redacted": true,
+      "potential_static_broadcast_VIN_signatures": 0,
+      "original_bag_sensor_raw_data_not_included": true,
+      "source_runtime_changes": false
+    },
+    "history_notes": "Older reports labeled dated stages; prior1AA unit and counter hypotheses remain provenance, current interpretations shown first. No history rewrite.",
+    "authentication_policy": "Requested account kelvin926; one-time publication using verified requested-account credential in process memory, helpers disabled for write; no token storage/global credential changes.",
+    "verification_scope": "Documentation, JSON/link/redaction/field ownership and DOM-model verification. No repeated builds/tests or vehicle actions."
   }
 }

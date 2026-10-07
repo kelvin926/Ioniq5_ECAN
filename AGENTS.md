@@ -4,6 +4,10 @@
 - Speak to the user in Korean. Repository documentation and state may be English.
 - Never use the middle-dot character (U+00B7).
 - Follow the user's current request and preserve earlier accepted decisions.
+- CAN inference may use co-recorded bag topics as reference, per the user's scope change.
+- Distinguish sensor-reference evidence from fields actually decoded from CAN payloads.
+- Keep uninterpretable fields out of display tables while preserving raw audit evidence.
+- Check header/bag clock differences and split shared-topic publishers before correlations.
 - Infer intent and complete tasks with the smallest root-cause fix.
 - Preserve existing behavior and scope; avoid unrelated changes.
 - Do not modify this computer's unrelated files, directory structure, installed packages,
@@ -176,6 +180,7 @@
 - `src/safety_supervisor.cpp`: existing channel engagement behavior.
 - `scripts/steering_sweep.py`: earlier vehicle control examples.
 - `scripts/can_logger.py` and `docs/can_logger.md`: standalone USB-IN-only ROS RAW recorder.
+- `docs/ecan_analysis_20261007.md`: current field/bit tables and dated research snapshots.
 - `patches/opendbc-hyundai-canfd-split-arm.patch`: custom channel semantics.
 - `patches/panda-ecan-only.patch`: ECAN-only firmware behavior.
 - `docs/vehicle_handoff.md`: current handoff and dated historical evidence; consult verification scope.

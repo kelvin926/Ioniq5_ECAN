@@ -1,0 +1,337 @@
+{
+  "date": "2026-10-07",
+  "scope_ko": "CAN 전용, 논리 버스 0",
+  "frames": 1914473,
+  "ids": 138,
+  "physical_bits": 17920,
+  "field_layout_rows": 727,
+  "variable_bits": 3968,
+  "fixed_zero_bits": 12184,
+  "fixed_one_bits": 1704,
+  "identity_bits_redacted": 64,
+  "crc16_ids": 67,
+  "crc8_ids": 8,
+  "new_candidate_layouts": 9,
+  "semantic_scope": "Interpretation candidates, alternatives and raw bit ranges. Not a runtime/control DBC.",
+  "baseline_pin": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
+  "ajouatom_pin": {
+    "repository": "https://github.com/ajouatom/openpilot",
+    "branch_snapshot": "carrot-wip",
+    "commit": "ab696d049e3d6d0fd3bde51c233ee81f736415be",
+    "runtime_pin_changed": false
+  },
+  "method_ko": [
+    "캡처별 경계 분리",
+    "전체 물리 비트의 0/1 횟수와 전이 횟수",
+    "정의별 부호 및 엔디언 재해석",
+    "두 캡처 학습 및 나머지 다섯 캡처의 CAN 상호검증",
+    "기본값과 포화 후보 구분",
+    "동일 비트 대안 및 고정 상위 비트 보존"
+  ],
+  "capture_limit_ko": "마지막 파일은 검증된 색인 앞부분만 포함. 합계 656.831초. 호스트 수신 시각 기준.",
+  "limits_ko": [
+    "GPS 좌표의 검증된 CAN 매핑 없음",
+    "원시 레이더 객체목록의 검증된 매핑 없음",
+    "미해석 비트의 기능은 고정값이나 상관관계만으로 확정 불가"
+  ],
+  "bit_numbering_ko": "첫 바이트 B0, 바이트의 최하위 비트 b0. 물리 비트 번호=8×B+b. BE 필드 시작번호는 DBC 표기이므로 물리 구간과 별도.",
+  "official_adasis_sources": [
+    {
+      "url": "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.4-D2.2-ADASIS_v2_Specification.0.pdf",
+      "sha256": "c56c9592518e5ab67824289d77bfb611e200c63bfc8107fa488c6b16d2d1ec1d",
+      "pages_checked": [
+        47,
+        51,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79
+      ],
+      "finding": "Intel conversion allowed, but Hyundai packet fields and short-message tail code not validated as the specified layout."
+    }
+  ],
+  "checks": {
+    "steering_MDPS_positive_vs_SAS_source_negative": {
+      "train": {
+        "n": 2554,
+        "r": -0.9999825832800021,
+        "y_equals_gain_x_plus_offset": [
+          -1.0045304688522656,
+          -0.09503296579370472
+        ],
+        "direct_rmse": 153.17823250153543,
+        "fit_rmse": 0.4506653624845699
+      },
+      "holdout": {
+        "n": 4017,
+        "r": -0.9999002639987079,
+        "y_equals_gain_x_plus_offset": [
+          -1.0059047807593458,
+          -0.29686592425132186
+        ],
+        "direct_rmse": 93.10222713520592,
+        "fit_rmse": 0.6344242598809707
+      }
+    },
+    "steering_MDPS_negative_vs_SAS_source_negative": {
+      "train": {
+        "n": 2554,
+        "r": 0.9999825832800021,
+        "y_equals_gain_x_plus_offset": [
+          1.0045304688522656,
+          -0.09503296579370472
+        ],
+        "direct_rmse": 0.5702731214481374,
+        "fit_rmse": 0.4506653624845699
+      },
+      "holdout": {
+        "n": 4017,
+        "r": 0.9999002639987079,
+        "y_equals_gain_x_plus_offset": [
+          1.0059047807593458,
+          -0.29686592425132186
+        ],
+        "direct_rmse": 0.7217744985011467,
+        "fit_rmse": 0.6344242598809707
+      }
+    },
+    "IMU_longitudinal_g_times_gravity_vs_wheel_speed_derivative": {
+      "train": {
+        "n": 2546,
+        "r": 0.8034384440120931,
+        "y_equals_gain_x_plus_offset": [
+          0.6597196068864112,
+          0.08517376541665901
+        ],
+        "direct_rmse": 0.31957740595372336,
+        "fit_rmse": 0.23597711534575747
+      },
+      "holdout": {
+        "n": 3997,
+        "r": 0.8789076301965579,
+        "y_equals_gain_x_plus_offset": [
+          0.6556026833500669,
+          0.023508096661352448
+        ],
+        "direct_rmse": 0.3766486662268932,
+        "fit_rmse": 0.26885484028687606
+      }
+    },
+    "ESC_aBasis_vs_IMU_longitudinal_acceleration": {
+      "train": {
+        "n": 2554,
+        "r": 0.8001355179672329,
+        "y_equals_gain_x_plus_offset": [
+          1.0108778990956144,
+          -0.1432134067421763
+        ],
+        "direct_rmse": 0.32287964387325047,
+        "fit_rmse": 0.28926469937981397
+      },
+      "holdout": {
+        "n": 4017,
+        "r": 0.8795612057976618,
+        "y_equals_gain_x_plus_offset": [
+          1.1928696818483286,
+          -0.049183408309395285
+        ],
+        "direct_rmse": 0.37850144129058916,
+        "fit_rmse": 0.35945258532351615
+      }
+    },
+    "IMU_lateral_acceleration_vs_speed_times_yaw": {
+      "train": {
+        "n": 2437,
+        "r": 0.82897657910774,
+        "y_equals_gain_x_plus_offset": [
+          0.6857576564708256,
+          -0.052053251410856594
+        ],
+        "direct_rmse": 0.32887912262870217,
+        "fit_rmse": 0.264906282429911
+      },
+      "holdout": {
+        "n": 3655,
+        "r": 0.8335912411636859,
+        "y_equals_gain_x_plus_offset": [
+          0.6891871310439172,
+          -0.11627350460432037
+        ],
+        "direct_rmse": 0.24227245539905698,
+        "fit_rmse": 0.18018204316469524
+      }
+    },
+    "camera_left_curvature_quality_2_vs_yaw_over_speed": {
+      "train": {
+        "n": 0,
+        "status": "insufficient_variation"
+      },
+      "holdout": {
+        "n": 18,
+        "status": "insufficient_variation"
+      }
+    },
+    "camera_left_curvature_quality_3_vs_yaw_over_speed": {
+      "train": {
+        "n": 782,
+        "r": -0.1050269014686162,
+        "y_equals_gain_x_plus_offset": [
+          -0.6186298952184038,
+          0.0006956259500757902
+        ],
+        "direct_rmse": 0.003770835489010229,
+        "fit_rmse": 0.003634551346745721
+      },
+      "holdout": {
+        "n": 2950,
+        "r": -0.6136974673027839,
+        "y_equals_gain_x_plus_offset": [
+          -0.9533140276545146,
+          1.6764798999433348e-05
+        ],
+        "direct_rmse": 0.003678074663843081,
+        "fit_rmse": 0.0018230630345778675
+      }
+    },
+    "camera_right_curvature_quality_2_vs_yaw_over_speed": {
+      "train": {
+        "n": 0,
+        "status": "insufficient_variation"
+      },
+      "holdout": {
+        "n": 16,
+        "status": "insufficient_variation"
+      }
+    },
+    "camera_right_curvature_quality_3_vs_yaw_over_speed": {
+      "train": {
+        "n": 983,
+        "r": -0.2160054127131768,
+        "y_equals_gain_x_plus_offset": [
+          -0.8006591277299883,
+          0.0005788403116865241
+        ],
+        "direct_rmse": 0.0034911319881638617,
+        "fit_rmse": 0.0031050733585430506
+      },
+      "holdout": {
+        "n": 2963,
+        "r": -0.6277987113006278,
+        "y_equals_gain_x_plus_offset": [
+          -0.8719915924197063,
+          -9.36548670222706e-05
+        ],
+        "direct_rmse": 0.0036136218537216468,
+        "fit_rmse": 0.0017160642926429045
+      }
+    },
+    "3B5_bit128_voltage_vs_0x10a": {
+      "train": {
+        "n": 1276,
+        "r": 0.8792742045454179,
+        "y_equals_gain_x_plus_offset": [
+          0.8586375439132481,
+          98.7235941178612
+        ],
+        "direct_rmse": 0.948104857764485,
+        "fit_rmse": 0.4492573016783459
+      },
+      "holdout": {
+        "n": 2008,
+        "r": 0.9880729183833439,
+        "y_equals_gain_x_plus_offset": [
+          1.0002477299265653,
+          0.468406676905647
+        ],
+        "direct_rmse": 0.8326026012651331,
+        "fit_rmse": 0.5332354139026463
+      }
+    },
+    "3B5_bit128_voltage_vs_0x120": {
+      "train": {
+        "n": 1276,
+        "r": 0.7950814170066287,
+        "y_equals_gain_x_plus_offset": [
+          0.7514892317091442,
+          173.73117853401993
+        ],
+        "direct_rmse": 1.7345376011073304,
+        "fit_rmse": 0.5536794373187697
+      },
+      "holdout": {
+        "n": 2008,
+        "r": 0.9860029959710389,
+        "y_equals_gain_x_plus_offset": [
+          1.0129011590657602,
+          -7.465373638535397
+        ],
+        "direct_rmse": 1.556857341209044,
+        "fit_rmse": 0.5858864891270364
+      }
+    },
+    "3B5_bit128_voltage_vs_0x235": {
+      "train": {
+        "n": 1276,
+        "r": 0.9157395878800675,
+        "y_equals_gain_x_plus_offset": [
+          0.8122193371009526,
+          132.80832165825555
+        ],
+        "direct_rmse": 2.788946217325652,
+        "fit_rmse": 0.34418809959391794
+      },
+      "holdout": {
+        "n": 2007,
+        "r": 0.9918136106323123,
+        "y_equals_gain_x_plus_offset": [
+          0.9507027775630221,
+          36.760807147384554
+        ],
+        "direct_rmse": 2.7624880649369388,
+        "fit_rmse": 0.41869997907558043
+      }
+    },
+    "3B5_bit128_voltage_vs_0x255": {
+      "train": {
+        "n": 1276,
+        "r": 0.9465205345458065,
+        "y_equals_gain_x_plus_offset": [
+          0.9230410875210234,
+          52.886494867337994
+        ],
+        "direct_rmse": 0.5165672200110369,
+        "fit_rmse": 0.3038984640857522
+      },
+      "holdout": {
+        "n": 2008,
+        "r": 0.9951209797909444,
+        "y_equals_gain_x_plus_offset": [
+          0.987903827546064,
+          7.912490187662595
+        ],
+        "direct_rmse": 0.5536729945197957,
+        "fit_rmse": 0.33504787507967726
+      }
+    }
+  },
+  "artifacts": [
+    "docs/ecan_korean_bit_fields_20261007.md",
+    "docs/ecan_bit_viewer_20261007.html",
+    "docs/evidence/2026-10-07/ecan-korean-bit-dictionary-20261007.json"
+  ],
+  "verification": {
+    "coverage": "138 unique IDs and all 17920 physical bit indices; no gaps or duplicates",
+    "statistics": "Bit zero/one counts, per-capture sums, within-capture transition bounds checked against 1914473 CAN frames",
+    "privacy": "IMU identity bits 128..191 contain no value/count/transition statistics",
+    "viewer": "Node DOM-model check: all ID field/bit rendering, matrix cells, search, variable filter, redacted detail. Actual browser rendering not asserted.",
+    "scope": "No other sensor topic/field data used; no runtime/config/device/system/Git publication changes"
+  },
+  "artifacts_sha256": {
+    "docs/ecan_korean_bit_fields_20261007.md": "ee5bbf7d0cf8f5c6e7fdf8460958f4c1efd0556f2b7d15241feb0868853823a3",
+    "docs/ecan_bit_viewer_20261007.html": "77cc1f413aa79142bf81b32b5dce0022be8b346961908dc80921e6eaaf95bc41",
+    "docs/evidence/2026-10-07/ecan-korean-bit-dictionary-20261007.json": "0a5f5012866f6d975c800a4e0fb552c5ebdd21626e9e8330104b65386528d360"
+  }
+}

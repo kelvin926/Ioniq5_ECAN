@@ -1,0 +1,788 @@
+{
+  "observed_on": "2026-10-07",
+  "requested_search_results": 140,
+  "workstreams": 6,
+  "query_count": 14,
+  "unique_result_urls": [
+    "https://github.com/Sterlingarcher2525/ioniq5-can",
+    "https://github.com/commaai/opendbc/blob/5ce12a2558e5657b62936d6346b7b05baecf6646/kia_ev6.dbc",
+    "https://github.com/tylerharvey/Ioniq5_CAN",
+    "https://github.com/tylerharvey/Ioniq5_CAN/tree/main/guides/cars/E-GMP_gen1",
+    "https://github.com/sbaliko/Wican-Pro-Vehicle-profiles",
+    "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs/blob/main/TorqueIONIQ5AWD77kWh.csv",
+    "https://github.com/meatpiHQ/wican-fw/blob/main/vehicle_profiles/hyundai/hyundai_ioniq_electric_38kwh_readme.md",
+    "https://github.com/dalathegreat/Battery-Emulator/wiki/Battery:-Hyundai-E%E2%80%90GMP-platform-(58.2-%E2%80%90-77.4-kWh)",
+    "https://ofs.ccwu.cc/tylerharvey/Ioniq5_CAN",
+    "https://ahmetbirinci.dev/posts/the-xor-method",
+    "https://github.com/OBDb/Hyundai-IONIQ-5",
+    "https://github.com/timurrrr/hyundai-n/blob/main/IONIQ_5_N/data_logging.md",
+    "https://gitee.com/czlz/opendbc/blob/master/hyundai_canfd.dbc",
+    "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+    "https://github.com/tylerharvey/Ioniq5_CAN/blob/main/README.md",
+    "https://www.hyundai-kefico.com/en/business/ev/product.do?detailsKey=225",
+    "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+    "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_canfd.dbc",
+    "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/interface.py",
+    "https://github.com/projectgus/hyundai-kona-ev-can-logs",
+    "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py",
+    "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_kia_generic.dbc",
+    "https://www.htucson4.com/schematic_diagrams-2155.html",
+    "https://www.sportiveshyundai.fr/wp-content/uploads/bsk-pdf-manager/2019/09/13.0-Brake-System.pdf",
+    "https://www.ioniqforum.com/threads/remote-climate-control-of-ioniq-5-over-wifi-possible.51726/page-12",
+    "https://www.ioniqforum.com/threads/remote-climate-control-of-ioniq-5-over-wifi-possible.51726/page-6",
+    "https://philipkocanda.github.io/canair/concepts/profiles/",
+    "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.4-D2.2-ADASIS_v2_Specification.0.pdf",
+    "https://github.com/mapbox/mapbox-adas-sdk",
+    "https://exa.ai/library/publication/n9v364dwd6p",
+    "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.2-D2.2-ADASIS_v2_Specification.0.pdf",
+    "https://en.sip-adus.go.jp/evt/workshop2022/file/dm/4_DM_Pandazis-ADASIS-presentation-Final.pdf",
+    "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.3-D2.2-ADASIS_v2_Specification.0.pdf",
+    "https://github.com/liruifeng1120/carrotpilot/blob/4e6694b7/opendbc_repo/opendbc/dbc/hyundai_canfd.dbc",
+    "https://github.com/sunnypilot/opendbc/blob/ec2a7dcf2fb3550c30ab6be32577547e0247c7ca/hyundai_2015_mcan.dbc",
+    "https://github.com/commaai/opendbc/blob/b8b3adfd9d64413642201954808810ea853782d7/hyundai_kia_generic.dbc",
+    "https://github.com/commaai/opendbc/pull/1269",
+    "https://github.com/sunnypilot/opendbc/commit/fdd0c5a37dff55aadea3a8b47ff51f1b7f5595ad",
+    "https://www.softechpro-solutions.com/can/hyundai-kia.html",
+    "https://github.com/sunnypilot/opendbc/commit/b6f7a1180d9b1c3c03f4c6f979a01d33ed2e5281",
+    "https://docs.bms-ev.com/second-life-battery/can-bus/",
+    "https://github.com/uhi22/IoniqMotorCAN",
+    "https://egmpfiles.com/ev6-technical.html",
+    "https://github.com/ElectricSidecar/Hyundai-IONIQ-5",
+    "https://github.com/CBNU-AVLAB/ioniq5-vecu",
+    "https://github.com/uhi22/IoniqMotorCAN/blob/master/Traces/hyundai_Ioniq28Motor.dbc",
+    "https://github.com/commaai/opendbc/blob/be7562acbbb13513deb0a6a6567300dd5c3b1fdb/hyundai_2015_ccan.dbc",
+    "https://github.com/sunnypilot/opendbc/commit/402b4139d09501165ba261d6e9d2a0b64375745c",
+    "https://github.com/commaai/opendbc/blob/296f190000a2e71408e207ba21a2257cc853ec15/hyundai_kia_generic.dbc",
+    "https://ownery.com/@nicedream/stories/r1vadmi",
+    "https://github.com/sunnypilot/opendbc/commit/c02d36d071a0dfa36bb097ebb571517f0f7439a8",
+    "https://github.com/projectgus/kona-ev-dbc",
+    "https://cargeek.org/can/hyundai-can",
+    "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_2015_ccan.dbc",
+    "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/can/dbc.cc",
+    "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/values.py",
+    "https://www.scribd.com/document/505781959/dbc-2015-Hyundai-C-CAN",
+    "https://github.com/sunnypilot/opendbc/blob/hkg-angle-steering-2025/opendbc/car/hyundai/carcontroller.py",
+    "https://github.com/commaai/opendbc/blob/e4c1664e5a87f4ff012e7038e44759f37e21adb0/hyundai_kia_generic.dbc",
+    "https://github.com/commaai/opendbc/blob/7c4cebef3706f831852694e87547a29093643a03/hyundai_2015_ccan.dbc",
+    "https://autosar-e2e.readthedocs.io/en/stable/api.html",
+    "https://github.com/sics-sse/moped/blob/master/autosar/src/core/system/E2E/E2E_P01.c",
+    "https://github.com/sics-sse/moped/blob/master/autosar/src/core/include/E2E.h",
+    "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_2015_ccan.dbc",
+    "https://gist.github.com/laysakura/b087efe4da122a85cd0e006b130a37ae",
+    "https://github.com/commaai/opendbc/blob/14cf233cce6b00aac576e18910ec8cbd33c11cc6/hyundai_2015_ccan.dbc",
+    "https://www.ecumaster.com/files/devices/wheelSpeed/wheelSpeedManual.pdf",
+    "https://github.com/kevinpt/ripyl/blob/master/ripyl/protocol/j1850.py",
+    "https://reverseengineering.stackexchange.com/questions/32421/crc8-can-message-reverse-engineering-ii",
+    "https://gist.github.com/JPToadstool/528fd9e88d1dc8b9650d5737b6b46e1d",
+    "https://stackoverflow.com/questions/38639423/understanding-results-of-crc8-sae-j1850-normal-vs-zero",
+    "https://github.com/ronaldocordeiro/MQB_CRC_padding_byte_finder",
+    "https://github.com/mdfarhan/opendbc/commit/db48ccf26b41f359006c20bc35bbf914af0ccc16",
+    "https://github.com/kentindell/canhack/blob/master/src/canframe.py",
+    "https://github.com/merbanan/rtl_433/blob/master/src/devices/tpms_elantra2012.c",
+    "https://github.com/hex-in/libscrc/"
+  ],
+  "queries": [
+    {
+      "angle": "battery_broadcast",
+      "query": "Original Hyundai Ioniq 5 Kia EV6 E-GMP CAN FD reverse engineering DBC broadcasts 0x225 0x325 0x1F5 state of charge battery temperature and voltage bit positions",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Sterlingarcher2525/ioniq5-can: Hyundai Ioniq 5 CAN ... - GitHub",
+          "url": "https://github.com/Sterlingarcher2525/ioniq5-can"
+        },
+        {
+          "title": "kia_ev6.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/5ce12a2558e5657b62936d6346b7b05baecf6646/kia_ev6.dbc"
+        },
+        {
+          "title": "Project coordination home for the Ioniq 5/6/EV6 manual ...",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN"
+        },
+        {
+          "title": "Ioniq5_CAN/guides/cars/E-GMP_gen1 at main  /  tylerharvey/Ioniq5_CAN  /  GitHub",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/tree/main/guides/cars/E-GMP_gen1"
+        },
+        {
+          "title": "sbaliko/Wican-Pro-Vehicle-profiles",
+          "url": "https://github.com/sbaliko/Wican-Pro-Vehicle-profiles"
+        },
+        {
+          "title": "TorqueIONIQ5AWD77kWh.csv at main  /  Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+          "url": "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs/blob/main/TorqueIONIQ5AWD77kWh.csv"
+        },
+        {
+          "title": "vehicle_profiles/hyundai/hyundai_ioniq_electric_38kwh_readme.md",
+          "url": "https://github.com/meatpiHQ/wican-fw/blob/main/vehicle_profiles/hyundai/hyundai_ioniq_electric_38kwh_readme.md"
+        },
+        {
+          "title": "Battery: Hyundai E‐GMP platform (58.2 ‐ 77.4 kWh)  /  dalathegreat/Battery-Emulator Wiki  /  GitHub",
+          "url": "https://github.com/dalathegreat/Battery-Emulator/wiki/Battery:-Hyundai-E%E2%80%90GMP-platform-(58.2-%E2%80%90-77.4-kWh)"
+        },
+        {
+          "title": "GitHub - tylerharvey/Ioniq5_CAN: Project coordination home for the Ioniq 5/6/EV6 manual preconditoning button, and other CAN reverse engineering.  /  GitHub",
+          "url": "https://ofs.ccwu.cc/tylerharvey/Ioniq5_CAN"
+        },
+        {
+          "title": "the XOR method  /  Ahmet Yusuf Birinci",
+          "url": "https://ahmetbirinci.dev/posts/the-xor-method"
+        }
+      ]
+    },
+    {
+      "angle": "motor_inverter",
+      "query": "First-party Hyundai Ioniq 5 MCU CAN FD 0x10A 0x120 0x19A inverter motor torque temperatures cooling electrical current DBC signal layouts",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Sterlingarcher2525/ioniq5-can",
+          "url": "https://github.com/Sterlingarcher2525/ioniq5-can"
+        },
+        {
+          "title": "OBDb/Hyundai-IONIQ-5",
+          "url": "https://github.com/OBDb/Hyundai-IONIQ-5"
+        },
+        {
+          "title": "IONIQ_5_N/data_logging.md at main  /  timurrrr/hyundai-n",
+          "url": "https://github.com/timurrrr/hyundai-n/blob/main/IONIQ_5_N/data_logging.md"
+        },
+        {
+          "title": "hyundai_canfd.dbc  /  luoyan/opendbc - Gitee.com",
+          "url": "https://gitee.com/czlz/opendbc/blob/master/hyundai_canfd.dbc"
+        },
+        {
+          "title": "TorqueIONIQ5AWD77kWh.csv at main  /  Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+          "url": "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs/blob/main/TorqueIONIQ5AWD77kWh.csv"
+        },
+        {
+          "title": "Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+          "url": "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs"
+        },
+        {
+          "title": "Ioniq5_CAN/guides/cars/E-GMP_gen1 at main  /  tylerharvey/Ioniq5_CAN  /  GitHub",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/tree/main/guides/cars/E-GMP_gen1"
+        },
+        {
+          "title": "sbaliko/Wican-Pro-Vehicle-profiles",
+          "url": "https://github.com/sbaliko/Wican-Pro-Vehicle-profiles"
+        },
+        {
+          "title": "README.md",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/blob/main/README.md"
+        },
+        {
+          "title": "EV Motor Control Unit | EV | EV/HEV | Business | Hyundai KEFICO",
+          "url": "https://www.hyundai-kefico.com/en/business/ev/product.do?detailsKey=225"
+        }
+      ]
+    },
+    {
+      "angle": "brake_esc",
+      "query": "Original E-GMP Hyundai CAN FD DBC brake signals 0x065 0x0F5 ESC regenerative braking four wheel braking pressure bit positions",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_canfd.dbc"
+        },
+        {
+          "title": "opendbc/car/hyundai/interface.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/interface.py"
+        },
+        {
+          "title": "projectgus/hyundai-kona-ev-can-logs",
+          "url": "https://github.com/projectgus/hyundai-kona-ev-can-logs"
+        },
+        {
+          "title": "opendbc/safety/tests/test_hyundai.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py"
+        },
+        {
+          "title": "hyundai_canfd.dbc  /  luoyan/opendbc - Gitee.com",
+          "url": "https://gitee.com/czlz/opendbc/blob/master/hyundai_canfd.dbc"
+        },
+        {
+          "title": "IONIQ_5_N/data_logging.md at main  /  timurrrr/hyundai-n",
+          "url": "https://github.com/timurrrr/hyundai-n/blob/main/IONIQ_5_N/data_logging.md"
+        },
+        {
+          "title": "opendbc/dbc/hyundai_kia_generic.dbc",
+          "url": "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "Hyundai Tucson - Schematic Diagrams - ESC (Electronic Stability Control) System",
+          "url": "https://www.htucson4.com/schematic_diagrams-2155.html"
+        },
+        {
+          "title": "[PDF] Brake System - SportivesHyundai.fr",
+          "url": "https://www.sportiveshyundai.fr/wp-content/uploads/bsk-pdf-manager/2019/09/13.0-Brake-System.pdf"
+        }
+      ]
+    },
+    {
+      "angle": "body_hvac",
+      "query": "Hyundai Ioniq 5 CAN bus original decoded body HVAC outside temperature 0x419 0x382 0x384 0x3B0 0x410 CAN signal bit layouts",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Sterlingarcher2525/ioniq5-can",
+          "url": "https://github.com/Sterlingarcher2525/ioniq5-can"
+        },
+        {
+          "title": "OBDb/Hyundai-IONIQ-5",
+          "url": "https://github.com/OBDb/Hyundai-IONIQ-5"
+        },
+        {
+          "title": "TorqueIONIQ5AWD77kWh.csv at main  /  Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+          "url": "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs/blob/main/TorqueIONIQ5AWD77kWh.csv"
+        },
+        {
+          "title": "IONIQ_5_N/data_logging.md at main  /  timurrrr/hyundai-n",
+          "url": "https://github.com/timurrrr/hyundai-n/blob/main/IONIQ_5_N/data_logging.md"
+        },
+        {
+          "title": "README.md",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/blob/main/README.md"
+        },
+        {
+          "title": "Ioniq5_CAN/guides/cars/E-GMP_gen1 at main  /  tylerharvey/Ioniq5_CAN  /  GitHub",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/tree/main/guides/cars/E-GMP_gen1"
+        },
+        {
+          "title": "remote climate control of Ioniq 5 over wifi, possible? | Page 12 | Hyundai IONIQ Forum",
+          "url": "https://www.ioniqforum.com/threads/remote-climate-control-of-ioniq-5-over-wifi-possible.51726/page-12"
+        },
+        {
+          "title": "sbaliko/Wican-Pro-Vehicle-profiles",
+          "url": "https://github.com/sbaliko/Wican-Pro-Vehicle-profiles"
+        },
+        {
+          "title": "remote climate control of Ioniq 5 over wifi, possible? | Page 6 | Hyundai IONIQ Forum",
+          "url": "https://www.ioniqforum.com/threads/remote-climate-control-of-ioniq-5-over-wifi-possible.51726/page-6"
+        },
+        {
+          "title": "Profiles - canair",
+          "url": "https://philipkocanda.github.io/canair/concepts/profiles/"
+        }
+      ]
+    },
+    {
+      "angle": "navigation",
+      "query": "Original Hyundai navigation ADASIS decoder 0x4B4 0x4B8 0x4BF little endian position heading slope profile CAN bits",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "ADASIS v2 Protocol",
+          "url": "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.4-D2.2-ADASIS_v2_Specification.0.pdf"
+        },
+        {
+          "title": "mapbox/mapbox-adas-sdk",
+          "url": "https://github.com/mapbox/mapbox-adas-sdk"
+        },
+        {
+          "title": "Development of an Automation Test Setup for Navigation Data Processing",
+          "url": "https://exa.ai/library/publication/n9v364dwd6p"
+        },
+        {
+          "title": "ADASIS v2 Protocol",
+          "url": "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.2-D2.2-ADASIS_v2_Specification.0.pdf"
+        },
+        {
+          "title": "Update on ADAS activities towards autonomous driving",
+          "url": "https://en.sip-adus.go.jp/evt/workshop2022/file/dm/4_DM_Pandazis-ADASIS-presentation-Final.pdf"
+        },
+        {
+          "title": "[PDF] ADASIS v2 Protocol",
+          "url": "https://adasis.org/wp-content/uploads/sites/10/2024/08/200v2.0.3-D2.2-ADASIS_v2_Specification.0.pdf"
+        },
+        {
+          "title": "opendbc/safety/tests/test_hyundai.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py"
+        },
+        {
+          "title": "opendbc_repo/opendbc/dbc/hyundai_canfd.dbc",
+          "url": "https://github.com/liruifeng1120/carrotpilot/blob/4e6694b7/opendbc_repo/opendbc/dbc/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_2015_mcan.dbc at ec2a7dcf2fb3550c30ab6be32577547e0247c7ca  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ec2a7dcf2fb3550c30ab6be32577547e0247c7ca/hyundai_2015_mcan.dbc"
+        },
+        {
+          "title": "hyundai_canfd.dbc  /  luoyan/opendbc - Gitee.com",
+          "url": "https://gitee.com/czlz/opendbc/blob/master/hyundai_canfd.dbc"
+        }
+      ]
+    },
+    {
+      "angle": "checksums",
+      "query": "First-party Hyundai Kia CAN FD 0x090 0x145 0x1B0 0x31A CRC checksum alive counter bus DBC reverse engineering",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_kia_generic.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/b8b3adfd9d64413642201954808810ea853782d7/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "Hyundai: Common DBC for CAN and CAN-FD Platforms",
+          "url": "https://github.com/commaai/opendbc/pull/1269"
+        },
+        {
+          "title": "HKG CANFD Signals: Fixes a miscalculation on 437 and adds descriptions to all signals found (#2392)  /  fdd0c5a  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/commit/fdd0c5a37dff55aadea3a8b47ff51f1b7f5595ad"
+        },
+        {
+          "title": "hyundai_canfd.dbc  /  luoyan/opendbc - Gitee.com",
+          "url": "https://gitee.com/czlz/opendbc/blob/master/hyundai_canfd.dbc"
+        },
+        {
+          "title": "Hyundai  /  Kia CAN Bus Reference — 475 Messages | Softechpro",
+          "url": "https://www.softechpro-solutions.com/can/hyundai-kia.html"
+        },
+        {
+          "title": "opendbc/safety/tests/test_hyundai.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py"
+        },
+        {
+          "title": "Hyundai CAN-FD: Simplify cruise button RX checks (#1791)  /  b6f7a11  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/commit/b6f7a1180d9b1c3c03f4c6f979a01d33ed2e5281"
+        },
+        {
+          "title": "opendbc/car/hyundai/interface.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/interface.py"
+        }
+      ]
+    },
+    {
+      "angle": "battery_broadcast",
+      "query": "Developer reverse engineering E-GMP EV6 Ioniq5 passive battery BMS CAN 0x1F5 0x225 0x235 0x325 signal schema excluding OBD PID equations",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Sterlingarcher2525/ioniq5-can",
+          "url": "https://github.com/Sterlingarcher2525/ioniq5-can"
+        },
+        {
+          "title": "Ioniq5_CAN/guides/cars/E-GMP_gen1 at main  /  tylerharvey/Ioniq5_CAN  /  GitHub",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/tree/main/guides/cars/E-GMP_gen1"
+        },
+        {
+          "title": "CAN Bus Communication for EV Battery Reuse",
+          "url": "https://docs.bms-ev.com/second-life-battery/can-bus/"
+        },
+        {
+          "title": "Project coordination home for the Ioniq 5/6/EV6 manual ...",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN"
+        },
+        {
+          "title": "README.md",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/blob/main/README.md"
+        },
+        {
+          "title": "TorqueIONIQ5AWD77kWh.csv at main  /  Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+          "url": "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs/blob/main/TorqueIONIQ5AWD77kWh.csv"
+        },
+        {
+          "title": "uhi22/IoniqMotorCAN",
+          "url": "https://github.com/uhi22/IoniqMotorCAN"
+        },
+        {
+          "title": "sbaliko/Wican-Pro-Vehicle-profiles",
+          "url": "https://github.com/sbaliko/Wican-Pro-Vehicle-profiles"
+        },
+        {
+          "title": "Battery: Hyundai E‐GMP platform (58.2 ‐ 77.4 kWh)  /  dalathegreat/Battery-Emulator Wiki  /  GitHub",
+          "url": "https://github.com/dalathegreat/Battery-Emulator/wiki/Battery:-Hyundai-E%E2%80%90GMP-platform-(58.2-%E2%80%90-77.4-kWh)"
+        },
+        {
+          "title": "egmpfiles.com | EV6 Technical Report",
+          "url": "https://egmpfiles.com/ev6-technical.html"
+        }
+      ]
+    },
+    {
+      "angle": "motor_inverter",
+      "query": "Original E-GMP motor controller CAN 0x10A 0x120 0x035 front rear torque total demand signed 10 bit 14 bit Hyundai Ioniq5 brake regen source code",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Sterlingarcher2525/ioniq5-can",
+          "url": "https://github.com/Sterlingarcher2525/ioniq5-can"
+        },
+        {
+          "title": "TorqueIONIQ5AWD77kWh.csv at main  /  Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs",
+          "url": "https://github.com/Esprit1st/Hyundai-Ioniq-5-Torque-Pro-PIDs/blob/main/TorqueIONIQ5AWD77kWh.csv"
+        },
+        {
+          "title": "OBDb/Hyundai-IONIQ-5",
+          "url": "https://github.com/ElectricSidecar/Hyundai-IONIQ-5"
+        },
+        {
+          "title": "Ioniq5_CAN/guides/cars/E-GMP_gen1 at main  /  tylerharvey/Ioniq5_CAN  /  GitHub",
+          "url": "https://github.com/tylerharvey/Ioniq5_CAN/tree/main/guides/cars/E-GMP_gen1"
+        },
+        {
+          "title": "CBNU-AVLAB/ioniq5-vecu",
+          "url": "https://github.com/CBNU-AVLAB/ioniq5-vecu"
+        },
+        {
+          "title": "sbaliko/Wican-Pro-Vehicle-profiles",
+          "url": "https://github.com/sbaliko/Wican-Pro-Vehicle-profiles"
+        },
+        {
+          "title": "Traces/hyundai_Ioniq28Motor.dbc",
+          "url": "https://github.com/uhi22/IoniqMotorCAN/blob/master/Traces/hyundai_Ioniq28Motor.dbc"
+        },
+        {
+          "title": "vehicle_profiles/hyundai/hyundai_ioniq_electric_38kwh_readme.md",
+          "url": "https://github.com/meatpiHQ/wican-fw/blob/main/vehicle_profiles/hyundai/hyundai_ioniq_electric_38kwh_readme.md"
+        },
+        {
+          "title": "uhi22/IoniqMotorCAN",
+          "url": "https://github.com/uhi22/IoniqMotorCAN"
+        },
+        {
+          "title": "hyundai_2015_ccan.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/be7562acbbb13513deb0a6a6567300dd5c3b1fdb/hyundai_2015_ccan.dbc"
+        }
+      ]
+    },
+    {
+      "angle": "brake_esc",
+      "query": "Hyundai CAN FD WHEEL_SPEEDS 0xA0 bytes 3 4 5 6 wheel pulse counters wheel rotation increments original DBC wheel distance pulse signals",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Hyundai CAN-FD: Update wheel speed signal parsing (#1844)  /  402b413  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/commit/402b4139d09501165ba261d6e9d2a0b64375745c"
+        },
+        {
+          "title": "hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_canfd.dbc - GitHub",
+          "url": "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+        },
+        {
+          "title": "opendbc_repo/opendbc/dbc/hyundai_canfd.dbc",
+          "url": "https://github.com/liruifeng1120/carrotpilot/blob/4e6694b7/opendbc_repo/opendbc/dbc/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_canfd.dbc  /  luoyan/opendbc - Gitee.com",
+          "url": "https://gitee.com/czlz/opendbc/blob/master/hyundai_canfd.dbc"
+        },
+        {
+          "title": "hyundai_kia_generic.dbc at 296f190000a2e71408e207ba21a2257cc853ec15  /  commaai/opendbc",
+          "url": "https://github.com/commaai/opendbc/blob/296f190000a2e71408e207ba21a2257cc853ec15/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "How to calibrate the speedometer for a different wheel+tire circumference written by nicedream",
+          "url": "https://ownery.com/@nicedream/stories/r1vadmi"
+        },
+        {
+          "title": "Hyundai  /  Kia CAN Bus Reference — 475 Messages | Softechpro",
+          "url": "https://www.softechpro-solutions.com/can/hyundai-kia.html"
+        },
+        {
+          "title": "Hyundai CAN-FD: Fix steering angle scaling (#1843)  /  c02d36d  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/commit/c02d36d071a0dfa36bb097ebb571517f0f7439a8"
+        },
+        {
+          "title": "hyundai_2015_mcan.dbc at ec2a7dcf2fb3550c30ab6be32577547e0247c7ca  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ec2a7dcf2fb3550c30ab6be32577547e0247c7ca/hyundai_2015_mcan.dbc"
+        }
+      ]
+    },
+    {
+      "angle": "body_hvac",
+      "query": "Original Hyundai Kia CAN body signals 0x419 outside temperature checksum 0x36F 0x37F 0x3E5 counter original DBC data",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "hyundai_kia_generic.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/b8b3adfd9d64413642201954808810ea853782d7/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "Hyundai  /  Kia CAN Bus Reference — 475 Messages | Softechpro",
+          "url": "https://www.softechpro-solutions.com/can/hyundai-kia.html"
+        },
+        {
+          "title": "projectgus/kona-ev-dbc",
+          "url": "https://github.com/projectgus/kona-ev-dbc"
+        },
+        {
+          "title": "Hyundai/Kia CAN (2016–2022 CAN cars) — CAN messages and signals",
+          "url": "https://cargeek.org/can/hyundai-can"
+        },
+        {
+          "title": "opendbc/safety/tests/test_hyundai.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py"
+        },
+        {
+          "title": "Hyundai: Common DBC for CAN and CAN-FD Platforms",
+          "url": "https://github.com/commaai/opendbc/pull/1269"
+        },
+        {
+          "title": "hyundai_2015_ccan.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_2015_ccan.dbc"
+        },
+        {
+          "title": "opendbc/can/dbc.cc",
+          "url": "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/can/dbc.cc"
+        },
+        {
+          "title": "opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+        }
+      ]
+    },
+    {
+      "angle": "navigation",
+      "query": "Source implementation Hyundai HU_NAVI_V2 STUB PROSHORT E 4BA 4BF position bit counter message type decoder",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "Hyundai  /  Kia CAN Bus Reference — 475 Messages | Softechpro",
+          "url": "https://www.softechpro-solutions.com/can/hyundai-kia.html"
+        },
+        {
+          "title": "opendbc/safety/tests/test_hyundai.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py"
+        },
+        {
+          "title": "hyundai_2015_mcan.dbc at ec2a7dcf2fb3550c30ab6be32577547e0247c7ca  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ec2a7dcf2fb3550c30ab6be32577547e0247c7ca/hyundai_2015_mcan.dbc"
+        },
+        {
+          "title": "opendbc/car/hyundai/interface.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/interface.py"
+        },
+        {
+          "title": "opendbc/dbc/hyundai_kia_generic.dbc",
+          "url": "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "opendbc/car/hyundai/values.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/values.py"
+        },
+        {
+          "title": "Hyundai DBC File and CAN Bus Overview | PDF | Units Of Measurement | Nature",
+          "url": "https://www.scribd.com/document/505781959/dbc-2015-Hyundai-C-CAN"
+        },
+        {
+          "title": "opendbc/car/hyundai/carcontroller.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/hkg-angle-steering-2025/opendbc/car/hyundai/carcontroller.py"
+        },
+        {
+          "title": "hyundai_kia_generic.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/e4c1664e5a87f4ff012e7038e44759f37e21adb0/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "hyundai_2015_ccan.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/7c4cebef3706f831852694e87547a29093643a03/hyundai_2015_ccan.dbc"
+        }
+      ]
+    },
+    {
+      "angle": "checksums",
+      "query": "Original Hyundai E-GMP ECAN checksum 0x90 0x145 0x1B0 AUTOSAR E2E data ID Hyundai CRC data identifier lookup",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "N/A",
+          "url": "https://autosar-e2e.readthedocs.io/en/stable/api.html"
+        },
+        {
+          "title": "autosar/src/core/system/E2E/E2E_P01.c",
+          "url": "https://github.com/sics-sse/moped/blob/master/autosar/src/core/system/E2E/E2E_P01.c"
+        },
+        {
+          "title": "opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+        },
+        {
+          "title": "CAN Bus Communication for EV Battery Reuse",
+          "url": "https://docs.bms-ev.com/second-life-battery/can-bus/"
+        },
+        {
+          "title": "opendbc/dbc/hyundai_kia_generic.dbc",
+          "url": "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "Hyundai  /  Kia CAN Bus Reference — 475 Messages | Softechpro",
+          "url": "https://www.softechpro-solutions.com/can/hyundai-kia.html"
+        },
+        {
+          "title": "autosar/src/core/include/E2E.h at master  /  sics-sse/moped",
+          "url": "https://github.com/sics-sse/moped/blob/master/autosar/src/core/include/E2E.h"
+        },
+        {
+          "title": "opendbc/car/hyundai/interface.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/61bf5a90c5c1917b657b8dd50c4d95e437413170/opendbc/car/hyundai/interface.py"
+        },
+        {
+          "title": "opendbc/dbc/hyundai_2015_ccan.dbc at master  /  BMW-E8x-E9x/opendbc",
+          "url": "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_2015_ccan.dbc"
+        },
+        {
+          "title": "b087efe4da122a85cd0e006b130a37ae",
+          "url": "https://gist.github.com/laysakura/b087efe4da122a85cd0e006b130a37ae"
+        }
+      ]
+    },
+    {
+      "angle": "brake_esc",
+      "query": "Original Hyundai CAN DBC WHEEL_PULSE_COUNT FL FR RL RR 0xA0 255 pulse wheel revolution byte counters 8-bit source implementation",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "hyundai_2015_ccan.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/14cf233cce6b00aac576e18910ec8cbd33c11cc6/hyundai_2015_ccan.dbc"
+        },
+        {
+          "title": "opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/master/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc"
+        },
+        {
+          "title": "opendbc/dbc/hyundai_kia_generic.dbc",
+          "url": "https://github.com/BMW-E8x-E9x/opendbc/blob/master/opendbc/dbc/hyundai_kia_generic.dbc"
+        },
+        {
+          "title": "Hyundai CAN-FD: Update wheel speed signal parsing (#1844)  /  402b413  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/commit/402b4139d09501165ba261d6e9d2a0b64375745c"
+        },
+        {
+          "title": "hyundai_canfd.dbc",
+          "url": "https://github.com/commaai/opendbc/blob/8c634615c5b6eb05ebdecc097bdc72f5403a3afa/hyundai_canfd.dbc"
+        },
+        {
+          "title": "opendbc_repo/opendbc/dbc/hyundai_canfd.dbc",
+          "url": "https://github.com/liruifeng1120/carrotpilot/blob/4e6694b7/opendbc_repo/opendbc/dbc/hyundai_canfd.dbc"
+        },
+        {
+          "title": "How to calibrate the speedometer for a different wheel+tire circumference written by nicedream",
+          "url": "https://ownery.com/@nicedream/stories/r1vadmi"
+        },
+        {
+          "title": "hyundai_2015_mcan.dbc at ec2a7dcf2fb3550c30ab6be32577547e0247c7ca  /  sunnypilot/opendbc",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ec2a7dcf2fb3550c30ab6be32577547e0247c7ca/hyundai_2015_mcan.dbc"
+        },
+        {
+          "title": "IONIQ_5_N/data_logging.md at main  /  timurrrr/hyundai-n",
+          "url": "https://github.com/timurrrr/hyundai-n/blob/main/IONIQ_5_N/data_logging.md"
+        },
+        {
+          "title": "Wheel Speed To CAN",
+          "url": "https://www.ecumaster.com/files/devices/wheelSpeed/wheelSpeedManual.pdf"
+        }
+      ]
+    },
+    {
+      "angle": "checksums",
+      "query": "Hyundai CAN CRC8 SAE J1850 counter modulo15 nibble 0x36F 0x37F 0x419 Python C decoder implementation",
+      "requested_results": 10,
+      "results": [
+        {
+          "title": "opendbc/safety/tests/test_hyundai.py",
+          "url": "https://github.com/sunnypilot/opendbc/blob/ff2f9686c208824a72b30d4cc540a6ab78c5983e/opendbc/safety/tests/test_hyundai.py"
+        },
+        {
+          "title": "ripyl/protocol/j1850.py",
+          "url": "https://github.com/kevinpt/ripyl/blob/master/ripyl/protocol/j1850.py"
+        },
+        {
+          "title": "CRC8 CAN message reverse engineering II",
+          "url": "https://reverseengineering.stackexchange.com/questions/32421/crc8-can-message-reverse-engineering-ii"
+        },
+        {
+          "title": "Implementation of CRC8 SAE-J1850 using a lookup table, suitable for automotive applications. Modified the original implementation from hypebeast.",
+          "url": "https://gist.github.com/JPToadstool/528fd9e88d1dc8b9650d5737b6b46e1d"
+        },
+        {
+          "title": "Understanding results of CRC8 SAE J1850 (normal) vs. \"Zero\"",
+          "url": "https://stackoverflow.com/questions/38639423/understanding-results-of-crc8-sae-j1850-normal-vs-zero"
+        },
+        {
+          "title": "ronaldocordeiro/MQB_CRC_padding_byte_finder",
+          "url": "https://github.com/ronaldocordeiro/MQB_CRC_padding_byte_finder"
+        },
+        {
+          "title": "Hyundai: Car Port for Nexo 2021 (#933)  /  db48ccf  /  mdfarhan/opendbc",
+          "url": "https://github.com/mdfarhan/opendbc/commit/db48ccf26b41f359006c20bc35bbf914af0ccc16"
+        },
+        {
+          "title": "src/canframe.py at master  /  kentindell/canhack",
+          "url": "https://github.com/kentindell/canhack/blob/master/src/canframe.py"
+        },
+        {
+          "title": "src/devices/tpms_elantra2012.c at master  /  merbanan/rtl_433",
+          "url": "https://github.com/merbanan/rtl_433/blob/master/src/devices/tpms_elantra2012.c"
+        },
+        {
+          "title": "hex-in/libscrc",
+          "url": "https://github.com/hex-in/libscrc/"
+        }
+      ]
+    }
+  ],
+  "extraction_quality": "Original DBC/code/specification prioritized. UDS/PID offsets, other-platform/bus ID collisions, virtual aftermarket ECU contracts and pages without actual layouts excluded from broadcast interpretation.",
+  "selected_source_assessments": [
+    {
+      "url": "https://github.com/sunnypilot/opendbc/blob/b2acec1dc7f15cfb258aa48415168485e29cc4ff/opendbc/dbc/generator/hyundai/hyundai_canfd.dbc",
+      "quality": "Original committed DBC with bit-specific comments. Source definition, not independent vehicle-operation proof.",
+      "decision": "Used for five IMU flags and three map-request flags; exact lines cited per field."
+    },
+    {
+      "url": "https://github.com/sunnypilot/opendbc/commit/fdd0c5a37dff55aadea3a8b47ff51f1b7f5595ad",
+      "quality": "Original implementation diff adding signal descriptions.",
+      "decision": "Cross-check origin of descriptions and camera object layouts."
+    },
+    {
+      "url": "https://github.com/sunnypilot/opendbc/commit/402b4139d09501165ba261d6e9d2a0b64375745c",
+      "quality": "Original wheel-speed parser and DBC change.",
+      "decision": "Cross-check 14-bit speed references; no published definition for new 8-bit accumulation fields."
+    },
+    {
+      "url": "https://github.com/Sterlingarcher2525/ioniq5-can/tree/8351cc0317e6cd45a286c2ed9b3d64f65336f666",
+      "quality": "Original real-vehicle reverse engineering with mixed bus/length and guessed-scale entries.",
+      "decision": "Retain only independently supported prior candidates; raw placeholders do not provide new semantics."
+    },
+    {
+      "url": "https://github.com/timurrrr/hyundai-n/blob/main/IONIQ_5_N/data_logging.md",
+      "quality": "Original owner work; passive CAN map still TODO, useful quantities use diagnostic responses.",
+      "decision": "Diagnostic PID byte positions excluded from broadcast decoding."
+    },
+    {
+      "url": "https://github.com/AkinYavuz1/wican-bridge",
+      "quality": "Original diagnostic ISO-TP implementation.",
+      "decision": "Excluded diagnostic byte offsets; not observed broadcast-frame layout."
+    },
+    {
+      "url": "https://github.com/CBNU-AVLAB/ioniq5-vecu",
+      "quality": "Original lab vECU for an aftermarket actuator interface.",
+      "decision": "Excluded: virtual/custom matrix is not the stock ECAN broadcast matrix."
+    },
+    {
+      "url": "https://docs.bms-ev.com/second-life-battery/can-bus/",
+      "quality": "Vendor description with no applicable exact bit map.",
+      "decision": "Excluded from field-layout evidence."
+    },
+    {
+      "url": "https://egmpfiles.com/ev6-technical.html",
+      "quality": "Original owner diagnostic report, no broadcast bit map.",
+      "decision": "Excluded from field-layout evidence."
+    }
+  ]
+}
