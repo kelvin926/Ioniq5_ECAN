@@ -25,6 +25,8 @@
 명령을 새 값처럼 반복 발행하지 않아야 합니다. `sequence=0`도 허용하지만 순서 번호를
 증가시켜 보내는 것을 권장합니다. 조향 부호는 차량의 실제 `steering_angle_deg` 증가 방향과
 대조하여 검증해야 합니다. 가속도 허용 범위는 -3.5~2.0 m/s²입니다.
+2026-10-07 bag 대조에서는 조향각 피드백의 좌회전 양수 해석을 지지했습니다.
+상위 `lateral` 명령과 LFA 토크 요청의 실제 좌우 방향은 별도 실차 통합 확인이 필요합니다.
 
 ## 상시 구독과 차량 버튼
 
@@ -84,8 +86,11 @@ scale/offset은 `scaled = input * scale + offset`입니다. 기본 scale은 1, o
 
 ## 상태와 피드백
 
+`/ioniq5/vehicle_state`는 20 Hz로 발행하며 `stamp`는 ROS 발행 시각입니다.
+현재 필드별 의미/단위와 parser 동작은 [피드백 필드 표](vehicle_state.md)를 참고합니다.
 [`VehicleState.msg`](../msg/VehicleState.msg)의 `valid`는 필수 steering/MDPS/wheel/TCS
 CAN의 크기, CRC와 freshness를 뜻합니다. `eps_fault`는 별도 MDPS LKA 보조 상태입니다.
+IMU/페달/기어/SCC/버튼의 개별 freshness는 포함하지 않습니다.
 `lateral_armed`/`longitudinal_armed`는 채널 선택이며 `*_control_active`는 현재 출력 허가입니다.
 Panda `controls_allowed`는 firmware 전역 허가이므로 각 채널의 active 필드와 함께 봅니다.
 
@@ -102,6 +107,9 @@ Panda `controls_allowed`는 firmware 전역 허가이므로 각 채널의 active
 요청값, 적용값, 포화 및 거부를 묶은 상위 제어기 전용 피드백 메시지는 아직 구현하지
 않았습니다. CAN 송신이나 software active 상태 자체가 ECU 실행 응답 또는 실제 구동력
 확인을 의미하지는 않습니다.
+
+[오프라인 ECAN 분석](ecan_analysis_20261007.md)의 새 필드와 동시 기록 GPS/레이더 참조값은
+현재 `VehicleState`에 추가되지 않았습니다. 상위 제어기는 현재 메시지 계약을 사용합니다.
 
 물리량/단위/메시지는 위 계약을 사용합니다. 좌우 부호와 차량 추종 결과, 가속도 경사 보상,
 실제 송신 주기와 jitter, source clock domain, 상위 deadman 소유 주체는 통합 시 검증해야 합니다.

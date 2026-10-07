@@ -1,6 +1,6 @@
 # Pinned Panda firmware
 
-2026-10-06 기준의 build/ABI 요구사항입니다. 빌드 결과, 플래시 이력과 현재 USB 관측은
+2026-10-07 문서 기준의 build/ABI 요구사항입니다. 빌드 결과, 플래시 이력과 날짜별 USB 관측은
 별도 사실이며 설치 image의 정확한 provenance는 [인수인계](vehicle_handoff.md)에 있습니다.
 
 종방향 Hyundai safety flag는 Panda의 `ALLOW_DEBUG` 빌드에서만 적용됩니다. release
@@ -162,7 +162,8 @@ Panda logical bus 0에 대응합니다.
 있습니다. 이는 초기 설치 이력이며, 이후 시험과 현재 수정 앱은 아래 기록으로 구분합니다.
 
 2026-10-06 정차 인계 실패 뒤 초기 RX 경쟁 조건 수정 앱을 USB-only로 별도 플래시했습니다.
-현재 signed 앱 SHA-256은 `6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52`입니다.
+당시 설치에서 검증한 signed 앱 SHA-256은 `6c4e4b388642911a6329690d7d917feceda618fa84255f5fe13e1d288d092d52`입니다.
 추가 patch hash, 설치 서명/capability, 관련 14개 safety test, preflight PASS와 standby 송신
 3개 차단/물리 TX 0은 [복구 수정 기록](evidence/2026-10-06/ecan-recovery-fix-20261006.json)에 있습니다.
 bootstub은 변경하지 않았으며 수정 후 실차 ACTIVE/주행 재인계는 아직 확인하지 않았습니다.
+10월 7일 CAN 분석과 문서 갱신에서는 장치 연결/설치 image를 재조회하거나 firmware를 변경하지 않았습니다.

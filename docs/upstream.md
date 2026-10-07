@@ -1,7 +1,7 @@
 # Upstream pins and evidence
 
-2026-10-06 문서 기준입니다. 아래 runtime/build pins는 2026-08-14에 선택한 baseline을
-유지합니다. 별도 Carrotpilot 비교 snapshot은 runtime pins의 업데이트가 아닙니다.
+2026-10-07 문서 기준입니다. 아래 runtime/build pins는 2026-08-14에 선택한 baseline을
+유지합니다. Carrotpilot 및 ECAN 분석용 비교 snapshot은 runtime pins의 업데이트가 아닙니다.
 
 | 프로젝트 | commit | 사용 지점 |
 | --- | --- | --- |
@@ -121,6 +121,23 @@ capability, PA command/activation/timeout protocol, and CAN routing. Stock RSPA
 absence alone does not prove latent PA support or inability to support it. Neither
 a separate wiring connector nor higher standstill torque authority is established.
 This was source research only, without CAN/USB/diagnostic actions or runtime changes.
+
+## 2026-10-07 ECAN 연구 스냅샷
+
+실차 bag의 필드/비트 비교에서는 ajouatom의 DBC와 공개 E-GMP 정의를 추가로 조사했습니다.
+주요 비교는 다음 커밋에 고정했으며 현재 런타임 DBC/Panda를 교체하지 않았습니다.
+
+| 연구 소스 | 고정 commit | 사용 범위 |
+| --- | --- | --- |
+| [ajouatom/openpilot](https://github.com/ajouatom/openpilot/tree/ab696d049e3d6d0fd3bde51c233ee81f736415be) | `ab696d049e3d6d0fd3bde51c233ee81f736415be` | CAN-FD 신호 및 내비 분류 비교 |
+| [dragz/egmpdbc](https://github.com/dragz/egmpdbc/tree/b234d7e0ff5ba881f80087580d6e86cf8af447f1) | `b234d7e0ff5ba881f80087580d6e86cf8af447f1` | E-GMP 동력계 신호 비교 |
+| [Sterlingarcher2525/ioniq5-can](https://github.com/Sterlingarcher2525/ioniq5-can/tree/8351cc0317e6cd45a286c2ed9b3d64f65336f666) | `8351cc0317e6cd45a286c2ed9b3d64f65336f666` | Ioniq 5 공개 수신 정의 비교 |
+
+다른 소스와 검색 근거는 [연구 근거 목록](evidence/2026-10-07/README.md)에 있습니다.
+소스 명칭만으로 실차 물리량을 확정하지 않았으며 CAN 내부 상관과 동시 기록 GPS/레이더를
+대조했습니다. 내비 순환번호 등 일부 배치는 소스와 다르게 관측돼 현재 표에서 수정했습니다.
+[현재 분석](ecan_analysis_20261007.md)의 605개 행은 폭/단위 대안을 포함한 배치 수입니다.
+새 필드의 ROS 구현, 절대 GPS 좌표와 원시 레이더 객체 목록 CAN 매핑은 확인되지 않았습니다.
 
 ## Runtime pin 변경 시
 

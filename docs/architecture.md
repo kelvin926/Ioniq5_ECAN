@@ -1,6 +1,6 @@
 # Architecture
 
-2026-10-06 현재 ROS C++ 노드의 구조입니다. 실행 타깃은 Ubuntu 20.04 / ROS 1 Noetic입니다.
+2026-10-07 현재 ROS C++ 노드의 구조입니다. 실행 타깃은 Ubuntu 20.04 / ROS 1 Noetic입니다.
 
 ```text
 Upstream controller
@@ -28,6 +28,14 @@ Red Panda CAN RX, separate thread
        └─ LFA additionally requires lateral permission
             └─ Panda whitelist/content checks → USB write
 ```
+
+상태는 `/ioniq5/vehicle_state`로 20 Hz 발행합니다. `stamp`는 ROS 발행 시각이며 `valid`는
+steering/MDPS/wheel/TCS의 수신 갱신만 검사합니다. IMU/페달/기어/SCC/버튼의 개별 유효
+시각은 제공하지 않습니다. [현재 피드백 필드](vehicle_state.md)에 parser 근거를 정리했습니다.
+
+별도 [수신 전용 기록기](can_logger.md)는 제어/ECU 소유권 경로를 사용하지 않고 SILENT에서
+USB IN을 CSV/RAW 토픽으로 기록합니다. [ECAN 추론 자료](ecan_analysis_20261007.md)는
+오프라인 결과이며 새 신호 정의를 런타임 parser에 적용한 상태는 아닙니다.
 
 ## CAN 소유권과 활성화
 

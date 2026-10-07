@@ -1,6 +1,6 @@
 # Raw CAN ROS 1 interface
 
-2026-10-06 현재 노드와 YAML 기준입니다. Red Panda USB는 C++ 노드 하나가 단독 소유합니다.
+2026-10-07 현재 제어 노드와 YAML 기준입니다. 실행한 Panda 클라이언트가 USB를 단독 소유합니다.
 `pandad`, Cabana `--panda`, 다른 Panda 프로세스와 동시에 열면 interface claim이 충돌합니다.
 Cabana 분석에는 ROS 기록을 변환하거나 별도 실행에서 Panda를 사용합니다.
 
@@ -16,8 +16,11 @@ Panda 송신 결과 metadata이며 순정 ECU 메시지 재개 증거로 사용�
 `stamp`는 ROS publish 시각으로, 하드웨어 CAN 수신 timestamp가 아닙니다.
 
 독립 수신 전용 기록기는 [can_logger.md](can_logger.md)에 있습니다. USB IN만 사용하여
-CSV로 기록하고 `/ioniq5/can_logger/rx`에 발행할 수 있으며, 그 `stamp`는 host USB read 시점입니다.
+CSV로 기록하고 `/ioniq5/can_logger/rx`에 발행할 수 있으며, 그 `stamp`는 host USB read 완료 시점입니다.
 기존 제어 노드를 실행하지 않아도 되며 동일 Panda를 동시에 점유하지 않습니다.
+CSV 기록과 ROS queue의 손실 여부는 별개이며 원시 프레임을 DBC로 필터하지 않습니다.
+[최신 CAN 분석](ecan_analysis_20261007.md)은 별도 필드 사전으로, RAW payload나 현재
+[VehicleState parser](vehicle_state.md)를 변경하지 않습니다.
 
 ```bash
 rostopic echo /ioniq5/can0/rx

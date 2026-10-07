@@ -1,6 +1,6 @@
-# 연구차량 인수인계 — 2026-10-06
+# 연구차량 인수인계
 
-현재 코드/설정, 날짜가 있는 하드웨어 관측과 과거 실차 시험을 구분한 문서입니다.
+2026-10-07 갱신. 현재 코드/설정, 날짜가 있는 하드웨어 관측과 과거 실차 시험을 구분합니다.
 작업 시작 시 [AGENTS.md](../AGENTS.md), [state.json](../state.json), `git status`, `git log -1`을
 확인합니다. 아래 USB 기록은 관측 당시의 값이며 현재 연결 상태를 대신하지 않습니다.
 
@@ -15,6 +15,7 @@
 | 비-ECAN | transceiver 및 forwarding 비활성화, camera bus 2 미사용 |
 | Panda | Red Panda, 일련번호는 로컬 설정 |
 | 명령 | `/ioniq5/actuation_command`, 기본 `lateral` deg/s + `acceleration` m/s² |
+| 피드백 | `/ioniq5/vehicle_state` 20 Hz, [현재 필드/단위](vehicle_state.md) |
 | 차량 조향 출력 | LFA `0x12A` 토크 100 Hz, native angle 제어 미구현/차량 지원 미확인 |
 | 종방향 출력 | SCC `0x1A0` 및 FCA `0x160` 50 Hz |
 | launch 기본값 | actuation/longitudinal/auto arm/raw TX가 켜진 연구장 YAML |
@@ -31,6 +32,19 @@ host 설정과 독립적으로 세션을 취소합니다. 자세한 단위와 �
 최근 순정 SCC template도 필요합니다. camera LFA quiet, 종방향이면 radar SCC quiet도
 확인한 뒤 Hyundai mode로 전환합니다. LDA는 lateral-only, SET release는 combined를
 선택/토글합니다. brake는 lateral을 유지하고 longitudinal만 SET 재조작 전까지 래치 해제합니다.
+
+## 최신 확인 범위
+
+10월 6일 퓨즈 교체 직후 ignition과 stock LFA/SCC 수신 복귀를 확인했습니다. 이후 정차
+시험에서 ACTIVE 진입이 실패했고 초기 수신/준비 경쟁 조건과 복구 순서를 수정했습니다.
+새 앱의 USB-only 설치와 수정 후 수신/무출력 대기는 확인했으나 ACC 이상과 세 DTC 재발이
+남아 시험을 중단했습니다. 퓨즈 교체 관측은 이 재발 검사보다 앞선 결과입니다.
+실제 추종과 주행 중 입력 재인계, 순정 보조 기능 정상 복구는 미확인입니다.
+
+10월 7일 [CAN 분석](ecan_analysis_20261007.md)은 138개 ID를 조사하고 현재 97개 ID,
+605개 필드 배치/대안과 3,892개 해석 비트를 정리했습니다. 동시 기록 센서는 CAN 해석의
+검증 참조이며 새 추론 필드는 현재 ROS 메시지에 추가하지 않았습니다. 주행 기록 분석은
+위 제어기의 실차 ACTIVE 시험과 별개입니다. [검증 기록](validation.md)에 범위를 구분했습니다.
 
 ## 최신 복귀/복구 구현
 
@@ -130,7 +144,7 @@ RX overflow 증가 26 때문에 무손실 관측은 아니며, 이 결과로 ADA
 충족되기 전에는 문제 해결로 판단하지 않습니다.
 
 그 뒤 사용자가 퓨즈 교체로 문제가 해결됐다고 알렸습니다. 교체한 퓨즈의 위치/규격은
-제공되지 않았습니다. 송신 없이 USB/CAN 수신만 확인한 최신 3초 관측(Panda uptime
+제공되지 않았습니다. 당시 송신 없이 USB/CAN 수신만 확인한 3초 관측(Panda uptime
 242~245초)은 harness=1(NORMAL, 정방향), ignition_line=1, 전압 14.102 V였습니다.
 ECAN RX가 8,636 증가했고 LFA `0x12A` 300개, SCC `0x1A0` 150개를 수신했습니다.
 MDPS 300개, 조향각 299개, wheel speed 300개, TCS 150개도 CRC가 모두 정상이며
@@ -141,6 +155,7 @@ ECAN-only 제외 mask의 non-ECAN 두 비트이며 ECAN bus-off/error-warning/er
 모두 0입니다. 이 관측은 stock CAN 수신 복귀를 확인한 결과이며 ECU 진단 접근 경로나
 고장코드 소거를 재확인한 결과는 아닙니다. 원본은 [panda-post-fuse-20261006.json](evidence/2026-10-06/panda-post-fuse-20261006.json)에
 있습니다. 이전 점화 미감지와 LFA/SCC 미수신 결과는 퓨즈 교체 전의 기록입니다.
+이후 정차 시험과 수정 후 DTC 재발은 아래에 별도로 기록했습니다.
 
 이후 Ubuntu 차량 컴퓨터에서 ROS Noetic Release 빌드와 최신 host 67개 test를 통과했습니다.
 사용자가 firmware 수정/flash를 승인하고 하네스를 분리한 뒤 I5R1 앱을 flash했습니다.

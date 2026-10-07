@@ -1,12 +1,13 @@
 # 차량 컴퓨터 전달 문서
 
-2026-10-06 작성. 대상은 **Ubuntu 20.04 / ROS 1 Noetic / C++17**입니다.
+2026-10-07 갱신. 대상은 **Ubuntu 20.04 / ROS 1 Noetic / C++17**입니다.
 이 문서는 차량 컴퓨터에서 현재 작업을 이어가기 위한 시작 절차입니다.
+설치와 USB/차량 값은 10월 6일의 관측이며 이번 문서 갱신에서 원격 설치 상태를 재조회하지 않았습니다.
 
 ## 차량 컴퓨터의 설치 결과
 
 2026-10-06 사용자의 요청으로 Ouster 작업공간에서 아래 별도 작업공간으로 이전했습니다.
-Ioniq5 저장소는 최신 `main`의 `48f9d210c08de1fba4508fee7879d278880a32c5`로
+당시 Ioniq5 저장소는 `main`의 `48f9d210c08de1fba4508fee7879d278880a32c5`로
 fast-forward 갱신했습니다. Cabana의 기존 openpilot revision과 로컬 CAN-FD 설정은 보존했습니다.
 
 | 용도 | 실제 경로 |
@@ -52,18 +53,20 @@ live 로그에서 ECAN 8,620개, LFA 100 Hz/SCC 50 Hz와 주요 7종 CRC 오류 
 
 - 저장소: `https://github.com/kelvin926/Ioniq5_ECAN`
 - 전달 브랜치: **`main`**. 사용자의 요청으로 최신 제어 코드와 전달 문서를 main에 반영합니다.
-- 제어 코드 기준 commit: `dc61647f00957e306a34a70ba99d38f7b6ac2bc3`.
-  전달 문서와 evidence는 이 commit 다음의 문서 commit에 포함됩니다. 위 코드 commit만
-  checkout하지 말고 전달 브랜치의 최신 내용을 가져옵니다.
+- 10월 6일 제어/ECU 복구 수정 기준은 [복구 수정 기록](evidence/2026-10-06/ecan-recovery-fix-20261006.json)입니다.
+  개인정보 정리 전 전달 SHA를 checkout 기준으로 사용하지 않습니다. 현재 공개 `main`과
+  `git log -1`을 사용하며 이번 문서 갱신은 제어 코드나 firmware를 변경하지 않았습니다.
 - 먼저 [AGENTS.md](../AGENTS.md), [state.json](../state.json), 이 문서를 읽습니다.
 - 상세 실차 이력: [vehicle_handoff.md](vehicle_handoff.md).
   입력 단위: [input_contract.md](input_contract.md). 검증 범위: [validation.md](validation.md).
+- 현재 피드백: [vehicle_state.md](vehicle_state.md). 최신 CAN 추론: [분석 안내](ecan_analysis_20261007.md).
 
-이번 전달에는 기존 로컬의 ROS 제어/ECU 복구 변경, 관련 test와 firmware patch source,
+현재 공개 저장소에는 ROS 제어/ECU 복구 변경, 관련 test와 firmware patch source,
 문서, 프로젝트 상태 및 날짜별 JSON 관측 기록이 포함됩니다. Windows 빌드 산출물,
 firmware binary와 임시 진단/고장코드 삭제 스크립트는 전달하지 않습니다.
+10월 7일 추가한 CAN 필드 표와 비트 검색표는 오프라인 자료이며 ROS parser의 신규 구현은 아닙니다.
 
-## 현재 차량과 최신 확인 결과
+## 차량 구성과 2026-10-06 관측 순서
 
 2022 Ioniq 5 HDA1 EV, radar-SCC, Hyundai K camera harness, Red Panda 구성입니다.
 Panda 일련번호는 로컬에서 확인하고 `PANDA_SERIAL`에 입력합니다. 저장소에는 기록하지 않습니다.
@@ -98,8 +101,16 @@ bus-off/error-warning/error-passive는 모두 0입니다. 원시 fault 값과 ve
 
 퓨즈 교체 전 HVAC DTC raw `923413`, status `09`를 읽었습니다. 한 번 삭제 요청이
 수락됐지만 즉시 같은 코드가 다시 확인됐습니다. ADAS 후보 주소들은 당시 timeout으로
-삭제 성공이 미확인이었습니다. 퓨즈 교체 후에는 DTC/ECU 식별을 재조회하지 않았습니다.
+삭제 성공이 미확인이었습니다. 위 퓨즈 교체 직후 passive 관측에서는 DTC/ECU 식별을 재조회하지 않았습니다.
 원본과 순서는 [evidence 목록](evidence/2026-10-06/README.md)에 있습니다.
+
+그 뒤 22:09~22:17 정차 시험에서 Panda 준비 검증 실패로 ACTIVE에 진입하지 못했습니다.
+초기 USB 수신/첫 RX 경쟁 조건과 stock 복구 순서를 수정하고 새 앱을 USB-only로 설치했습니다.
+22:48 수정 후 재연결은 CAN valid/ready/무출력으로 정상 대기했지만 `ACCEnable=3`이 남았습니다.
+승인된 `0x730` 한 번 삭제는 수락됐으나 22:52 재확인에서 같은 세 DTC/status89가 약 2초 뒤
+재발하여 추가 진단/삭제/제어를 중단했습니다. 정확한 ECU identity와 제조사 고장 원인은
+미확인입니다. [수정 후 기록](evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json)과
+[검증 범위](validation.md)를 먼저 확인합니다. 최신 ACTIVE 추종/주행 중 재인계 성공 기록은 없습니다.
 
 ## 차량 컴퓨터에서 저장소 준비
 
@@ -212,11 +223,17 @@ rostopic echo -n 1 /diagnostics
 
 `vehicle_state`는 20 Hz 상태 게시이며 LFA/SCC 각각의 CAN 주기와 다릅니다. `valid=true`,
 EPS/ACC 상태, 물리 입력에 맞는 조향/속도/페달/브레이크/기어 값을 확인합니다.
+`valid`는 필수 4종 갱신만 검사하며 IMU/페달/기어/SCC/버튼의 개별 freshness를 보장하지 않습니다.
+필드별 단위와 현재 미구현 추론 값은 [피드백 필드 표](vehicle_state.md)를 확인합니다.
 버튼 프레임 `0x1CF`/`0x1AA`와 실제 버튼 변화에 맞춰 `hardware.alternate_buttons`를 정합니다.
 raw `0x12A`/`0x1A0`의 크기/CRC/counter를 확인하고 source commit, YAML, preflight와 trace를
 기록합니다. 외부 컴퓨터의 상위 ROS 제어기를 연결할 경우 양쪽의 `ROS_MASTER_URI`와
 각 host의 `ROS_IP`/`ROS_HOSTNAME`을 실제 네트워크에 맞춥니다. 주소는 이 문서에서 추정하지
 않습니다.
+
+CAN 저장만 필요하면 [독립 수신 기록기](can_logger.md)의 `./scripts/start_can_logger.sh`를
+사용합니다. SILENT 상태를 요구하고 USB IN만 수행하며 위 passive 제어 노드처럼 Panda
+설정을 쓰지 않습니다. 이 기록기의 Noetic launch/실차 수집은 아직 확인되지 않았습니다.
 
 ## 제어 설정과 아직 남은 선행 확인
 
@@ -284,7 +301,10 @@ rosservice call /ioniq5_ecan/set_armed "data: false"
 > 최신 checkout에서 AGENTS.md, state.json, docs/vehicle_computer_handoff.md를 먼저 읽고
 > 현재 commit을 기록해라. 퓨즈 교체 뒤 Panda 정방향/ignition=1과 순정 LFA 100 Hz/SCC 50 Hz
 > 수신은 확인했다. 차량 컴퓨터 Release 빌드/67개 호스트 test와 USB-only I5R1 앱 flash/서명
-> 검증도 완료했다. camera 소유권 endpoint와 실차 stock 복구/주행 중 입력 복귀는 미확인이다.
+> 검증도 완료했다. 이후 정차 시험 실패를 수정하고 새 앱을 설치했지만 수정 후 DTC/ACC 이상이
+> 재발했다. ACTIVE 추종/주행 중 입력 복귀와 보조 기능 정상 복구는 미확인이다.
+> camera endpoint의 정확한 ECU identity도 미확인이다. 10월 7일 CAN 분석은 오프라인 근거이며
+> 새 필드는 현재 ROS 피드백에 추가되지 않았다.
 > 차량 연결 후 read-only 및 passive 수신 확인부터 진행하고 결과를 state.json에 기록해라.
 > 합의된 핸들 조향각속도 deg/s와 가속도 m/s²를 사용하고 토크/목표각과 혼동하지 말아라.
 > 차량 컴퓨터로 옮기는 요청 자체는 실제 actuator/ECU disable/flash 실행 요청이 아니다.

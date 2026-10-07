@@ -1,6 +1,6 @@
 # 검증 상태와 남은 확인
 
-2026-10-06 기준입니다. 완료한 호스트 검증, 과거 실차 결과와 향후 확인 항목을 구분합니다.
+2026-10-07 문서 기준입니다. 완료한 호스트 검증, 날짜별 실차 결과와 오프라인 분석을 구분합니다.
 상세 날짜와 provenance는 [인수인계](vehicle_handoff.md) 및 [state.json](../state.json)에 있습니다.
 문서 갱신 자체에는 빌드나 하드웨어 시험을 반복하지 않습니다.
 
@@ -8,6 +8,8 @@
 
 | 시점 | 확인한 범위 | 한계 |
 | --- | --- | --- |
+| 2026-10-07 오프라인 CAN 분석 | 138개 ID/1,914,473프레임 조사, 현재 표시 97개 ID/605개 배치와 대안/3,892개 비트. 동시 기록 GPS/레이더로 속도/요레이트/조향 피드백/기준 가속도 대조, 내비 순환번호 배치 수정 | 추론 후보와 단위 대안 포함. GPS 절대 좌표/원시 레이더 객체 목록 CAN 매핑 미확인. 원본 마지막 bag은 검증된 앞부분만 사용. ROS parser 추가나 actuator 검증 아님. [현재 결과](ecan_analysis_20261007.md) |
+| 2026-10-06 퓨즈 교체 직후 | 사용자 해결 보고 후 passive 3초 관측에서 ignition=1, 순정 LFA100/SCC50 Hz, 선택 CRC 오류 및 TX 증가 0 | 퓨즈 자체/정확한 ECU identity/고장 해소의 독립 검증 아님. 그 시점에는 DTC 재조회 없음. 이후 정차 시험 및 수정 후 DTC 재발은 별도 기록. [관측](evidence/2026-10-06/panda-post-fuse-20261006.json) |
 | 2026-10-06 수정 후 재연결/진단 | 오류 없이 startup/CAN valid/session ready/NO_OUTPUT 대기, stock LFA100/SCC50 Hz 및 TX0 관측. 0x730/7D0 DTC 조회 성공, 승인된 0x730 한 번 삭제 54 수락 | 즉시 기록 없음 이후 2초 내 동일 세 status89 기록 재발, ACCEnable3 지속. 추가 삭제/진단/제어 중단. ECU identity/고장 원인과 실제 추종 미확인. [기록](evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json) |
 | 2026-10-06 정차 실패 후 수정 | 실제 libsafety로 tick-before-first-RX 경쟁 재현, 수정 뒤 custom 14개와 host 관련 18개 통과. 수정 node/ARM 앱 빌드, 새 앱 USB-only flash/서명/capability, preflight PASS/3개 차단/물리 TX 0 | 초기 USB 동기화, 빈 listener 복귀와 통신 복구 순서 수정. 수정 후 실차 ACTIVE/추종/주행 중 복귀 및 ACC 이상 해소 미확인. [기록](evidence/2026-10-06/ecan-recovery-fix-20261006.json) |
 | 2026-10-06 22:09~22:17 정차 ROS/ECU 시험 | 임시 20 Hz 입력과 700 ms idle 단절/복귀, physical OFF 무출력 확인. D/brake/LDA 조건에서 0x730/0x7D0 응답, stock LFA/SCC quiet 및 복구 확인 | 인계 후 Panda CAN 준비 검증 실패로 ACTIVE 미진입, 비영점 실조향 단계 미실행. 복구 뒤 ACCEnable=3 통신 이상 신호 관측. [기록](evidence/2026-10-06/stationary-ros-test-20261006.json) |
@@ -33,6 +35,11 @@ disable/복구는 관측했지만 Panda 준비 검증 실패와 SCC 통신 이�
 관련 경쟁 조건과 host 복구 경로는 이후 수정/빌드하고 새 앱을 USB-only로 검증했습니다.
 수정 후 차량 수신/대기는 정상이나, 승인된 0x730 한 번 삭제 후 세 기록이 재발하고 ACC 이상이 남아 제어 시험은 중단했습니다.
 ACTIVE 추종, 주행 중 입력 복귀, 실제 일시 EPS 복귀 및 차량 고장 해소는 여전히 미확인입니다.
+
+퓨즈 교체 직후의 stock 수신 복귀는 위 정차 시험보다 앞선 기록입니다. 이후 수정 후
+DTC 재조회/재발이 있으므로 교체 보고만으로 최종 고장 해소를 판단하지 않습니다.
+10월 7일 주행 bag의 센서 대조도 이 제어기의 ACTIVE 추종 검증을 대신하지 않습니다.
+현재 ROS 피드백의 개별 freshness 한계와 미구현 분석 필드는 [필드 표](vehicle_state.md)에 있습니다.
 
 ## 변경에 맞는 host 확인
 

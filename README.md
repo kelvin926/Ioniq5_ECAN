@@ -39,6 +39,15 @@ rostopic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/ActuationCommand \
 
 상세 계약은 [입력 계약](docs/input_contract.md)과 [메시지 정의](msg/ActuationCommand.msg)를 참고합니다.
 
+## ROS 피드백
+
+`/ioniq5/vehicle_state`는 `ioniq5_ecan/VehicleState`를 20 Hz로 발행합니다.
+차속과 4륜 속도(m/s), 조향각(deg), 조향각속도와 요레이트(deg/s), 가속도(m/s²),
+페달/브레이크/기어, 채널 선택과 출력 허가 상태를 제공합니다.
+`stamp`는 발행 시각이며 `valid`는 조향 센서/MDPS/휠 속도/TCS의 갱신 조건만 확인합니다.
+IMU, 페달, 기어와 SCC의 개별 유효 시각은 제공하지 않습니다.
+[피드백 필드 표](docs/vehicle_state.md)에서 단위와 해석 한계를 확인하십시오.
+
 ## 제어 흐름
 
 ```text
@@ -67,7 +76,7 @@ CSV와 timestamp를 저장하고 선택적으로 `/ioniq5/can_logger/rx`에 발�
 
 [수신 전용 기록기](docs/can_logger.md)의 시작 조건과 시각 의미를 참고하십시오.
 
-이 차량 컴퓨터에 설치된 한 줄 명령입니다. `source`하지 말고 실행합니다.
+2026-10-06 차량 컴퓨터에 설치한 작업공간 실행 명령입니다. `source`하지 말고 실행합니다.
 
 ```bash
 /home/ave/catkin_ws_ioniq5/ecan
@@ -88,12 +97,19 @@ Ctrl+C로 종료합니다. 실행기는 자기 프로세스에만 Noetic/이 작
 
 ## 확인 상태와 상세 문서
 
-2026-10-06 정차 시험 이후 USB 초기 수신 동기화와 순정 복구 순서를 수정했고, Panda 첫 수신/안전검사 경쟁 조건도 수정해 USB-only로 새 앱을 설치했습니다.
-관련 호스트 18개와 펌웨어 14개 테스트, 빌드, 설치 서명 검증, preflight PASS 및 무출력 송신 차단을 확인했습니다.
-**수정 후 실제 추종과 주행 중 재인계는 미검증**입니다. 재연결 수신/대기는 정상이지만 ACC 이상과 ECU 고장이 재발해 제어 시험을 중단했습니다.
-순정 AEB 유지도 보장하지 않습니다. [검증 기록](docs/validation.md)에 완료와 미확인 범위를 구분했습니다.
+2026-10-07 문서 기준입니다. 10월 6일 퓨즈 교체 후 ignition과 순정 LFA/SCC 수신 복귀를
+확인했지만, 이후 정차 시험과 수정 후 재연결에서 ACC 이상 및 DTC 재발을 관측했습니다.
+USB 초기 수신과 Panda 첫 RX 경쟁 조건의 수정, 관련 호스트 18개/펌웨어 14개 테스트,
+새 앱의 USB-only 설치/서명 및 무출력 송신 차단 검증은 완료했습니다.
+**수정 후 실제 추종, 주행 중 재인계와 순정 보조 기능 정상 복구는 미검증**입니다.
+순정 AEB 유지도 보장하지 않습니다. [검증 기록](docs/validation.md)에 범위를 구분했습니다.
+
+10월 7일 오프라인 ECAN 분석은 138개 ID와 1,914,473프레임을 조사했습니다.
+현재 한국어 표에는 97개 ID, 605개 필드 배치/대안, 3,892개 해석 비트를 표시합니다.
+동시 기록 GPS/레이더는 CAN 해석의 참조이며, 새 추론 필드는 현재 ROS 피드백에 추가되지 않았습니다.
 
 - [설치와 차량 컴퓨터 시작 절차](docs/vehicle_computer_handoff.md)
+- [현재 ROS 피드백 필드](docs/vehicle_state.md), [상위 입력 계약](docs/input_contract.md)
 - [상태와 제어 제한](docs/safety.md), [구조](docs/architecture.md), [raw CAN](docs/raw_can.md)
 - [Panda 펌웨어 빌드/flash](docs/panda_firmware.md), [upstream 근거](docs/upstream.md)
 - [실차 이력](docs/vehicle_handoff.md), [날짜별 관측](docs/evidence/2026-10-06/README.md)

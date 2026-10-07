@@ -2,7 +2,7 @@
   "schema_version": 1,
   "updated_on": "2026-10-07",
   "timezone": "Asia/Seoul",
-  "update_reason": "Organized ECAN research documents/evidence published to main; source SHA verified, state-only publication receipt follows.",
+  "update_reason": "Aligned README and operational documentation with current parser, latest offline ECAN research and verified vehicle observation chronology; documentation-only delivery prepared.",
   "can_only_sensor_field_assessment": {
     "observed_on": "2026-10-07",
     "source": "Direct user scope correction; CAN-only cached original0x1A0 payloads in build/deep-ecan-20261007/arrays.npz, can-only-object-assessment.json and pinned Hyundai CAN-FD DBC.",
@@ -209,8 +209,8 @@
     "actions": "Offline reads and scoped project analysis artifacts/state only. No USB/CAN/UDS, runtime/config/firmware changes, packages/system settings, bag edits, Git commit/push or external application writes."
   },
   "current_request": {
-    "description": "Organize the current ECAN field/bit and co-recorded-bag inference reports and publish scoped documentation/evidence/state to kelvin926/Ioniq5_ECAN main.",
-    "status": "organized_ecan_analysis_published",
+    "description": "Update README and related documentation to the latest project state and publish the scoped documentation update under the existing repository-delivery authorization.",
+    "status": "documentation_refresh_verified_ready_to_publish",
     "user_facing_language": "Korean",
     "artifact_language": "Korean report and source signal identifiers; English JSON provenance",
     "further_implementation_requested": false,
@@ -229,7 +229,7 @@
       "fresh_usb_only_confirmation_received": true,
       "device_harness_and_ignition_zero_verified": true
     },
-    "historical_detail_notice": "Current request explicitly authorizes repository commit/push of organized analysis. Vehicle actuation, diagnostics, firmware/settings changes and unrelated external publication remain outside scope.",
+    "historical_detail_notice": "Current documentation update continues the user's authorized repository publication. Historical vehicle constraints below are dated observations, not live hardware readings or new authorization for diagnostics, actuation or firmware changes.",
     "vehicle_actuation_decision": {
       "recorded_on": "2026-10-06",
       "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
@@ -462,8 +462,8 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "main",
-    "head": "c7dd2add610a09d7f59229cb3be3f6613877d9b0",
-    "head_subject": "Document ECAN field inference and co-recorded sensor validation",
+    "head": "b40dc75b2feda7f53620acc0de3c12e4bcb2b0e2",
+    "head_subject": "Record verified ECAN analysis publication",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -480,7 +480,7 @@
       "commit_or_push_performed": true,
       "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
     },
-    "head_scope": "Verified analysis source/document commit. This state-only publication receipt is its child; live git HEAD and origin/main identify the receipt commit.",
+    "head_scope": "Pre-refresh main snapshot; publication receipt will record the verified documentation source commit. Live Git identifies the receipt child.",
     "delivery_snapshot": {
       "observed_at": "2026-10-06T23:04:51+09:00",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -1527,7 +1527,7 @@
       "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
     }
   ],
-  "next_action": "Report0x4BA eight-byte layout, actual decoded example, all-FF placeholder and unresolved header/profile semantics. No other sensor data, runtime implementation or publication requested.",
+  "next_action": "Verify and publish the scoped documentation refresh. No runtime implementation, original bag modification, vehicle diagnostics, actuation or firmware work requested.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -1746,6 +1746,11 @@
       "date": "2026-10-07",
       "type": "analysis_publication_verified",
       "summary": "Organized current605-row ECAN tables, standalone viewer, co-recorded sensor validation, historical snapshots and license published to main with30 scoped files. kelvin926 account and source remote SHA verified; runtime unchanged."
+    },
+    {
+      "date": "2026-10-07",
+      "type": "documentation_refresh_prepared",
+      "summary": "Aligned README and operational guides; added current VehicleState contract, clarified post-fuse/post-fix chronology, research versus runtime fields and timestamp semantics. No runtime or hardware actions."
     }
   ],
   "ecu_recovery": {
@@ -1960,6 +1965,56 @@
     "command_session_update": {
       "updated_on": "2026-10-06",
       "scope": "Aligned README and topic/safety/architecture/upstream/firmware/validation/handoff docs with current I5R1 behavior and dated offline/USB proof; README reduced to concise input/control/startup guide. Preserve previous documentation-only checks above as historical."
+    },
+    "latest_refresh": {
+      "updated_on": "2026-10-07",
+      "source": [
+        "Current src/vehicle_state_parser.cpp, src/node.cpp, codec address constants, ROS message definitions and active YAML",
+        "Standalone logger launch/helper and existing logger verification receipt",
+        "docs/evidence/2026-10-06/README.md chronological index, post-fuse passive and post-fix DTC JSON records",
+        "Published docs/ecan_analysis_20261007.md and current co-recorded sensor validation"
+      ],
+      "files": [
+        "README.md",
+        "docs/vehicle_state.md",
+        "docs/input_contract.md",
+        "docs/validation.md",
+        "docs/vehicle_computer_handoff.md",
+        "docs/vehicle_handoff.md",
+        "docs/architecture.md",
+        "docs/latency.md",
+        "docs/raw_can.md",
+        "docs/upstream.md",
+        "docs/panda_firmware.md",
+        "state.json"
+      ],
+      "scope": "Documentation and project state only. No source/message/configuration/firmware changes, hardware or remote vehicle-computer queries, repeated builds or implementation tests.",
+      "decisions": [
+        "Add a source-backed current VehicleState field/unit/freshness contract and link it from README and operational guides.",
+        "Keep wheel-average speed and current parser behavior distinct from newly inferred DA speed,175 acceleration basis,1AA display-speed and navigation fields.",
+        "Feedback positive-left evidence is not external-command or actuator-direction vehicle validation.",
+        "Clarify chronology: fuse replacement/passive stock reception preceded stationary test failure, recovery fixes/new app installation and post-fix recurrent DTC/ACC abnormality.",
+        "Vehicle-computer installation and hardware state are dated observations; no live verification during documentation refresh.",
+        "Use current public main after privacy rewrite instead of pre-redaction delivery SHA as a checkout target.",
+        "Separate controller RAW publish time, logger USB-read completion time and sensor alignment from hardware arrival latency.",
+        "Keep ECAN research commit snapshots separate from unchanged runtime pins and preserve historical computed research artifacts."
+      ],
+      "verification": {
+        "status": "passed",
+        "checked_on": "2026-10-07",
+        "changed_files": 12,
+        "markdown_files_checked": 24,
+        "local_links_resolved": 298,
+        "broken_local_links": 0,
+        "VehicleState_fields_documented": 36,
+        "AGENTS_lines": 192,
+        "runtime_message_configuration_changes": false,
+        "runtime_pins_unchanged": true,
+        "computed_evidence_unchanged": true,
+        "documentation_source_review": "Parser conversions, 20Hz ROS publication/freshness, logger timestamps, research counts/pins and dated fuse/post-fix sequence reviewed against source and existing JSON records.",
+        "scope": "No builds, implementation tests, original bag writes, remote vehicle queries or hardware actions."
+      },
+      "previous_sync_notice": "Other entries in documentation_sync retain their explicitly dated 2026-10-06 checks and are historical, not rerun by this refresh."
     }
   },
   "adas_diagnostics": {
@@ -3063,5 +3118,30 @@
     "verification": "Normal push succeeded; read-only git ls-remote refs/heads/main matched source commit.",
     "receipt_scope": "State-only child records verified source delivery; its own final SHA is confirmed at session close and is not self-embedded.",
     "committed_files": 30
+  },
+  "documentation_refresh_publication": {
+    "requested_on": "2026-10-07",
+    "user_request": "README 등 문서들 최신 업데이트해",
+    "publication_authorization": "Continuation of the direct user request to organize and upload to the repository earlier in the same session.",
+    "repository": "https://github.com/kelvin926/Ioniq5_ECAN",
+    "branch": "main",
+    "base_head": "b40dc75b2feda7f53620acc0de3c12e4bcb2b0e2",
+    "status": "verified_ready_to_publish",
+    "files": [
+      "README.md",
+      "docs/vehicle_state.md",
+      "docs/input_contract.md",
+      "docs/validation.md",
+      "docs/vehicle_computer_handoff.md",
+      "docs/vehicle_handoff.md",
+      "docs/architecture.md",
+      "docs/latency.md",
+      "docs/raw_can.md",
+      "docs/upstream.md",
+      "docs/panda_firmware.md",
+      "state.json"
+    ],
+    "scope": "Documentation/state only; raw evidence, runtime pins, code and configuration remain unchanged.",
+    "authentication_policy": "Verify requested GitHub account kelvin926; use its credential in process memory only, disable Git credential helpers for writes, no token/global configuration storage or force push."
   }
 }

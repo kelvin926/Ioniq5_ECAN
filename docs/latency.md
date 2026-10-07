@@ -1,6 +1,6 @@
 # Latency and scheduling
 
-2026-10-06 현재 기본 YAML의 목표 주기입니다. 실제 bus 도착 주기나 최대 지연을 보장하는
+2026-10-07 현재 기본 YAML의 목표 주기입니다. 실제 bus 도착 주기나 최대 지연을 보장하는
 측정 결과는 아직 없습니다.
 
 | 경로 | 기본 동작 |
@@ -30,6 +30,13 @@ RT 사용 시 systemd 또는 limits의 RT 권한이 필요하며, 설정 실패�
 scheduler로 계속 동작합니다.
 
 지연 측정에는 source timestamp, callback 수신 시각, codec 출력 시각, Panda returned frame,
-외부 CAN logger 시각을 함께 사용하고 clock domain을 맞춥니다. `RawCanFrame.stamp`는
-ROS publish 시각이며 차량 CAN 도착 timestamp가 아닙니다. software 출력 또는 returned
-frame만으로 ECU 적용 시각과 실제 actuator 응답을 단정하지 않습니다.
+외부 CAN logger 시각을 함께 사용하고 clock domain을 맞춥니다. 제어 노드의
+`RawCanFrame.stamp`와 `VehicleState.stamp`는 ROS publish 시각입니다.
+[독립 수신 기록기](can_logger.md)의 RAW/CSV 시각은 host USB read 완료 시각이며 한 read의
+프레임들이 시각을 공유할 수 있습니다. 모두 하드웨어 CAN 도착 timestamp와 다릅니다.
+software 출력 또는 returned frame만으로 ECU 적용 시각과 실제 actuator 응답을 단정하지 않습니다.
+
+동시 기록 센서를 대조할 때는 헤더 시계 차이를 먼저 확인하고 같은 토픽의 발행 주체를
+분리합니다. 10월 7일 영상은 큰 헤더 시계 차이 때문에 bag 기록 시각을 사용했습니다.
+[센서 대조](ecan_bag_reference_inference_20261007.md)의 정렬/필터 시차도 실제 CAN 지연
+측정값으로 사용하지 않습니다.
