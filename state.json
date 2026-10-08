@@ -773,7 +773,7 @@
         "checked_on": "2026-10-06",
         "source": "Current src/command_adapter.cpp, safety_supervisor.cpp and active YAML; pinned opendbc Hyundai CAN-FD steering limits and DBC.",
         "host_permission": "The current lateral path has no minimum-moving-speed requirement; stationary takeover and normal lateral/Panda permission are still required.",
-        "feedback_path_at_zero_speed": "low_speed_factor_v[0]=15 produces nonzero proportional error through factor squared. Desired/actual lateral acceleration and acceleration-based friction/feedforward are zero at v=0. Integral accumulation freezes below 5 m/s by default, so increasing friction or ki alone does not add standstill torque in the current formula.",
+        "feedback_path_at_zero_speed": "low_speed_factor_v[0]=15 produces nonzero proportional error through factor squared. Desired/actual lateral acceleration and acceleration-based friction/feedforward are zero at v=0. Integral accumulation runs at every speed (integrator_freeze_speed_mps 0) and may contribute up to integral_output_limit 3.78 x torque_output_scale (about 1021 counts), so a persistent standstill error builds torque over time.",
         "tuning_scope": "Increasing low-speed proportional weighting or kp can increase a below-cap torque request; it cannot exceed the final +/-1021-count ceiling. Steering ratio is a model parameter.",
         "direct_torque_path": "An upstream torque controller should supply Panda counts in direct_torque mode; local ratio/PID/friction/low-speed generation is bypassed, while count saturation and engagement gates remain. Current default YAML remains steering_rate_deg_s.",
         "vehicle_capability": "No stronger standstill steering guarantee or supported native parking/angle interface established for this MDPS. Software saturation does not establish ECU acceptance or physical output.",
@@ -1788,6 +1788,11 @@
       "date": "2026-10-08",
       "type": "button_reengage_after_fault",
       "summary": "User decision: after any fault, a new physical LDA press or SET release re-engages. Host restores stock, passes Panda through profile 0 to clear a blocked session, reinstalls the I5R1 listener; a press clears inhibit/rearm-required, auto-arm request_arm(true) acknowledges FAULT, and ECU takeover is allowed while moving. Explicit set_armed=false and process restart disable it. Superseded limit records removed from docs/state per user. No test/build/flash."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "integral_term_opened",
+      "summary": "User approved: integral_output_limit 3.78 (I term may reach about 1021 counts at scale 270) and integrator_freeze_speed_mps 0 (accumulates at standstill/low speed) in YAML and code defaults. Saturation anti-windup kept; torque_output_scale 270 kept as the Carrot calibration reference. Not pushed; no vehicle test."
     }
   ],
   "ecu_recovery": {
@@ -3310,6 +3315,8 @@
         "accel_min_mps2": -10.23,
         "accel_max_mps2": 10.24,
         "jerk_limit_mps3": 12.7,
+        "integral_output_limit": 3.78,
+        "integrator_freeze_speed_mps": 0.0,
         "code_defaults": "same as YAML"
       }
     },

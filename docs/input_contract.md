@@ -88,6 +88,8 @@ metadata이며 host 가속도 slew 기능이 아닙니다. 차량이 이 값을 
 watchdog은 남습니다. active YAML은 host torque slew(`torque_rate_up/down: 2042`)와
 driver torque 제한(`driver_torque_multiplier: 0`)을 끕니다. 토크 제어기 출력 1.0은
 `torque_output_scale` 270 count에 대응하고, `max_torque` 1021은 clamp로만 쓰입니다.
+적분항은 정규화 3.78(약 1021 count)까지 쓸 수 있고 정차와 저속에서도 누적합니다.
+출력이 상한에 닿으면 적분 누적을 멈추며, 버튼 OFF와 재인계 때 적분과 목표각을 초기화합니다.
 1021은 DBC Reserved/Invalid 원시값(+1022/+1023)을 피하는 대칭 최대값입니다.
 NaN/Inf 입력은 맞출 범위가 없어 기존처럼 무효 명령으로 처리합니다.
 

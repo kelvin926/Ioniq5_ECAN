@@ -63,8 +63,11 @@ lateral:
   friction: 0.096019
   friction_threshold: 0.3
   steering_angle_deadzone_deg: 0.0
-  integral_output_limit: 1.0
-  integrator_freeze_speed_mps: 5.0
+  # The integral term may use the full torque range (3.78 x 270 = about 1021 counts) and
+  # accumulates at every speed, including standstill. Saturation at max_torque still
+  # stops accumulation (anti-windup).
+  integral_output_limit: 3.78
+  integrator_freeze_speed_mps: 0.0
   low_speed_factor_bp_mps: [0.0, 10.0, 20.0, 30.0]
   low_speed_factor_v: [15.0, 13.0, 10.0, 5.0]
   # Host target bounds apply only when input.unfiltered_input is false.

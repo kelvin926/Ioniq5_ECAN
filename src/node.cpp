@@ -192,9 +192,9 @@ void Ioniq5EcanNode::load_configuration() {
   adapter_config_.friction_threshold = parameter<double>("lateral/friction_threshold", 0.3);
   adapter_config_.steering_angle_deadzone_deg =
     parameter<double>("lateral/steering_angle_deadzone_deg", 0.0);
-  adapter_config_.integral_output_limit = parameter<double>("lateral/integral_output_limit", 1.0);
+  adapter_config_.integral_output_limit = parameter<double>("lateral/integral_output_limit", 3.78);
   adapter_config_.integrator_freeze_speed_mps =
-    parameter<double>("lateral/integrator_freeze_speed_mps", 5.0);
+    parameter<double>("lateral/integrator_freeze_speed_mps", 0.0);
   const auto low_speed_bp =
     parameter<std::vector<double>>("lateral/low_speed_factor_bp_mps", {0.0, 10.0, 20.0, 30.0});
   const auto low_speed_v =

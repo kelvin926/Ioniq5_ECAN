@@ -37,8 +37,8 @@ struct CommandAdapterConfig {
   double friction{0.096019};
   double friction_threshold{0.3};
   double steering_angle_deadzone_deg{0.0};
-  double integral_output_limit{1.0};
-  double integrator_freeze_speed_mps{5.0};
+  double integral_output_limit{3.78};
+  double integrator_freeze_speed_mps{0.0};
   std::array<double, 4> low_speed_factor_bp_mps{0.0, 10.0, 20.0, 30.0};
   std::array<double, 4> low_speed_factor_v{15.0, 13.0, 10.0, 5.0};
   double max_target_angle_deg{175.0};
