@@ -1535,7 +1535,7 @@
     },
     {
       "id": "command_passthrough_validation",
-      "status": "source_only_untested_unbuilt_unflashed",
+      "status": "built_tested_flashed_vehicle_pending",
       "detail": "Torque (host 1021, Panda 1023, no rate/RT/driver limits), accel (-10.23..10.24, jerk metadata 12.7) and physical-button re-engagement after faults are unverified: host gtest, opendbc safety tests, ARM build, flash, MDPS acceptance of large steps, SCC/ESC acceptance of the full accel range, jerk-field effect, MDPS-side driver override and moving re-takeover are all unconfirmed."
     }
   ],
@@ -1813,6 +1813,16 @@
       "date": "2026-10-08",
       "type": "ecan_signals_and_100hz_state",
       "summary": "User request: publish every interpreted ECAN field and raise vehicle_state to the CAN rate. Added scripts/generate_ecan_signals.py, config/ecan_signals.json (604 fields, 97 IDs from the 2026-10-07 interpreted dictionary, 1 redacted identity field excluded, all bit layouts matched physical_bits), msg/EcanSignals.msg and a separate decoder process scripts/ecan_signal_decoder.py publishing /ioniq5/ecan_signals at 20 Hz (launch args decode_signals, signals_rate_hz). Decoding of the host-codec SCC golden frame matched encoded values for little/big-endian fields; 3000 0x1A0 frames decode in about 35 ms. vehicle_state timer raised to 100 Hz (source IDs 0x125/0x0EA/0x0A0/0x035/0x04A observed at 100 Hz, 0x175/0x1A0/0x1CF at 50 Hz in the 2026-10-07 capture); /diagnostics kept at 20 Hz. AGENTS compacted to stay within 200 lines. No ROS build or vehicle run."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "vehicle_computer_build_and_tests",
+      "summary": "Over user-approved SSH (hotspot 10.139.212.95, user ave; no key or laptop SSH config change) on the vehicle computer at main 3cbdd03: catkin Release build passed; run_tests_ioniq5_ecan 150 tests, 0 failures. Firmware build (build root third_party/ecan_firmware) applied the local safety patch; built source shows torque/RT/rate 1023, driver multiplier 0, accel -1023..1024. Signed app SHA-256 2a0ac3235a0eb2463e6650f02eb565f7494252103fdadf3b546425793f64948f, bootstub 644ef25f217ffd899ef008d7d876ba67a4666d1a311b411ef326b57c77dfc3e2 (unchanged). opendbc unittest (test_hyundai_canfd + test_ioniq5_command_session) first failed 27 generic test_steer_req_bit cases that assume a rate limit after violation; overridden in the local patch, rerun 1000 ran, 0 failures, 117 skipped. Not flashed. The vehicle checkout holds another workstream's uncommitted sensor-suite/can-dashboard work with unresolved stash-pop conflicts (stash before-user-pull-20261008 kept); left untouched."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "firmware_flash_pass_through",
+      "summary": "User confirmed USB-only state and approved; pre-flash read-only preflight showed app mode, harness_status 0, ignition 0, about 5.8 V USB power, no Panda clients, only accumulated rx_buffer_overflow failure. flash_panda.py flashed and verified signed app 2a0ac3235a0eb2463e6650f02eb565f7494252103fdadf3b546425793f64948f (bootstub unchanged; transient USB pipe errors during reboot). Post-flash preflight --ecan-only --require-command-session PASS: marker IONIQ5ECAN-dd8a5b3d-DEBUG, command session supported, faults 0, overflow 0, controls 0. No vehicle connection or actuation yet."
     }
   ],
   "ecu_recovery": {
