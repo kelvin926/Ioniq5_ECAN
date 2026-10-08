@@ -470,14 +470,14 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "codex/panda-local-safety",
-    "head": "77f9543569d93a370fcd48249f4c0d91f0ac3306",
-    "head_subject": "Record verified documentation refresh publication",
+    "head": "76faada035e928268530f3cf114269ebc8e60ff6",
+    "head_subject": "Pass upstream commands through and re-engage on LDA/SET after faults",
     "remote_snapshot": {
-      "observed_on": "2026-10-06",
-      "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
-      "origin_feature": "75a48afb06a279f18a8679f5a34ada43b5e79ab1",
-      "update_result": "Normal fast-forward push of scoped recovery fixes/evidence to main succeeded and git ls-remote matched 93d00526a2319a159f6ac0d8da09289756545df5. Pre-delivery local/remote main were 8d9cb1347d8ce0270279612ba88e2b17ff4620f7; no force push.",
-      "scope": "Verified current source-delivery main snapshot. origin_feature remains a historical migration observation, not a current feature-branch query. A state-only child receipt may follow."
+      "observed_on": "2026-10-08",
+      "origin_main": "77f9543569d93a370fcd48249f4c0d91f0ac3306",
+      "origin_feature": "76faada035e928268530f3cf114269ebc8e60ff6",
+      "update_result": "New branch codex/panda-local-safety pushed to origin; git ls-remote matched 76faada035e928268530f3cf114269ebc8e60ff6. origin/main was not changed; no force push.",
+      "scope": "Verified feature-branch source delivery. Merging to main was not requested. A state-only child receipt follows."
     },
     "working_tree": {
       "observed_on": "2026-10-06",
