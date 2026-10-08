@@ -78,7 +78,8 @@ def main(argv=None):
         "excluded_redacted_fields": len(skipped),
         "signals": signals,
     }
-    args.output.write_text(json.dumps(document, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    with open(args.output, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(document, ensure_ascii=False, indent=1) + "\n")
     print("wrote %d signals for %d IDs to %s (excluded %d)"
           % (len(signals), len({s["address"] for s in signals}), args.output, len(skipped)))
     return 0

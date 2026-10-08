@@ -470,13 +470,13 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "codex/panda-local-safety",
-    "head": "8dd77d6a48a568b2e18c603b72c31a7e0d911319",
-    "head_subject": "Switch the active lateral contract to direct_torque and add torque test tools",
+    "head": "7f88948109778828080b7c77147556e561022a7b",
+    "head_subject": "Publish all interpreted ECAN fields and raise vehicle_state to 100 Hz",
     "remote_snapshot": {
       "observed_on": "2026-10-08",
       "origin_main": "77f9543569d93a370fcd48249f4c0d91f0ac3306",
-      "origin_feature": "8dd77d6a48a568b2e18c603b72c31a7e0d911319",
-      "update_result": "New branch codex/panda-local-safety pushed to origin; git ls-remote matched 8dd77d6a48a568b2e18c603b72c31a7e0d911319. origin/main was not changed; no force push.",
+      "origin_feature": "7f88948109778828080b7c77147556e561022a7b",
+      "update_result": "New branch codex/panda-local-safety pushed to origin; git ls-remote matched 7f88948109778828080b7c77147556e561022a7b. origin/main was not changed; no force push.",
       "scope": "Verified feature-branch source delivery. Merging to main was not requested. A state-only child receipt follows."
     },
     "working_tree": {
