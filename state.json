@@ -1847,6 +1847,11 @@
       "date": "2026-10-08",
       "type": "vehicle_steering_test",
       "summary": "User ran the torque slider at standstill after the flash: steering responded over -30.9..+54.3 deg with commands up to +/-1021 counts, Panda blocked 0 frames, no hard fault. MDPS LKA fault flag cycled at about 400+ counts (see vehicle_steering_test_20261008)."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "receive_only_capture_10s",
+      "summary": "User request: 10 s receive-only capture with scripts/start_can_logger.sh duration_s:=10 publish:=false on the vehicle computer (ignition on, harness_status 1, Panda SILENT). 28,877 frames, 133 IDs, about 2,889 frames/s, all bus 0, no returned/rejected; LFA 0x12A 100 Hz, SCC 0x1A0 50 Hz, 0x125/0xEA/0xA0/0x35/0x4A about 100 Hz, 0x175/0x1CF/0x160 50 Hz. Meta: duration_complete, usb_control_writes 0, CAN TX calls 0, serial not recorded. First Noetic launch capture of the standalone logger on the vehicle; roslaunch needed an external stop after the node finished. Copied to the laptop log/can_logger (git-ignored), SHA-256 721ff6d7aa8101a9ea515ab46e45f947e087cc04f9e7d0e63e4eef04a620b81e matched."
     }
   ],
   "ecu_recovery": {
