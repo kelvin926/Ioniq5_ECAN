@@ -52,8 +52,8 @@ TEST(HyundaiCanFdCodec, MatchesPinnedOpenDbcGoldenFrames) {
   codec.reset_counters();
   expect_payload(
     codec.make_scc_control(0.5, 0.1, true, false, false, 30.0, 5.0),
-    std::array<uint8_t, 32>{0x83, 0x45, 0x00, 0x0A, 0x00, 0x30, 0x64, 0x00, 0x14, 0x00, 0x00,
-                            0x04, 0x1E, 0x08, 0x00, 0x00, 0x09, 0x14, 0x43, 0x1E, 0x32, 0x00,
+    std::array<uint8_t, 32>{0x60, 0x64, 0x00, 0x0A, 0x00, 0x30, 0x64, 0x00, 0x14, 0x00, 0x00,
+                            0x04, 0x1E, 0x08, 0x00, 0x00, 0x09, 0x14, 0x43, 0x32, 0x32, 0x00,
                             0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
   codec.reset_counters();
@@ -64,17 +64,24 @@ TEST(HyundaiCanFdCodec, MatchesPinnedOpenDbcGoldenFrames) {
                             0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 }
 
-TEST(HyundaiCanFdCodec, EnforcesPandaHardBoundsAndMaintainsChecksum) {
+TEST(HyundaiCanFdCodec, SaturatesAtCanRepresentationAndMaintainsChecksum) {
   using namespace ioniq5_ecan;
   HyundaiCanFdCodec codec;
-  const CanFrame lfa = codec.make_lfa(999, true, true);
+  const CanFrame lfa = codec.make_lfa(2000, true, true);
   EXPECT_TRUE(HyundaiCanFdCodec::checksum_valid(lfa));
   std::array<uint8_t, 16> data{};
   std::copy_n(lfa.data.begin(), 16, data.begin());
-  EXPECT_EQ(static_cast<int>(get_signal(data, 41, 11, ByteOrder::LittleEndian)) - 1024, 270);
+  EXPECT_EQ(static_cast<int>(get_signal(data, 41, 11, ByteOrder::LittleEndian)) - 1024, 1021);
 
-  EXPECT_THROW(codec.make_scc_control(9.0, -9.0, true, false, false, 30.0, 5.0), std::out_of_range);
-  EXPECT_THROW(codec.make_scc_control(0.0, 0.0, true, false, false, 30.0, 20.0), std::out_of_range);
+  const CanFrame scc = codec.make_scc_control(20.0, -20.0, true, false, false, 300.0, 20.0);
+  EXPECT_TRUE(HyundaiCanFdCodec::checksum_valid(scc));
+  std::array<uint8_t, 32> scc_data{};
+  std::copy_n(scc.data.begin(), 32, scc_data.begin());
+  EXPECT_EQ(get_signal(scc_data, 140, 11, ByteOrder::LittleEndian), 2047U);  // aReqRaw +10.24
+  EXPECT_EQ(get_signal(scc_data, 128, 11, ByteOrder::LittleEndian), 0U);     // aReqValue -10.23
+  EXPECT_EQ(get_signal(scc_data, 158, 7, ByteOrder::BigEndian), 127U);       // jerk 12.7
+  EXPECT_EQ(get_signal(scc_data, 166, 7, ByteOrder::BigEndian), 127U);
+  EXPECT_EQ(get_signal(scc_data, 103, 8, ByteOrder::BigEndian), 255U);       // set speed
 }
 
 TEST(HyundaiCanFdCodec, PreservesUnownedStockSccFields) {

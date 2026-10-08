@@ -128,6 +128,8 @@ Ioniq5EcanNode::Ioniq5EcanNode(ros::NodeHandle node_handle, ros::NodeHandle priv
 
 Ioniq5EcanNode::~Ioniq5EcanNode() {
   auto_arm_inhibited_ = true;
+  operator_disarmed_ = true;
+  button_rearm_takeover_ = false;
   preserve_command_session_ = false;
   command_gap_resume_qualified_ = false;
   requested_arm_ = false;
@@ -206,13 +208,14 @@ void Ioniq5EcanNode::load_configuration() {
   std::copy(low_speed_v.begin(), low_speed_v.end(), adapter_config_.low_speed_factor_v.begin());
   adapter_config_.max_target_angle_deg = parameter<double>("lateral/max_target_angle_deg", 175.0);
   adapter_config_.max_target_rate_deg_s = parameter<double>("lateral/max_target_rate_deg_s", 500.0);
-  adapter_config_.max_torque = parameter<int>("lateral/max_torque", 270);
-  adapter_config_.torque_rate_up = parameter<int>("lateral/torque_rate_up", 2);
-  adapter_config_.torque_rate_down = parameter<int>("lateral/torque_rate_down", 3);
+  adapter_config_.torque_output_scale = parameter<int>("lateral/torque_output_scale", 270);
+  adapter_config_.max_torque = parameter<int>("lateral/max_torque", 1021);
+  adapter_config_.torque_rate_up = parameter<int>("lateral/torque_rate_up", 2042);
+  adapter_config_.torque_rate_down = parameter<int>("lateral/torque_rate_down", 2042);
   adapter_config_.driver_torque_allowance =
     parameter<double>("lateral/driver_torque_allowance", 250.0);
   adapter_config_.driver_torque_multiplier =
-    parameter<double>("lateral/driver_torque_multiplier", 2.0);
+    parameter<double>("lateral/driver_torque_multiplier", 0.0);
   adapter_config_.driver_torque_factor = parameter<double>("lateral/driver_torque_factor", 1.0);
   adapter_config_.steer_request_cutoff_angle_deg =
     parameter<double>("lateral/steer_request_cutoff_angle_deg", 85.0);
@@ -223,9 +226,9 @@ void Ioniq5EcanNode::load_configuration() {
   }
   adapter_config_.steer_request_valid_frames = static_cast<uint32_t>(steer_request_valid_frames);
   adapter_config_.steer_request_cut_frames = static_cast<uint32_t>(steer_request_cut_frames);
-  adapter_config_.accel_min_mps2 = parameter<double>("longitudinal/accel_min_mps2", -3.5);
-  adapter_config_.accel_max_mps2 = parameter<double>("longitudinal/accel_max_mps2", 2.0);
-  adapter_config_.jerk_limit_mps3 = parameter<double>("longitudinal/jerk_limit_mps3", 5.0);
+  adapter_config_.accel_min_mps2 = parameter<double>("longitudinal/accel_min_mps2", -10.23);
+  adapter_config_.accel_max_mps2 = parameter<double>("longitudinal/accel_max_mps2", 10.24);
+  adapter_config_.jerk_limit_mps3 = parameter<double>("longitudinal/jerk_limit_mps3", 12.7);
   set_speed_kph_ = parameter<double>("longitudinal/set_speed_kph", 30.0);
 
   safety_config_.allow_actuation = parameter<bool>("safety/allow_actuation", false);
@@ -392,6 +395,8 @@ bool Ioniq5EcanNode::arm_callback(std_srvs::SetBool::Request& request,
     return true;
   }
   auto_arm_inhibited_ = !request.data;
+  operator_disarmed_ = !request.data;
+  button_rearm_takeover_ = false;
   command_gap_resume_qualified_ = false;
   preserve_command_session_ = false;
   if (request.data) recovery_rearm_required_ = false;
@@ -514,6 +519,21 @@ void Ioniq5EcanNode::control_loop() {
                                 panda_health.command_session_active &&
                                 panda_health.command_session_ready &&
                                 !panda_health.command_session_blocked;
+    // User decision: after any fault, a new physical LDA press or SET release re-engages.
+    // The press acknowledges the latched fault; the reinstalled Panda listener records the same
+    // edge as channel intent, and the next ECU takeover may happen while moving.
+    const bool engage_press = vehicle.lane_keep_button_events > rearm_lane_keep_events_ ||
+                              vehicle.set_button_events > rearm_set_events_;
+    rearm_lane_keep_events_ = vehicle.lane_keep_button_events;
+    rearm_set_events_ = vehicle.set_button_events;
+    if (engage_press && safety_config_.resume_on_command_return && !operator_disarmed_.load() &&
+        !requested_arm_.load() && (auto_arm_inhibited_.load() || recovery_rearm_required_.load())) {
+      auto_arm_inhibited_ = false;
+      recovery_rearm_required_ = false;
+      button_rearm_takeover_ = true;
+      ROS_WARN("Physical LDA/SET press after fault: re-engaging when the listener is ready");
+    }
+
     const bool auto_arm_ready = auto_arm_on_command_ && !auto_arm_inhibited_.load() &&
                                 !recovery_pending_.load() &&
                                 safety_config_.allow_actuation && vehicle.valid && !vehicle.eps_fault &&
@@ -610,7 +630,8 @@ void Ioniq5EcanNode::control_loop() {
         continue;
       }
 
-      const bool moving_resume = command_gap_resume_qualified_.load() &&
+      const bool moving_resume = (command_gap_resume_qualified_.load() ||
+                                  button_rearm_takeover_.load()) &&
                                  panda_health.command_session_active &&
                                  panda_health.command_session_ready &&
                                  !panda_health.command_session_blocked;
@@ -727,6 +748,7 @@ void Ioniq5EcanNode::control_loop() {
 uint64_t Ioniq5EcanNode::request_internal_disarm(bool require_operator_rearm) {
   preserve_command_session_ = false;
   command_gap_resume_qualified_ = false;
+  button_rearm_takeover_ = false;  // A failed re-engagement needs a new physical press.
   const bool was_armed = requested_arm_.exchange(false) || applied_arm_.load() ||
                          vehicle_safety_mode_.load();
   if (was_armed && require_operator_rearm) {
@@ -748,7 +770,8 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle, 
     throw std::runtime_error("vehicle state or EPS is not ready for ADAS ECU disable");
   }
   if ((!vehicle.standstill || vehicle.speed_mps > kDisableMaximumSpeedMps) &&
-      !(command_gap_resume && command_gap_resume_qualified_.load() &&
+      !(command_gap_resume &&
+        (command_gap_resume_qualified_.load() || button_rearm_takeover_.load()) &&
         safety_config_.resume_on_command_return)) {
     throw std::runtime_error("ADAS ECUs may only be disabled while the vehicle is stationary");
   }
@@ -806,6 +829,7 @@ void Ioniq5EcanNode::enter_vehicle_safety_mode(const VehicleStateData& vehicle, 
   }
   maintain_disabled_ecus(SteadyClock::now());
   vehicle_safety_mode_ = true;
+  button_rearm_takeover_ = false;
   ROS_WARN("Panda HYUNDAI_CANFD safety enabled with param=%u", configured_param);
 }
 
@@ -880,8 +904,12 @@ void Ioniq5EcanNode::enter_no_output_mode() {
   try {
     const uint16_t standby_param = recovery_standby_param(
       safety_config_.required_safety_param, preserve_command_session_.load(),
-      safety_config_.resume_on_command_return, auto_arm_inhibited_.load(),
-      recovery_rearm_required_.load());
+      safety_config_.resume_on_command_return, operator_disarmed_.load());
+    if (standby_param != 0U && !preserve_command_session_.load()) {
+      // Unless a healthy command gap preserves intent, pass through profile 0 so Panda clears a
+      // blocked session and the reinstalled listener records the next physical press as intent.
+      panda_->set_safety_mode(PandaUsb::kSafetyNoOutput, 0U);
+    }
     panda_->set_safety_mode(PandaUsb::kSafetyNoOutput, standby_param);
     const PandaHealth health = panda_->health();
     if (health.safety_mode != PandaUsb::kSafetyNoOutput || health.safety_param != standby_param ||
@@ -906,7 +934,7 @@ void Ioniq5EcanNode::enter_no_output_mode() {
   recovery_retry_.restored();
   recovery_pending_ = false;
   ROS_INFO("ECU restoration confirmed; Panda returned to NO_OUTPUT%s",
-           recovery_rearm_required_.load() ? "; operator rearm required" : "");
+           recovery_rearm_required_.load() ? "; press LDA or SET to re-engage" : "");
 }
 
 void Ioniq5EcanNode::retry_no_output_recovery(TimePoint now) {

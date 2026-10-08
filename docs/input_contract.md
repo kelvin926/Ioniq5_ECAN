@@ -24,7 +24,7 @@
 `stamp`는 현재 수신 유효성 검사에 쓰이지 않으므로 상위 출력 노드가 오래된 모델 계획이나
 명령을 새 값처럼 반복 발행하지 않아야 합니다. `sequence=0`도 허용하지만 순서 번호를
 증가시켜 보내는 것을 권장합니다. 조향 부호는 차량의 실제 `steering_angle_deg` 증가 방향과
-대조하여 검증해야 합니다. 가속도 허용 범위는 -3.5~2.0 m/s²입니다.
+대조하여 검증해야 합니다. 가속도는 CAN 표현 범위 -10.23~10.24 m/s²로 전달합니다.
 2026-10-07 bag 대조에서는 조향각 피드백의 좌회전 양수 해석을 지지했습니다.
 상위 `lateral` 명령과 LFA 토크 요청의 실제 좌우 방향은 별도 실차 통합 확인이 필요합니다.
 
@@ -48,7 +48,8 @@ OFF 중 수신된 조향각속도를 미리 적분하거나 다음 ON에 과거 
 소유권을 해제하고 순정 ECU 통신 복구 후 대기로 돌아가되 버튼 ON/OFF 선택을 유지합니다.
 입력만 끊긴 이전 ACTIVE 세션은 새 값과 정상 CAN, 복구 완료를 확인하여 주행 중 재인계할
 수 있습니다. 대기 중 OFF, 브레이크의 종방향 latch-off, CANCEL과 CAN/USB 고장을 무시하지 않습니다.
-이전 목표 조향각과 적분 상태는 버립니다. 첫 takeover 및 고장 후 재arm은 여전히 정차가 필요합니다.
+이전 목표 조향각과 적분 상태는 버립니다. 첫 takeover는 정차가 필요합니다. 고장 후에는 순정 복구 뒤
+버튼 대기로 돌아가며, 새 LDA 또는 SET 조작이 고장을 확인하고 주행 중에도 다시 인계합니다.
 복구 실패 시 구독은 계속하지만 제어는 금지합니다. 정차 시험에서 ECU 통신 복구는 관측했으나
 ACTIVE 추종/주행 중 재인계와 차량 보조 기능 정상 복구는 확인되지 않았습니다. [검증 기록](validation.md)을 참고하십시오.
 
@@ -66,7 +67,7 @@ ACTIVE 추종/주행 중 재인계와 차량 보조 기능 정상 복구는 확�
 
 ROS 노드에는 직접 조향각 입력 모드가 없습니다. 목표각을 토크로 추종하는 방식과
 MDPS에 native angle 명령을 보내는 방식은 다릅니다. 이 HDA1 차량의 native angle 수용 여부는
-확인되지 않았습니다. `direct_torque` 단위는 Nm가 아니며, 270 count는 명령 경로의 상한입니다.
+확인되지 않았습니다. `direct_torque` 단위는 Nm가 아니며, 1021 count는 명령 경로의 상한입니다.
 
 rate/curvature 경로는 Carrotpilot Ioniq 5 횡가속도 및 마찰 보상 토크 제어기를 사용합니다.
 정확한 부호와 scale은 실제 차량 상태 및 입력 정의와 대조해야 합니다.
@@ -76,13 +77,19 @@ rate/curvature 경로는 Carrotpilot Ioniq 5 횡가속도 및 마찰 보상 토�
 scale/offset은 `scaled = input * scale + offset`입니다. 기본 scale은 1, offset은 0입니다.
 `input.unfiltered_input=true`에서는 host의 rate/목표각 clamp와 입력 평활화를 생략합니다.
 가속도는 host clamp 또는 jerk slew 없이 다음 50 Hz SCC에 반영하며, CAN에서 0.01 m/s²
-단위로 양자화됩니다. scale/offset 적용 후 `-3.5 .. 2.0 m/s²` 범위를 벗어나면 조용히
-잘라내지 않고 오류와 disarm으로 처리합니다.
+단위로 양자화됩니다. 2026-10-08 사용자 결정에 따라 입력 전달을 끊지 않습니다.
+scale/offset 적용 후 YAML 범위(`-10.23 .. 10.24 m/s²`, CAN 11-bit 표현 범위)를 벗어나면
+오류나 disarm 없이 끝값으로 맞춥니다. 토크도 ±1021 count에서 끝값으로 맞춥니다.
 
-`unfiltered_input=false`에서는 설정한 rate/목표각 및 가속도 범위로 clamp합니다.
-`longitudinal.jerk_limit_mps3`는 SCC `JerkLowerLimit` metadata이며 host 가속도 slew 기능이
-아닙니다. 두 모드 모두 토크 변환, driver torque 제한, 270 count 상한, 100 Hz에서
-2/3 count 증가/감소, CAN 양자화, 채널 허가와 watchdog은 남습니다.
+`unfiltered_input=false`에서는 설정한 rate/목표각 범위로도 clamp합니다.
+`longitudinal.jerk_limit_mps3`(12.7, CAN 최대값)는 활성 SCC의 `JerkUpperLimit`/`JerkLowerLimit`
+metadata이며 host 가속도 slew 기능이 아닙니다. 차량이 이 값을 jerk 제한으로 쓰는지는
+확인되지 않았습니다. 두 모드 모두 토크 변환, ±1021 count 상한, CAN 양자화, 채널 허가와
+watchdog은 남습니다. active YAML은 host torque slew(`torque_rate_up/down: 2042`)와
+driver torque 제한(`driver_torque_multiplier: 0`)을 끕니다. 토크 제어기 출력 1.0은
+`torque_output_scale` 270 count에 대응하고, `max_torque` 1021은 clamp로만 쓰입니다.
+1021은 DBC Reserved/Invalid 원시값(+1022/+1023)을 피하는 대칭 최대값입니다.
+NaN/Inf 입력은 맞출 범위가 없어 기존처럼 무효 명령으로 처리합니다.
 
 ## 상태와 피드백
 

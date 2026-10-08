@@ -35,8 +35,9 @@ input:
   # Agreed ROS contract: lateral = steering-wheel angle rate (deg/s), acceleration = m/s^2.
   # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
   lateral_mode: "steering_rate_deg_s"
-  # Do not clamp/slew the ROS steering-rate or acceleration input in the host adapter.
-  # Torque conversion/count limits, CAN quantization, engagement and watchdogs remain.
+  # Do not clamp/slew the ROS steering-rate input. Values beyond the CAN representation
+  # (torque and acceleration ranges below) saturate instead of stopping output.
+  # Torque conversion, CAN quantization, engagement and watchdogs remain.
   unfiltered_input: true
   lateral_scale: 1.0
   lateral_offset: 0.0
@@ -69,12 +70,17 @@ lateral:
   # Host target bounds apply only when input.unfiltered_input is false.
   max_target_angle_deg: 175.0
   max_target_rate_deg_s: 500.0
+  # Torque-controller output 1.0 maps to torque_output_scale counts (Carrot tuning scale).
+  torque_output_scale: 270
   # Command-path count limits at 100 Hz, not verified maximum MDPS motor torque.
-  max_torque: 270
-  torque_rate_up: 2
-  torque_rate_down: 3
+  # Matches the local Panda patch: 1021 is the largest symmetric StrTqReqVal that
+  # avoids DBC Reserved/Invalid raw codes (+1022/+1023), 2042 means no host slew,
+  # and multiplier 0 means no host driver-torque limit.
+  max_torque: 1021
+  torque_rate_up: 2042
+  torque_rate_down: 2042
   driver_torque_allowance: 250.0
-  driver_torque_multiplier: 2.0
+  driver_torque_multiplier: 0.0
   driver_torque_factor: 1.0
   # Carrot-style EPS fault avoidance above 85 degrees: 89 request frames,
   # then two frames with only STEER_REQ cleared. Set angle to 0 to disable.
@@ -83,12 +89,14 @@ lateral:
   steer_request_cut_frames: 2
 
 longitudinal:
-  # Full Panda Hyundai longitudinal range. Carrot's wider -4.0/+2.5 values
-  # cannot pass the pinned Panda firmware's -3.5/+2.0 checks.
-  accel_min_mps2: -3.5
-  accel_max_mps2: 2.0
-  # SCC_CONTROL JerkLowerLimit metadata only; this does not slew the ROS acceleration command.
-  jerk_limit_mps3: 5.0
+  # Full 11-bit SCC aReqRaw/aReqValue encoding, matching the local Panda patch.
+  # Commands outside this range saturate at the bound; output is not stopped.
+  # Vehicle acceptance of this range is unverified.
+  accel_min_mps2: -10.23
+  accel_max_mps2: 10.24
+  # SCC_CONTROL JerkUpperLimit/JerkLowerLimit metadata (CAN maximum 12.7) while enabled;
+  # this does not slew the ROS acceleration command.
+  jerk_limit_mps3: 12.7
   set_speed_kph: 30.0
 
 safety:

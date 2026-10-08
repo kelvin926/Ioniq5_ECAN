@@ -5,6 +5,20 @@ PANDA_COMMIT="dd8a5b3df77706337a11555377e7180c5adc8726"
 OPENDBC_COMMIT="b72c1fd55ae7e84763e40912bbe06b8f533cb66b"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+prepare_only=false
+if [[ "${1:-}" == "--prepare-only" ]]; then
+  prepare_only=true
+  shift
+fi
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  printf 'Usage: %s [--prepare-only] [build-root]\n' "$0"
+  printf 'Prepare-only downloads pinned sources and applies patches without package installation, build or device access.\n'
+  exit 0
+fi
+if (( $# > 1 )) || [[ "${1:-}" == --* ]]; then
+  printf 'Usage: %s [--prepare-only] [build-root]\n' "$0" >&2
+  exit 2
+fi
 split_arm_patch="${repo_root}/patches/opendbc-hyundai-canfd-split-arm.patch"
 command_session_patch="${repo_root}/patches/opendbc-command-session.patch"
 command_session_startup_patch="${repo_root}/patches/opendbc-command-session-startup.patch"
@@ -12,11 +26,10 @@ panda_version_patch="${repo_root}/patches/panda-builder-env.patch"
 panda_ecan_patch="${repo_root}/patches/panda-ecan-only.patch"
 
 cache_root="${1:-${repo_root}/.firmware-build}"
-panda_dir="${cache_root}/panda"
-opendbc_dir="${cache_root}/opendbc"
-venv_dir="${cache_root}/venv"
 
-for command_name in git uv; do
+required_commands=(git)
+if ! $prepare_only; then required_commands+=(uv); fi
+for command_name in "${required_commands[@]}"; do
   if ! command -v "${command_name}" >/dev/null 2>&1; then
     printf 'Required command is missing: %s\n' "${command_name}" >&2
     exit 1
@@ -35,6 +48,10 @@ clone_pinned() {
 }
 
 mkdir -p "${cache_root}"
+cache_root="$(cd -- "$cache_root" && pwd)"
+panda_dir="${cache_root}/panda"
+opendbc_dir="${cache_root}/opendbc"
+venv_dir="${cache_root}/venv"
 export UV_CACHE_DIR="${cache_root}/cache"
 export UV_PYTHON_INSTALL_DIR="${cache_root}/python"
 export XDG_CACHE_HOME="${cache_root}/cache"
@@ -73,6 +90,53 @@ apply_patch_once "${panda_dir}" "${panda_version_patch}" \
   "IONIQ5ECAN firmware builder marker patch"
 apply_patch_once "${panda_dir}" "${panda_ecan_patch}" \
   "ECAN-only transceiver and harness-orientation patch"
+
+if $prepare_only; then
+  baseline_dir="${cache_root}/.safety-baseline"
+  mkdir -p "$baseline_dir"
+  record_baseline() {
+    local destination="$1" name="$2" pin="$3"
+    shift 3
+    local index tree old_tree
+    index="$(mktemp "${baseline_dir}/index.XXXXXX")"
+    rm -f -- "$index"
+    (
+      trap 'rm -f -- "$index" "${index}.lock"' EXIT
+      export GIT_INDEX_FILE="$index"
+      git -C "$destination" read-tree "$pin"
+      for patch in "$@"; do git -C "$destination" apply --cached "$patch"; done
+      tree="$(git -C "$destination" write-tree)"
+      if [[ -s "${baseline_dir}/${name}.tree" ]]; then
+        old_tree="$(cat "${baseline_dir}/${name}.tree")"
+        if [[ "$old_tree" != "$tree" ]]; then
+          printf 'Prepared baseline changed; preserve existing tuning and review before replacing it.\n' >&2
+          exit 1
+        fi
+      fi
+      printf '%s\n' "$tree" > "${baseline_dir}/${name}.tree"
+      printf '%s\n' "$pin" > "${baseline_dir}/${name}.commit"
+      git -C "$destination" update-ref refs/ioniq5-safety/baseline "$tree"
+    )
+  }
+  record_baseline "$opendbc_dir" opendbc "$OPENDBC_COMMIT" \
+    "$split_arm_patch" "$command_session_patch" "$command_session_startup_patch"
+  record_baseline "$panda_dir" panda "$PANDA_COMMIT" "$panda_version_patch" "$panda_ecan_patch"
+fi
+
+# Additional user edits are exported relative to the five project patches above.
+# Empty/missing exports leave the existing firmware behavior unchanged.
+for source_name in opendbc panda; do
+  local_patch="${repo_root}/patches/${source_name}-local-safety.patch"
+  if [[ -s "$local_patch" ]]; then
+    apply_patch_once "${cache_root}/${source_name}" "$local_patch" "${source_name} local safety edits"
+  fi
+done
+
+if $prepare_only; then
+  printf 'Prepared editable sources: %s\n' "$cache_root"
+  printf 'Values are unchanged unless an existing local-safety patch was supplied.\n'
+  exit 0
+fi
 
 if [[ ! -d "${venv_dir}" ]]; then
   uv venv --python 3.11 "${venv_dir}"

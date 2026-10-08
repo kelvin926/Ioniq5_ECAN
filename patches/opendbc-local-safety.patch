@@ -1,0 +1,148 @@
+diff --git a/opendbc/safety/modes/hyundai_canfd.h b/opendbc/safety/modes/hyundai_canfd.h
+index bb57c78e5965d935cb2cf72e6678de4ea641cb92..a15ebfb966dd233d6e9b90e0927d32f6c1f1bd95 100644
+--- a/opendbc/safety/modes/hyundai_canfd.h
++++ b/opendbc/safety/modes/hyundai_canfd.h
+@@ -175,13 +175,16 @@ static void hyundai_canfd_rx_hook(const CANPacket_t *msg) {
+ }
+ 
+ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
++  // Repository-local: the upstream controller owns torque shaping. Rate, RT and driver-torque
++  // checks do not restrict requests (values >= max_torque; multiplier 0 keeps the driver limit
++  // at max_torque), leaving the torque range check and channel permission.
+   const TorqueSteeringLimits HYUNDAI_CANFD_STEERING_LIMITS = {
+-    .max_torque = 270,
+-    .max_rt_delta = 112,
+-    .max_rate_up = 2,
+-    .max_rate_down = 3,
+-    .driver_torque_allowance = 250,
+-    .driver_torque_multiplier = 2,
++    .max_torque = 1023,
++    .max_rt_delta = 1023,
++    .max_rate_up = 1023,
++    .max_rate_down = 1023,
++    .driver_torque_allowance = 0,
++    .driver_torque_multiplier = 0,
+     .type = TorqueDriverLimited,
+ 
+     // the EPS faults when the steering angle is above a certain threshold for too long. to prevent this,
+@@ -192,6 +195,13 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+     .has_steer_req_tolerance = true,
+   };
+ 
++  // Repository-local: SCC acceleration accepts the full 11-bit aReqRaw/aReqValue encoding
++  // (-10.23..+10.24 m/s^2), separate from the classic Hyundai mode's HYUNDAI_LONG_LIMITS.
++  const LongitudinalLimits HYUNDAI_CANFD_LONG_LIMITS = {
++    .max_accel = 1024,   // 1/100 m/s2
++    .min_accel = -1023,  // 1/100 m/s2
++  };
++
+   bool tx = true;
+ 
+   // steering
+@@ -233,8 +243,8 @@ static bool hyundai_canfd_tx_hook(const CANPacket_t *msg) {
+     bool violation = false;
+ 
+     if (hyundai_longitudinal) {
+-      violation |= longitudinal_accel_checks(desired_accel_raw, HYUNDAI_LONG_LIMITS);
+-      violation |= longitudinal_accel_checks(desired_accel_val, HYUNDAI_LONG_LIMITS);
++      violation |= longitudinal_accel_checks(desired_accel_raw, HYUNDAI_CANFD_LONG_LIMITS);
++      violation |= longitudinal_accel_checks(desired_accel_val, HYUNDAI_CANFD_LONG_LIMITS);
+       const int acc_mode = (msg->data[8] >> 4) & 0x7U;
+       if (hyundai_canfd_split_button_arm && !hyundai_canfd_longitudinal_controls_allowed &&
+           ((desired_accel_raw != 0) || (desired_accel_val != 0) || (acc_mode != 0))) {
+diff --git a/opendbc/safety/tests/test_hyundai_canfd.py b/opendbc/safety/tests/test_hyundai_canfd.py
+index 26886c01a3b21fedebfb928864f799894d568948..5b9be8acbc9fdafd5b801727032ba840e330b761 100755
+--- a/opendbc/safety/tests/test_hyundai_canfd.py
++++ b/opendbc/safety/tests/test_hyundai_canfd.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python3
+ from opendbc.testing import parameterized_class
++import numpy as np
+ import unittest
+ 
+ from opendbc.car.hyundai.values import HyundaiSafetyFlags
+@@ -28,14 +29,15 @@ class TestHyundaiCanfdBase(HyundaiButtonBase, common.CarSafetyTest, common.Drive
+   STANDSTILL_THRESHOLD = 12  # 0.375 kph
+   FWD_BLACKLISTED_ADDRS = {2: [0x50, 0x2a4]}
+ 
+-  MAX_RATE_UP = 2
+-  MAX_RATE_DOWN = 3
+-  MAX_TORQUE_LOOKUP = [0], [270]
++  # Repository-local: no rate, RT or driver-torque restriction; 1023 is the 11-bit maximum.
++  MAX_RATE_UP = 1023
++  MAX_RATE_DOWN = 1023
++  MAX_TORQUE_LOOKUP = [0], [1023]
+ 
+-  MAX_RT_DELTA = 112
++  MAX_RT_DELTA = 1023
+ 
+-  DRIVER_TORQUE_ALLOWANCE = 250
+-  DRIVER_TORQUE_FACTOR = 2
++  DRIVER_TORQUE_ALLOWANCE = 0
++  DRIVER_TORQUE_FACTOR = 0
+ 
+   # Safety around steering req bit
+   MIN_VALID_STEERING_FRAMES = 89
+@@ -60,6 +62,30 @@ class TestHyundaiCanfdBase(HyundaiButtonBase, common.CarSafetyTest, common.Drive
+     values = {f"WHL_Spd{pos}Val": speed * 0.03125 for pos in ["FL", "FR", "RL", "RR"]}
+     return self.packer.make_can_msg_safety("WHEEL_SPEEDS", self.PT_BUS, values)
+ 
++  # The generic tests below send values outside the 11-bit StrTqReqVal range or assume
++  # rate/driver limits; check the pass-through behavior within the encodable range instead.
++  def test_steer_safety_check(self):
++    for enabled in [0, 1]:
++      for t in range(-1024, 1024):
++        self.safety.set_controls_allowed(enabled)
++        self._set_prev_torque(t)
++        should_tx = t == 0 or (enabled and abs(t) <= self.MAX_TORQUE)
++        self.assertEqual(should_tx, self._tx(self._torque_cmd_msg(t)))
++
++  def test_against_torque_driver(self):
++    self.safety.set_controls_allowed(True)
++    for sign in [-1, 1]:
++      self._reset_torque_driver_measurement(-4000 * sign)
++      self._set_prev_torque(self.MAX_TORQUE * sign)
++      self.assertTrue(self._tx(self._torque_cmd_msg(self.MAX_TORQUE * sign)))
++
++  def test_realtime_limits(self):
++    self.safety.set_controls_allowed(True)
++    self._reset_torque_driver_measurement(0)
++    for sign in [-1, 1]:
++      self._set_prev_torque(-self.MAX_TORQUE * sign)
++      self.assertTrue(self._tx(self._torque_cmd_msg(self.MAX_TORQUE * sign)))
++
+   def _user_brake_msg(self, brake):
+     values = {"DriverBraking": brake}
+     return self.packer.make_can_msg_safety("TCS", self.PT_BUS, values)
+@@ -194,7 +220,21 @@ class TestHyundaiCanfdLKASteeringAltEV(TestHyundaiCanfdBase):
+     self.safety.init_tests()
+ 
+ 
+-class TestHyundaiCanfdLKASteeringLongEV(HyundaiLongitudinalBase, TestHyundaiCanfdLKASteeringEV):
++class HyundaiCanfdOpenAccelLimits:
++  # Repository-local: accel spans the 11-bit SCC encoding. The generic test sweeps
++  # 1 m/s^2 past the limits, which does not fit the signal, so sweep the encodable range.
++  MIN_ACCEL = -10.23
++  MAX_ACCEL = 10.24
++
++  def test_accel_actuation_limits(self):
++    for accel in np.concatenate((np.arange(self.MIN_ACCEL, self.MAX_ACCEL, 0.05), [self.MAX_ACCEL, 0])):
++      accel = round(accel, 2)
++      for controls_allowed in [True, False]:
++        self.safety.set_controls_allowed(controls_allowed)
++        self.assertEqual(controls_allowed or accel == 0, self._tx(self._accel_msg(accel)))
++
++
++class TestHyundaiCanfdLKASteeringLongEV(HyundaiCanfdOpenAccelLimits, HyundaiLongitudinalBase, TestHyundaiCanfdLKASteeringEV):
+ 
+   TX_MSGS = [[0x50, 0], [0x1CF, 1], [0x2A4, 0], [0x51, 0], [0x730, 1], [0x12a, 1], [0x160, 1],
+              [0x1e0, 1], [0x1a0, 1], [0x1ea, 1], [0x200, 1], [0x345, 1], [0x1da, 1]]
+@@ -224,7 +264,7 @@ class TestHyundaiCanfdLKASteeringLongEV(HyundaiLongitudinalBase, TestHyundaiCanf
+ 
+ 
+ # Tests longitudinal for ICE, hybrid, EV cars with LFA steering
+-class TestHyundaiCanfdLFASteeringLongBase(HyundaiLongitudinalBase, TestHyundaiCanfdLFASteeringBase):
++class TestHyundaiCanfdLFASteeringLongBase(HyundaiCanfdOpenAccelLimits, HyundaiLongitudinalBase, TestHyundaiCanfdLFASteeringBase):
+ 
+   FWD_BLACKLISTED_ADDRS = {2: [0x12a, 0x1e0, 0x1a0, 0x160]}
+ 

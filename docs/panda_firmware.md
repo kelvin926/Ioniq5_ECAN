@@ -37,6 +37,10 @@ revision이나 설치 binary가 같다는 보장은 없습니다. 실제 설치 
 
 ## 빌드
 
+Windows에서 차량 없이 전체 safety 소스를 편집하려면
+[로컬 편집 절차](panda_safety_local.md)를 사용합니다. `--prepare-only`는 고정 소스와 기존
+패치만 준비하며, 추가 변경은 별도 패치로 추출해 다음 빌드에 재적용할 수 있습니다.
+
 ### I5R1 command-session 확장
 
 `opendbc-command-session.patch`는 opt-in param `4096`을 추가합니다. 현재 active YAML의

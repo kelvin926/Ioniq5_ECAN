@@ -80,13 +80,14 @@ passive ROS 노드는 Panda 설정을 수행합니다. control write 없는 pref
 - LDA lateral-only 및 SET combined 토글, brake 중 lateral 유지/longitudinal latch-off와 SET 재개
 - ACTIVE 중 MDPS 보조 오류에서 LFA 0/비활성, heartbeat/tester-present/소유권 유지와 정상 SCC 지속
 - 유효한 clear 샘플이 3초 전에 들어오면 현재 명령으로 복귀, CRC 불량 clear 샘플은 무시
-- 3초 만료/늦은 clear/CAN stale/Panda 장애 또는 EPS pause 중 명령 단절은 hard fault와 자동 재arm 억제
+- 3초 만료/늦은 clear/CAN stale/Panda 장애 또는 EPS pause 중 명령 단절은 hard fault, 순정 복구, 버튼 listener 재설치
+- hard fault 복구 후 새 LDA/SET 조작으로 주행 중 재인계, 복구 중 누른 버튼은 재조작 필요, `set_armed=false` 후 버튼 재인계 없음
 - 정상 ACTIVE의 입력 단절은 출력 해제/stock 복구, 물리 ON 유지, 복구 완료 후 새 입력으로 주행 중 재인계
-- 입력 대기 중 물리 OFF/CANCEL, hard fault, 프로세스/USB/Panda 재시작은 이전 ON을 자동 계승하지 않음
+- 입력 대기 중 물리 OFF/CANCEL, hard fault, 프로세스/USB/Panda 재시작은 버튼 조작 없이 이전 ON을 계승하지 않음
 - EPS 복귀가 brake/ACC 종방향 래치를 해제하지 않는지 확인
 - raw TX는 종방향 허가 gate를 따르고, 일시 EPS 대기 중 raw LFA는 차단되는지 확인
 - hard fault 복구의 radar→camera 통신 요청 후 두 stock 재개, 유실 ACK와 valid stock 구분, Panda NO_OUTPUT 확인
-- 실패 복구의 1/2/4/8/16/30초 backoff, USB 재연결, pending 중 재arm 거부 및 완료 후 명시적 재arm 확인
+- 실패 복구의 1/2/4/8/16/30초 backoff, USB 재연결, pending 중 재arm 거부 및 완료 후 버튼 재인계 확인
 
 ## 실차 결과를 남길 항목
 

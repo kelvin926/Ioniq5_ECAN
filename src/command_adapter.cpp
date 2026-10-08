@@ -8,6 +8,12 @@ namespace ioniq5_ecan {
 namespace {
 constexpr double kRadiansToDegrees = 57.2957795130823208768;
 constexpr double kDegreesToRadians = 1.0 / kRadiansToDegrees;
+// Largest symmetric StrTqReqVal that avoids DBC Reserved/Invalid raw 2046/2047 (+1022/+1023).
+// The local Panda patch accepts up to 1023 without rate/RT/driver checks.
+constexpr int kMaxValidTorque = 1021;
+// Full 11-bit SCC aReqRaw/aReqValue encoding, matching the local Panda patch.
+constexpr double kSccMinAccel = -10.23;
+constexpr double kSccMaxAccel = 10.24;
 
 double interpolate(double value, const std::array<double, 4>& x, const std::array<double, 4>& y) {
   if (value <= x.front()) return y.front();
@@ -71,16 +77,20 @@ CommandAdapter::CommandAdapter(CommandAdapterConfig config) : config_(config) {
       throw std::invalid_argument("invalid Carrot low-speed factor table");
     }
   }
-  if (config_.max_torque < 0 || config_.max_torque > 270) {
-    throw std::invalid_argument("max_torque must be within Panda limit [0, 270]");
+  if (config_.max_torque < 0 || config_.max_torque > kMaxValidTorque) {
+    throw std::invalid_argument("max_torque must be within [0, 1021]");
   }
-  if (config_.torque_rate_up < 1 || config_.torque_rate_up > 2 || config_.torque_rate_down < 1 ||
-      config_.torque_rate_down > 3) {
-    throw std::invalid_argument("software torque rates cannot exceed Panda limits");
+  if (config_.torque_output_scale < 1 || config_.torque_output_scale > kMaxValidTorque) {
+    throw std::invalid_argument("torque_output_scale must be within [1, 1021]");
   }
-  if (config_.accel_min_mps2 < -3.5 || config_.accel_max_mps2 > 2.0 ||
+  // A rate of 2 * 1021 can cross the full range in one frame, which disables the slew.
+  if (config_.torque_rate_up < 1 || config_.torque_rate_up > 2 * kMaxValidTorque ||
+      config_.torque_rate_down < 1 || config_.torque_rate_down > 2 * kMaxValidTorque) {
+    throw std::invalid_argument("software torque rates must be within [1, 2042]");
+  }
+  if (config_.accel_min_mps2 < kSccMinAccel || config_.accel_max_mps2 > kSccMaxAccel ||
       config_.accel_min_mps2 > config_.accel_max_mps2) {
-    throw std::invalid_argument("software acceleration bounds exceed Panda limits");
+    throw std::invalid_argument("software acceleration bounds exceed SCC encoding");
   }
 }
 
@@ -115,14 +125,9 @@ ControlOutput CommandAdapter::update(const CommandSample& command, const Vehicle
   if (longitudinal_allowed) {
     const double requested =
       command.acceleration_mps2 * config_.acceleration_scale + config_.acceleration_offset;
-    if (config_.unfiltered_input &&
-        (requested < config_.accel_min_mps2 || requested > config_.accel_max_mps2)) {
-      throw std::out_of_range("acceleration command exceeds Panda representable range");
-    }
+    // Saturate instead of rejecting: dropping the upstream command stream is the larger hazard.
     output.acceleration_mps2 =
-      config_.unfiltered_input
-        ? requested
-        : std::clamp(requested, config_.accel_min_mps2, config_.accel_max_mps2);
+      std::clamp(requested, config_.accel_min_mps2, config_.accel_max_mps2);
     output.stopping = output.acceleration_mps2 < -0.1 && vehicle.speed_mps < 0.3;
   }
   if (!lateral_allowed) {
@@ -218,8 +223,8 @@ ControlOutput CommandAdapter::update(const CommandSample& command, const Vehicle
     const double normalized_torque =
       config_.torque_kp * torque_error + config_.torque_ki * torque_integral_ +
       config_.torque_kd * derivative + config_.torque_kf * feedforward;
-    desired_torque =
-      static_cast<int>(std::lround(normalized_torque * static_cast<double>(config_.max_torque)));
+    desired_torque = static_cast<int>(
+      std::lround(normalized_torque * static_cast<double>(config_.torque_output_scale)));
   }
 
   desired_torque = std::clamp(desired_torque, -config_.max_torque, config_.max_torque);

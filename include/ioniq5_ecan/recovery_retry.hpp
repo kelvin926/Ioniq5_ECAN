@@ -7,11 +7,11 @@
 
 namespace ioniq5_ecan {
 
-// Reinstall only the empty physical-button listener after an unarmed startup
-// failure. Explicit OFF, shutdown and faults requiring rearm stay plain NO_OUTPUT.
+// Reinstall the physical-button listener after restoration, including after faults, so a new
+// LDA/SET press can re-engage. Explicit operator OFF and shutdown stay plain NO_OUTPUT.
 inline uint16_t recovery_standby_param(uint16_t profile, bool preserve_session,
-                                      bool listener_enabled, bool inhibited, bool rearm_required) {
-  return preserve_session || (listener_enabled && !inhibited && !rearm_required) ? profile : 0U;
+                                      bool listener_enabled, bool operator_disarmed) {
+  return preserve_session || (listener_enabled && !operator_disarmed) ? profile : 0U;
 }
 
 // Schedules restoration only. It never authorizes actuator output or clears a fault.

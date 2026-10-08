@@ -7,22 +7,20 @@
 
 namespace {
 
-TEST(RecoveryStandby, UnarmedStartupRestoresEmptyListener) {
+TEST(RecoveryStandby, StartupAndFaultRestoreListenerForButtonReengage) {
   using namespace ioniq5_ecan;
-  EXPECT_EQ(recovery_standby_param(7173U, false, true, false, false), 7173U);
-  EXPECT_EQ(recovery_standby_param(7173U, false, false, false, false), 0U);
+  EXPECT_EQ(recovery_standby_param(7173U, false, true, false), 7173U);
+  EXPECT_EQ(recovery_standby_param(7173U, false, false, false), 0U);
 }
 
-TEST(RecoveryStandby, FaultExplicitOffAndShutdownDoNotReinstallListener) {
+TEST(RecoveryStandby, ExplicitOffAndShutdownDoNotReinstallListener) {
   using namespace ioniq5_ecan;
-  EXPECT_EQ(recovery_standby_param(7173U, false, true, true, false), 0U);
-  EXPECT_EQ(recovery_standby_param(7173U, false, true, false, true), 0U);
-  EXPECT_EQ(recovery_standby_param(7173U, false, true, true, true), 0U);
+  EXPECT_EQ(recovery_standby_param(7173U, false, true, true), 0U);
 }
 
 TEST(RecoveryStandby, HealthyCommandGapRetainsProfile) {
   using namespace ioniq5_ecan;
-  EXPECT_EQ(recovery_standby_param(7173U, true, true, false, false), 7173U);
+  EXPECT_EQ(recovery_standby_param(7173U, true, true, false), 7173U);
 }
 
 struct FixtureData {
@@ -84,6 +82,27 @@ TEST(SafetySupervisor, FaultsOnModeDriftAndCanBeExplicitlyCleared) {
             ControlState::Fault);
   EXPECT_TRUE(supervisor.request_arm(false));
   EXPECT_EQ(supervisor.state(), ControlState::Passive);
+}
+
+TEST(SafetySupervisor, RearmAfterFaultReengagesWithNewButtonIntent) {
+  using namespace ioniq5_ecan;
+  FixtureData data;
+  SafetyConfig config;
+  config.allow_actuation = true;
+  SafetySupervisor supervisor(config);
+  arm_lateral(supervisor, data);
+
+  data.panda.safety_mode = 19;
+  ASSERT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Fault);
+  data.panda.safety_mode = 28;
+  ASSERT_TRUE(supervisor.request_arm(true));
+  EXPECT_EQ(supervisor.state(), ControlState::Passive);
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Armed);
+  ++data.vehicle.lane_keep_button_events;
+  EXPECT_EQ(supervisor.update(data.now, data.vehicle, data.panda, data.command).state,
+            ControlState::Active);
 }
 
 TEST(SafetySupervisor, FailsClosedOnStaleCommand) {

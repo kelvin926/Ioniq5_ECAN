@@ -22,16 +22,23 @@ ARMED에서 비활성 프레임을 계속 보내는 이유는 UDS로 순정 송�
 - longitudinal param `1 | 4 | 1024 | 2048 = 3077` (DEBUG firmware만 LONG 적용)
 - I5R1 command-session opt-in은 `4096` 추가: lateral `7169`, combined `7173`
 - alt-buttons 차량은 위 param에 `32` 추가
-- steering max 270 count
-- steering rate up/down 2/3 count per 10 ms
-- acceleration `-3.5 .. 2.0 m/s²`
+- steering max 1023 count (11-bit `StrTqReqVal` 최대값), host는 ±1021로 clamp
+- steering rate, 250 ms RT 변화, driver torque 제한 없음 (`patches/opendbc-local-safety.patch`)
+- acceleration `-10.23 .. 10.24 m/s²` (11-bit SCC 표현 범위, 같은 patch)
 - `SAFETY_ALLOUTPUT` 금지
+
+사용자 결정에 따라 상위 제어기가 모든 shaping을 맡고, Panda는 조향 토크와 가속도에
+표현 범위와 채널 허가만 검사합니다. host는 범위 밖 명령을 끊지 않고 끝값으로 맞춥니다.
+이 patch의 ARM 빌드, flash와 실차 수용은 확인되지 않았습니다. Panda와 host 모두 운전자
+토크로 요청을 줄이지 않으며, MDPS 자체의 운전자 개입 처리와 차량의 가속도 수용 범위도
+확인되지 않았습니다. 브레이크의 종방향 해제와 SET 재조작 요구는 유지합니다.
 
 YAML은 Panda 경계 안에서 최대 토크/변화율/가속도와 선택적인 속도/조향각 상한을
 조정합니다. 속도/조향각 상한은 `0`으로 비활성화할 수 있지만 생성 함수와 Panda
 firmware의 hard limit는 항상 남습니다.
-270 count는 명령 경로의 상한이며 실제 MDPS 최대 구동력이나 native angle 수용 여부를
-증명하지 않습니다.
+1021 count는 명령 경로의 상한이며 실제 MDPS 최대 구동력이나 native angle 수용 여부를
+증명하지 않습니다. DBC는 raw 2046/2047(+1022/+1023 count)을 Reserved/Invalid로 표기하므로
+host는 이 값을 보내지 않습니다.
 
 85도 이상에서 EPS fault를 피하는 Carrot 방식도 적용했습니다. 기본값은 조향 request를
 89 frame 유지한 뒤 2 frame 동안 토크 값은 유지하고 `STEER_REQ`만 내립니다. cutoff
@@ -47,7 +54,7 @@ angle을 `0`으로 설정하면 이 host 동작도 비활성화할 수 있습니
   actuator frame(0x12A/0x1A0/0x160) rejection은 양 채널 OFF를 유지하는 정상 해제로 처리
 - `disengage_on_cancel`이 true일 때 host CANCEL 전체 해제; I5R1 firmware CANCEL은 host 설정과 독립적으로 세션 취소
 - I5R1 프로파일의 정상 command timeout: 무출력/순정 복구 대기, 버튼 선택 유지
-- I5R1 비활성 프로파일 또는 EPS soft-disable 중 command timeout: 기존 FAULT/재승인
+- I5R1 비활성 프로파일 또는 EPS soft-disable 중 command timeout: FAULT
 - Panda health timeout/USB disconnect
 - critical vehicle CAN timeout 또는 checksum/counter에 따른 Panda RX invalid
 - bus-off/error-passive
@@ -62,7 +69,8 @@ EPS 보조 오류를 별도로 추적합니다. `ACTIVE` 중 오류가 발생하
 정상 종방향은 기존 명령을 계속 처리합니다. 최초 오류 시점부터 3초 안에 오류가 해소되고
 최신 명령, 정상 CAN, Panda `controls_allowed`가 모두 유효하면 자동으로 `ACTIVE`에 복귀합니다.
 Panda 허가를 강제로 설정하지 않으며, 첫 활성화는 EPS 오류가 있는 동안 차단합니다.
-3초가 만료된 시점에 뒤늦게 정상 샘플이 들어와도 `FAULT`가 유지되며 재승인이 필요합니다.
+3초가 만료된 시점에 뒤늦게 정상 샘플이 들어와도 `FAULT`가 되며, 순정 복구 뒤 새 LDA/SET
+조작으로 다시 인계합니다.
 브레이크, ACC 오류, CANCEL, 수동 disarm, 명령 단절 및 Panda/CAN 고장 처리가 우선합니다.
 특히 브레이크로 래치 해제된 종방향은 EPS 복귀로 재활성화하지 않습니다. 일시 정지 중
 조향 제어기 적분과 목표각을 현재 실측값으로 초기화하고 raw LFA 송신도 차단합니다.
@@ -99,22 +107,40 @@ NO_OUTPUT/ELM327에서 물리 버튼과 brake를 계속 검증하지만 actuator
 모드 전환 직후에는 새 CRC/counter/freshness-valid CAN이 모두 들어오기 전까지 출력 금지입니다.
 초기 100 ms의 미수신 메시지는 안전 tick이 세션을 조기에 취소하지 않도록 대기하지만
 출력 허가를 만들지 않습니다. 이미 수신된 불량 CAN과 이후 미수신은 계속 차단합니다.
-OFF, CANCEL, CAN/USB/시동/하네스 고장, 복구 실패는 자동 재인계 대상이 아닙니다.
+OFF, CANCEL, CAN/USB/시동/하네스 고장, 복구 실패는 버튼 조작 없이 자동 재인계하지 않습니다.
 이 예외는 프로세스 재부팅 후 무승인 자동 제어가 아니며 실차 재인계 성능은 별도 검증 대상입니다.
+
+## 고장 후 버튼 재인계
+
+사용자 결정(2026-10-08)에 따라 고장 뒤에도 운전자의 물리 버튼 조작이 다시 연결을 보장합니다.
+
+1. FAULT가 나면 host는 출력과 ECU 소유권을 해제하고 radar→camera 순정 통신을 복구합니다.
+2. 복구가 끝나면 Panda를 profile 0으로 한 번 거쳐 차단된 command session을 지운 뒤,
+   I5R1 NO_OUTPUT 버튼 listener를 다시 설치합니다.
+3. 새 LDA 상승 또는 SET release가 들어오면 host는 latched FAULT를 확인하고 자동 arm을
+   다시 허용합니다. Panda listener는 같은 버튼 edge를 채널 선택으로 기록합니다.
+4. 최신 command, 정상 CAN, EPS 정상 조건이 있으면 정차 여부와 관계없이 ECU를 다시 인계합니다.
+
+예외와 남는 조건은 다음과 같습니다.
+
+- `set_armed=false`로 명시 OFF했거나 프로세스가 종료/재시작되면 버튼으로 자동 재연결하지 않습니다.
+- 복구 중(listener 설치 전) 누른 버튼은 Panda가 기록하지 못하므로 listener 준비 후 한 번 더 누릅니다.
+- 재인계 시도 자체가 실패하면 새 버튼 조작이 다시 필요합니다.
+- EPS 오류가 남아 있거나, USB/Panda 연결, 하네스, 시동, 순정 ECU 복구가 불가능하면 인계할 수 없습니다.
+- RES나 MAIN 버튼은 재인계 입력이 아닙니다.
 
 통합 모드에서 brake가 들어오면 host와 Panda가 각각 종방향 arm을 false로 래치합니다.
 host는 바로 `aReqRaw=0`, `aReqValue=0`, `ACCMode=0`을 송신하며 조향 LFA는 계속 보냅니다.
 브레이크 입력과 한 주기 겹친 active SCC가 Panda에서 거부되더라도 마지막 rejected address가
 `0x1A0`/`0x160`이면 종방향 채널만 해제하고 횡방향은 유지합니다.
 
-FAULT 후 재arm하려면 먼저 `set_armed=false`를 호출해 fault를 명시적으로 acknowledge한
-뒤 `true`와 필요한 물리 LDA/SET 절차를 다시 수행합니다. 기본 자동 arm은 arm 요청을 줄여 주지만,
-latched FAULT를 자동으로 지우지는 않습니다. 연구장 기본 YAML은
+FAULT 후에는 위 버튼 재인계를 사용하거나 `set_armed=true`를 호출합니다. 새 arm 요청이
+latched FAULT를 확인하며, 채널 선택은 새 물리 버튼 조작에서만 생깁니다. 연구장 기본 YAML은
 `disengage_on_cancel=false`, `longitudinal_override_on_gas=false`이며 brake의 종방향 전용
 해제는 켜져 있습니다. passive YAML은 CANCEL/gas 옵션이 true지만 actuation 자체가 꺼져
 있습니다. Panda hook의 별도 검사는 host 옵션과 구분합니다.
-서비스로 `set_armed=false`를 요청하면 자동 arm도 억제되고, 명시적인 `true` 요청으로
-다시 허용됩니다.
+서비스로 `set_armed=false`를 요청하면 자동 arm과 버튼 재인계가 모두 억제되고, 명시적인
+`true` 요청으로 다시 허용됩니다.
 
 ## 종방향 경고
 
@@ -129,7 +155,7 @@ radar→camera 순서로 두 통신을 모두 복구한 뒤 순정 SCC/LFA 재�
 재시도에서는 이미 순정 메시지가 돌아왔는지 먼저 확인하여 응답 유실을 복구 실패와
 구분하고, 필요할 때 진단 세션을 다시 연 뒤 통신을 복구합니다. 두 ECU의 순정 메시지
 재개와 Panda `NO_OUTPUT` 확인 전에는 재arm하지 않습니다. USB 단절 중에는 재연결을
-기다리고, 복구 후에도 운전자 재승인과 기존 정차 조건을 거쳐야 제어를 재개합니다.
+기다리고, 복구 후 새 LDA/SET 조작으로 주행 중에도 제어를 재개합니다.
 이는 ECU reset이나 장애 중 명령 유지가 아닙니다. ECU 자체 고장은 복구를 보장하지 않으며,
 `/diagnostics`에 복구 대기, 시도 횟수, 재승인 필요 상태를 게시합니다. HDA2 ADRV 메시지는 HDA1
 ECAN-only 송신 목록에 포함하지 않습니다.

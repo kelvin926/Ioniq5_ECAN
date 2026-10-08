@@ -43,8 +43,7 @@ upstream ABI 확장입니다. marker 문자열만으로 이 확장의 설치를 
 
 ## Carrot Ioniq 5 profile
 
-고정한 Carrotpilot commit에서 CAN-FD 조향 한계는 torque 270 count, 증가/감소
-2/3 count per 10 ms, driver allowance 250 및 multiplier 2입니다. Ioniq 5 torque data는
+Ioniq 5 torque data는
 `LAT_ACCEL_FACTOR=3.172929`, `FRICTION=0.096019`이고 공통 torque PID 기본값은
 `kp=1.0`, `ki=0.1`, `kf=1.0`입니다. Hyundai 공통 `steerActuatorDelay=0.1 s`와
 저속 보상표도 `CommandAdapter` 및 YAML에 옮겼습니다.
@@ -62,10 +61,9 @@ source를 다시 대조했으며 설정 변경이나 테스트는 수행하지 �
 `direct_torque`에서는 위 ratio/feedback gain/friction/저속 보상으로 토크를 재계산하지
 않습니다. 해당 모델/튜닝을 사용하는 상위 제어기와 ROS 내부 feedback 경로를 구분합니다.
 
-Carrot fork의 종방향 범위 `-4.0 .. 2.5 m/s²`는 고정 Panda safety의
-`-3.5 .. 2.0 m/s²`보다 넓으므로 적용하지 않고 Panda 범위를 사용합니다.
+이 저장소는 종방향에 11-bit 표현 범위 `-10.23 .. 10.24 m/s²`를 사용합니다.
 
-270 count는 software/CAN 명령 제한이며 MDPS 실제 최대 구동 토크가 검증된 값은 아닙니다.
+토크 count 상한은 software/CAN 명령 범위이며 MDPS 실제 최대 구동 토크가 검증된 값은 아닙니다.
 입력 조향각 추종과 native angle 명령 수용 여부도 구분해야 합니다.
 
 ## 2026-10-06 Carrotpilot 비교

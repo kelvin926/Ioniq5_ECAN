@@ -76,7 +76,7 @@ TEST(CommandAdapter, SlewsCurvatureTargetInsteadOfJumpingToIt) {
   EXPECT_NEAR(adapter.target_angle_deg(), 0.1, 1e-12);
 }
 
-TEST(CommandAdapter, UsesCarrotIoniq5Defaults) {
+TEST(CommandAdapter, UsesCarrotGainsAndPassThroughDefaults) {
   using namespace ioniq5_ecan;
   const CommandAdapterConfig config;
   EXPECT_TRUE(config.unfiltered_input);
@@ -86,16 +86,24 @@ TEST(CommandAdapter, UsesCarrotIoniq5Defaults) {
   EXPECT_DOUBLE_EQ(config.torque_kf, 1.0);
   EXPECT_DOUBLE_EQ(config.lat_accel_factor, 3.172929);
   EXPECT_DOUBLE_EQ(config.friction, 0.096019);
-  EXPECT_EQ(config.max_torque, 270);
-  EXPECT_EQ(config.torque_rate_up, 2);
-  EXPECT_EQ(config.torque_rate_down, 3);
-  EXPECT_DOUBLE_EQ(config.driver_torque_allowance, 250.0);
+  EXPECT_EQ(config.torque_output_scale, 270);
+  EXPECT_EQ(config.max_torque, 1021);
+  EXPECT_EQ(config.torque_rate_up, 2042);
+  EXPECT_EQ(config.torque_rate_down, 2042);
+  EXPECT_DOUBLE_EQ(config.driver_torque_multiplier, 0.0);
+  EXPECT_DOUBLE_EQ(config.accel_min_mps2, -10.23);
+  EXPECT_DOUBLE_EQ(config.accel_max_mps2, 10.24);
+  EXPECT_DOUBLE_EQ(config.jerk_limit_mps3, 12.7);
 }
 
-TEST(CommandAdapter, AppliesCarrotDirectionalDriverTorqueLimit) {
+TEST(CommandAdapter, AppliesDirectionalDriverTorqueLimitWhenConfigured) {
   using namespace ioniq5_ecan;
   CommandAdapterConfig config;
   config.lateral_mode = LateralInputMode::DirectTorque;
+  config.max_torque = 270;
+  config.torque_rate_up = 2;
+  config.torque_rate_down = 3;
+  config.driver_torque_multiplier = 2.0;
   CommandAdapter adapter(config);
   VehicleStateData vehicle;
   vehicle.driver_torque = -400.0;
@@ -127,10 +135,13 @@ TEST(CommandAdapter, UsesCarrotHighAngleRequestPattern) {
 TEST(CommandAdapter, RejectsParametersAbovePandaLimits) {
   using namespace ioniq5_ecan;
   CommandAdapterConfig config;
-  config.max_torque = 271;
+  config.max_torque = 1022;
   EXPECT_THROW((void)CommandAdapter{config}, std::invalid_argument);
   config.max_torque = 100;
-  config.accel_min_mps2 = -3.6;
+  config.torque_rate_down = 2043;
+  EXPECT_THROW((void)CommandAdapter{config}, std::invalid_argument);
+  config.torque_rate_down = 3;
+  config.accel_min_mps2 = -10.24;
   EXPECT_THROW((void)CommandAdapter{config}, std::invalid_argument);
 }
 
@@ -163,13 +174,21 @@ TEST(CommandAdapter, UnfilteredModePreservesSteeringRateAndAcceleration) {
   EXPECT_DOUBLE_EQ(output.acceleration_mps2, 1.234);
 }
 
-TEST(CommandAdapter, UnfilteredModeRejectsInsteadOfClippingUnrepresentableAcceleration) {
+TEST(CommandAdapter, UnfilteredModeSaturatesOutOfRangeAccelerationWithoutStopping) {
   using namespace ioniq5_ecan;
-  CommandAdapter adapter;
+  CommandAdapterConfig config;
+  config.accel_min_mps2 = -10.23;
+  config.accel_max_mps2 = 10.24;
+  CommandAdapter adapter(config);
   VehicleStateData vehicle;
   CommandSample command;
-  command.acceleration_mps2 = 2.01;
-  EXPECT_THROW(adapter.update(command, vehicle, 0.01, true, true), std::out_of_range);
+  command.acceleration_mps2 = -15.0;
+  ControlOutput output = adapter.update(command, vehicle, 0.01, true, true);
+  EXPECT_TRUE(output.longitudinal_active);
+  EXPECT_DOUBLE_EQ(output.acceleration_mps2, -10.23);
+  command.acceleration_mps2 = 15.0;
+  output = adapter.update(command, vehicle, 0.01, true, true);
+  EXPECT_DOUBLE_EQ(output.acceleration_mps2, 10.24);
 }
 
 TEST(CommandAdapter, ButtonOffDoesNotIntegrateAndReengagementStartsAtMeasuredAngle) {

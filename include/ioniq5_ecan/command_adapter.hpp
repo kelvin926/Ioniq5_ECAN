@@ -43,18 +43,23 @@ struct CommandAdapterConfig {
   std::array<double, 4> low_speed_factor_v{15.0, 13.0, 10.0, 5.0};
   double max_target_angle_deg{175.0};
   double max_target_rate_deg_s{500.0};
-  int max_torque{270};
-  int torque_rate_up{2};
-  int torque_rate_down{3};
+  // Normalized torque-controller output 1.0 maps to this count; max_torque is only the clamp.
+  int torque_output_scale{270};
+  // Pass-through defaults: StrTqReqVal range without Reserved/Invalid codes, no slew
+  // (2042 crosses the full range in one frame), no driver-torque limit (multiplier 0).
+  int max_torque{1021};
+  int torque_rate_up{2042};
+  int torque_rate_down{2042};
   double driver_torque_allowance{250.0};
-  double driver_torque_multiplier{2.0};
+  double driver_torque_multiplier{0.0};
   double driver_torque_factor{1.0};
   double steer_request_cutoff_angle_deg{85.0};
   uint32_t steer_request_valid_frames{89};
   uint32_t steer_request_cut_frames{2};
-  double accel_min_mps2{-3.5};
-  double accel_max_mps2{2.0};
-  double jerk_limit_mps3{5.0};
+  // Full 11-bit SCC aReqRaw/aReqValue encoding and maximum jerk metadata.
+  double accel_min_mps2{-10.23};
+  double accel_max_mps2{10.24};
+  double jerk_limit_mps3{12.7};
 };
 
 class CommandAdapter {

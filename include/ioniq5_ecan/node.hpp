@@ -115,6 +115,12 @@ class Ioniq5EcanNode {
   std::atomic<bool> vehicle_safety_mode_{false};
   std::atomic<bool> preserve_command_session_{false};
   std::atomic<bool> command_gap_resume_qualified_{false};
+  // Explicit set_armed false or shutdown; a physical button press never overrides it.
+  std::atomic<bool> operator_disarmed_{false};
+  // A physical LDA/SET press after a fault permits the next ECU takeover even while moving.
+  std::atomic<bool> button_rearm_takeover_{false};
+  uint64_t rearm_lane_keep_events_{0};  // Control thread only.
+  uint64_t rearm_set_events_{0};        // Control thread only.
   std::atomic<uint64_t> safety_transition_epoch_{0};
   std::atomic<uint64_t> raw_can_rx_count_{0};
   std::atomic<uint64_t> raw_can_tx_count_{0};

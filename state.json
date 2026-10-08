@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_on": "2026-10-07",
+  "updated_on": "2026-10-08",
   "timezone": "Asia/Seoul",
-  "update_reason": "README and operational documentation refresh published to main with verified source SHA; state-only publication receipt follows.",
+  "update_reason": "User decisions: pass upstream values without filtering (saturate at representable bounds), physical LDA/SET re-engages after any fault including while moving, and remove superseded limit records from logs/docs; no tests, build or flash run.",
   "can_only_sensor_field_assessment": {
     "observed_on": "2026-10-07",
     "source": "Direct user scope correction; CAN-only cached original0x1A0 payloads in build/deep-ecan-20261007/arrays.npz, can-only-object-assessment.json and pinned Hyundai CAN-FD DBC.",
@@ -209,8 +209,8 @@
     "actions": "Offline reads and scoped project analysis artifacts/state only. No USB/CAN/UDS, runtime/config/firmware changes, packages/system settings, bag edits, Git commit/push or external application writes."
   },
   "current_request": {
-    "description": "Update README and related documentation to the latest project state and publish the scoped documentation update under the existing repository-delivery authorization.",
-    "status": "documentation_refresh_published",
+    "description": "Pass every upstream (Alpamayo-based) control value without filtering for aggressive autonomous tests, saturate out-of-range values instead of cutting delivery, keep brake longitudinal latch with SET re-arm and EPS-fault avoidance, re-engage on physical LDA/SET after any fault, and remove superseded limit records from logs/docs.",
+    "status": "source_config_docs_updated_tests_build_flash_pending",
     "user_facing_language": "Korean",
     "artifact_language": "Korean report and source signal identifiers; English JSON provenance",
     "further_implementation_requested": false,
@@ -229,14 +229,14 @@
       "fresh_usb_only_confirmation_received": true,
       "device_harness_and_ignition_zero_verified": true
     },
-    "historical_detail_notice": "Current documentation update continues the user's authorized repository publication. Historical vehicle constraints below are dated observations, not live hardware readings or new authorization for diagnostics, actuation or firmware changes.",
+    "historical_detail_notice": "Current request is read-only theoretical assessment plus material state/document synchronization. Existing user source edits preserved; no build, export, flash or actuation requested/performed.",
     "vehicle_actuation_decision": {
       "recorded_on": "2026-10-06",
       "requested": "Latest user request accepts right steering within the available existing limits. The earlier unconstrained maximum-force request was declined.",
       "user_mitigation": "User said they would hold the brake and confirmed a supervised research setting. The latest checksum-valid TCS frame reports brake_pressed=true.",
       "decision": "Retain existing torque/angle/time and engagement requirements. Do not issue actuation while the existing initial ignition_line=1 requirement is unmet.",
       "reason": "Fresh Panda health reports ignition_line=0 and ignition_can=0 despite user-confirmed READY; scripts/steering_sweep.py rejects this before CAN configuration and ECU takeover. Root cause of missing Panda ignition detection remains unresolved.",
-      "bounded_alternative": "Existing maximum steering torque is 270 counts; no limit or activation-gate changes were made. A right-only bounded procedure was not executed.",
+      "bounded_alternative": "No activation-gate changes were made. A right-only bounded procedure was not executed.",
       "observations": {
         "sample_seconds": 2,
         "panda_uptime_s": 511,
@@ -330,7 +330,7 @@
     "fresh_input": "I5R1: fresh valid command plus Panda-authoritative physical ON may initiate first takeover only while stationary, with healthy ignition/CAN and existing ECU/gear/stock-SCC prerequisites. No physical ON means stock communication waiting.",
     "buttons": "I5R1 Panda volatile LDA/SET selection is authoritative. LDA toggles lateral-only; SET release toggles combined. OFF disables ECAN assistance and revokes moving command-return eligibility. With continuously fresh input, existing inactive-frame ownership may remain until cleanup; OFF alone is not stock ECU restoration.",
     "idle_input_loss": "NO_OUTPUT/stock-communication waiting; keep subscription and healthy physical-button intent. New input never bypasses first-takeover stationary conditions.",
-    "active_input_loss": "resume_on_command_return=true: a healthy publisher-only gap stops output and restores stock communication/NO_OUTPUT while retaining ON. Fresh input may re-take ownership while moving only after prior verified ACTIVE in the same uninterrupted session, completed restoration, fresh valid CAN and exact firmware profile. OFF/CANCEL/hard faults/restarts do not auto-resume.",
+    "active_input_loss": "resume_on_command_return=true: a healthy publisher-only gap stops output and restores stock communication/NO_OUTPUT while retaining ON. Fresh input may re-take ownership while moving only after prior verified ACTIVE in the same uninterrupted session, completed restoration, fresh valid CAN and exact firmware profile. OFF/CANCEL/hard faults/restarts do not resume without a new physical LDA/SET press (see command_passthrough.button_reengage).",
     "button_fix": "Physical toggles are monitored by firmware across NO_OUTPUT/ELM/Hyundai transitions with the same I5R1 profile. First held button at cold start is not a new ON; SET initial release is inhibited until neutral. Host brake/ACC latch and firmware permission-reduction request prevent stale health re-enabling longitudinal.",
     "verification": {
       "native_release_build": "passed",
@@ -430,7 +430,15 @@
     "protected": "All unrelated files and directory structures, other workspaces including catkin_ws_ouster, OS/ROS installation, global packages, shell settings, personal configuration, Desktop and application-menu entries outside this workspace.",
     "incidental_writes": "Consider tools/applications that automatically write outside the workspace; do not silently bypass the constraint by launching them. Stop and seek explicit new authorization if such writes are necessary.",
     "existing_external_changes": "Previously user-authorized Cabana settings and shortcuts remain historical changes. This instruction does not authorize changing or undoing them.",
-    "actions_for_this_request": "Scoped source/patch changes, affected tests/builds, no-actuator ECU diagnostics, fresh USB-only app flash/verification and explicitly approved one 0x730-only DTC clear/recurrence check. Own processes stopped; source/build/cache/log/evidence/state within workspace. No unrelated/global changes, other ECU clear, ECU reset, vehicle ignition cycle or Git commit/push."
+    "actions_for_this_request": "Scoped source/patch changes, affected tests/builds, no-actuator ECU diagnostics, fresh USB-only app flash/verification and explicitly approved one 0x730-only DTC clear/recurrence check. Own processes stopped; source/build/cache/log/evidence/state within workspace. No unrelated/global changes, other ECU clear, ECU reset, vehicle ignition cycle or Git commit/push.",
+    "local_firmware_editing": {
+      "authorized_on": "2026-10-08",
+      "source": "Direct user request to adjust on this computer, followed by scope selection: all adjustable elements.",
+      "root": ".",
+      "allowed_scope": "Current repository checkout, its ignored .firmware-build source/metadata cache and necessary workflow/documentation/state files.",
+      "protected": "Unrelated files, installations, global packages/credentials, OS/shell/ROS/personal settings and other workspaces remain outside scope.",
+      "historical_boundary_notice": "The parent Ubuntu workspace path and earlier vehicle-action scope remain dated records, not a current remote-machine action request."
+    }
   },
   "maintenance": {
     "instructions_file": "AGENTS.md",
@@ -461,9 +469,9 @@
   },
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
-    "branch": "main",
-    "head": "7dfee3f02410160914e2e0e402fa276e9558b2d5",
-    "head_subject": "Refresh README and vehicle feedback documentation",
+    "branch": "codex/panda-local-safety",
+    "head": "77f9543569d93a370fcd48249f4c0d91f0ac3306",
+    "head_subject": "Record verified documentation refresh publication",
     "remote_snapshot": {
       "observed_on": "2026-10-06",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -480,7 +488,7 @@
       "commit_or_push_performed": true,
       "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
     },
-    "head_scope": "Verified documentation source commit. This state-only publication receipt is its child; live Git HEAD and origin/main identify the receipt commit.",
+    "head_scope": "Current local base commit; offline-editing workflow/docs/state changes remain uncommitted on the codex branch.",
     "delivery_snapshot": {
       "observed_at": "2026-10-06T23:04:51+09:00",
       "origin_main": "93d00526a2319a159f6ac0d8da09289756545df5",
@@ -652,9 +660,9 @@
       "requested_architecture": "Upper ROS controller -> command adapter/CAN bridge -> Panda ECAN -> lateral and longitudinal vehicle ECUs.",
       "both_paths_implemented": true,
       "input_semantics_and_units": "Still require the upstream contract; do not assume angle, angle-rate, torque, curvature, target speed, or acceleration are interchangeable.",
-      "longitudinal": "With current scale=1/offset=0 and unfiltered_input=true, valid acceleration in m/s^2 is copied into both SCC acceleration-request fields, quantized to 0.01 m/s^2, without host jerk slew. Host accepts -3.5..2.0 m/s^2; out-of-range input throws and currently disarms both channels. Actual ECU acceleration tracking is not guaranteed by command delivery.",
+      "longitudinal": "With current scale=1/offset=0 and unfiltered_input=true, valid acceleration in m/s^2 is copied into both SCC acceleration-request fields, quantized to 0.01 m/s^2, without host jerk slew. Values outside -10.23..10.24 m/s^2 saturate at the bound without stopping output. Actual ECU acceleration tracking is not guaranteed by command delivery.",
       "lateral_default": "steering_rate_deg_s -> integrated target angle -> feedback torque controller -> LFA at 100 Hz; this is not numeric pass-through.",
-      "lateral_direct_torque": "Supported in Panda integer-count units; rounding, amplitude limits, driver-torque limits, and torque slew still apply. Nm input would require an explicit unit conversion.",
+      "lateral_direct_torque": "Supported in Panda integer-count units; rounding and saturation at +/-1021 counts apply. Nm input would require an explicit unit conversion.",
       "lateral_angle": "Direct-angle ROS input is absent. Software angle tracking can be added; native MDPS angle command support on this vehicle remains unresolved.",
       "cadence": "Latest command is sampled at 100 Hz for steering and 50 Hz for SCC, not one CAN transmission per ROS message.",
       "activation": "Both channels can be selected with SET; existing engagement, ECU ownership, freshness, and firmware conditions still apply.",
@@ -714,7 +722,7 @@
       "patches/opendbc-hyundai-canfd-split-arm.patch"
     ],
     "temporary_eps_fault": "ACTIVE enters SOFT_DISABLING with a fixed 3-second deadline. Lateral output is zero/inactive; existing channel arm, CAN ownership and heartbeat remain. Resume ACTIVE within the deadline only with cleared EPS status, fresh valid CAN/command and Panda permission. Healthy longitudinal commands may continue.",
-    "temporary_recovery_exclusions": "Expired EPS pause or CAN/Panda/harness/ignition faults remain hard-fault shutdown/stock restoration and explicit rearm. Command loss during EPS pause remains a fault; healthy ACTIVE publisher loss uses the separate command_gap_resume path.",
+    "temporary_recovery_exclusions": "Expired EPS pause or CAN/Panda/harness/ignition faults remain hard-fault shutdown/stock restoration, then physical LDA/SET re-engagement. Command loss during EPS pause remains a fault; healthy ACTIVE publisher loss uses the separate command_gap_resume path.",
     "healthy_command_gap": "With current I5R1 resume profile, retain physical ON across a publisher-only gap, restore stock and automatically retake in motion only in the same previously ACTIVE session after verified restoration. OFF/CANCEL/hard faults/restarts revoke this exception."
   },
   "steering": {
@@ -752,11 +760,11 @@
     "force_assessment": {
       "observed_on": "2026-10-06",
       "scope": "Read-only repository and primary-source research; no CAN transmission, firmware change, vehicle measurement, or controller change.",
-      "host_and_pinned_firmware_limit_counts": 270,
-      "limit_interpretation": "Verified host/pinned-firmware command cap, not an established ECU maximum or total MDPS output torque. The exact installed firmware binary remains unverified.",
+      "host_command_cap_counts": 1021,
+      "limit_interpretation": "Host command cap, not an established ECU maximum or total MDPS output torque. The exact installed firmware binary remains unverified.",
       "torque_overlay_scaling": {
         "nm_per_count": 0.0078125,
-        "cap_requested_overlay_nm": 2.109375,
+        "cap_requested_overlay_nm": 7.9765625,
         "method": "Derived from the opendbc comment recording original DBC scaling: host torque is encoded with a +1024 offset, so requested overlay is host_count / 128.",
         "caveat": "Requested additional torque at the overlay interface; actual MDPS output, acceptance, and motor maximum were not measured."
       },
@@ -766,8 +774,8 @@
         "source": "Current src/command_adapter.cpp, safety_supervisor.cpp and active YAML; pinned opendbc Hyundai CAN-FD steering limits and DBC.",
         "host_permission": "The current lateral path has no minimum-moving-speed requirement; stationary takeover and normal lateral/Panda permission are still required.",
         "feedback_path_at_zero_speed": "low_speed_factor_v[0]=15 produces nonzero proportional error through factor squared. Desired/actual lateral acceleration and acceleration-based friction/feedforward are zero at v=0. Integral accumulation freezes below 5 m/s by default, so increasing friction or ki alone does not add standstill torque in the current formula.",
-        "tuning_scope": "Increasing low-speed proportional weighting or kp can increase a below-cap torque request; it cannot increase the final +/-270-count ceiling. Steering ratio is a model parameter; slew changes the rise time, not the ceiling.",
-        "direct_torque_path": "An upstream torque controller should supply Panda counts in direct_torque mode; local ratio/PID/friction/low-speed generation is bypassed, while existing count/slew/driver/engagement gates remain. Current default YAML remains steering_rate_deg_s.",
+        "tuning_scope": "Increasing low-speed proportional weighting or kp can increase a below-cap torque request; it cannot exceed the final +/-1021-count ceiling. Steering ratio is a model parameter.",
+        "direct_torque_path": "An upstream torque controller should supply Panda counts in direct_torque mode; local ratio/PID/friction/low-speed generation is bypassed, while count saturation and engagement gates remain. Current default YAML remains steering_rate_deg_s.",
         "vehicle_capability": "No stronger standstill steering guarantee or supported native parking/angle interface established for this MDPS. Software saturation does not establish ECU acceptance or physical output.",
         "actions": "Explanation and persistent-state record only. No parameter/controller/firmware change, tests, CAN transmission, Panda queries or ECU diagnostics."
       },
@@ -890,16 +898,15 @@
     }
   },
   "existing_implementation_limits": {
-    "note": "Describes current code/configuration; no limits were changed in this session.",
-    "max_torque_count": 270,
-    "torque_rate_count_per_10ms": {
-      "up": 2,
-      "down": 3
-    },
+    "note": "Describes current code/configuration (2026-10-08 source).",
+    "max_torque_count": 1021,
+    "torque_rate_count_per_10ms": "none (2042 crosses the full range in one frame)",
+    "driver_torque_limit": "none (multiplier 0)",
     "acceleration_mps2": {
-      "min": -3.5,
-      "max": 2
-    }
+      "min": -10.23,
+      "max": 10.24
+    },
+    "out_of_range_policy": "saturate at the bound; never stop output for range"
   },
   "panda": {
     "latest_observation": {
@@ -1473,8 +1480,8 @@
     },
     {
       "id": "fallback_command_policy",
-      "status": "proposal_only",
-      "detail": "The user objected to full-frame rejection/disarm of upstream fallback commands. Requested/applied/saturated/rejected feedback was proposed but not implemented."
+      "status": "saturation_implemented_feedback_pending",
+      "detail": "Out-of-range torque/acceleration now saturates at the representable bound without disarm. Requested/applied/saturated feedback in vehicle_state was proposed but not implemented."
     },
     {
       "id": "local_ros_and_firmware_changes",
@@ -1525,9 +1532,14 @@
       "id": "post_restore_scc_communication_fault",
       "status": "acc_enable_3_and_730_records_recur_after_authorized_single_clear",
       "detail": "Post-fix startup/ready/stock RX normal; ACCEnable3 persists. 0x730 raw588186/56b881/563881 status89 returned in 2 s after positive54 single clear. No ECU reset/ignition cycle. Manufacturer root cause/identity unverified; stopped more clear/diagnostics/actuation per explicit condition."
+    },
+    {
+      "id": "command_passthrough_validation",
+      "status": "source_only_untested_unbuilt_unflashed",
+      "detail": "Torque (host 1021, Panda 1023, no rate/RT/driver limits), accel (-10.23..10.24, jerk metadata 12.7) and physical-button re-engagement after faults are unverified: host gtest, opendbc safety tests, ARM build, flash, MDPS acceptance of large steps, SCC/ESC acceptance of the full accel range, jerk-field effect, MDPS-side driver override and moving re-takeover are all unconfirmed."
     }
   ],
-  "next_action": "Requested documentation update is complete and published. Future runtime or vehicle work requires a corresponding user request; dated unverified paths remain recorded, not active tasks.",
+  "next_action": "Pass-through and button re-engagement are in source/config/docs only. Run host gtest and opendbc safety tests on the Ubuntu/target toolchain, then ARM build and a separately confirmed USB-only flash before any vehicle use.",
   "upstream_pins": {
     "panda": "dd8a5b3df77706337a11555377e7180c5adc8726",
     "opendbc": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
@@ -1581,7 +1593,7 @@
     {
       "date": "2026-10-06",
       "type": "steering_force_research",
-      "summary": "Verified the 270-count host/pinned-firmware cap and derived approximately 2.11 Nm requested torque overlay from DBC scaling. ECU maximum, installed-binary limit, actual output, and stronger PA/ACI support remain unverified.",
+      "summary": "Derived requested torque overlay scaling (count / 128 Nm) from DBC. ECU maximum, installed-binary behavior, actual output, and stronger PA/ACI support remain unverified.",
       "source": "Local source and pinned/current official opendbc DBC and safety implementation."
     },
     {
@@ -1756,6 +1768,26 @@
       "date": "2026-10-07",
       "type": "documentation_refresh_published",
       "summary": "README, current36-field VehicleState contract, validation, handoff, timestamps and upstream research references published with12 scoped documentation/state files. Source remote SHA and kelvin926 account verified; runtime/evidence unchanged."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "offline_panda_safety_workspace",
+      "summary": "Prepared full pinned Panda/opendbc sources with existing patches and source-only mode; added baseline-aware additional-edit export and local editing map. Round-trip export/source/index checks passed; defaults and hardware unchanged."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "panda_safety_current_values_documented",
+      "summary": "Added Korean source-backed tables for torque/acceleration, TX/RX contracts, I5R1 timing, heartbeat/watchdog and profile/channel conditions. Distinguished bus2 legacy TX entry, checksum-exempt button frames and 100ms I5R1 freshness from common1s lag checks. No numerical source changes or hardware actions."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "full_passthrough_saturation",
+      "summary": "User decision: upstream owns all shaping and delivery is never cut. Local opendbc patch: Panda torque max/RT/rate 1023, driver allowance/multiplier 0, CAN-FD accel -1023..1024 (0.01 m/s^2), generic tests overridden. Host: torque_output_scale 270, cap/codec 1021 (avoid raw 2046/2047), no slew/driver limit, accel -10.23..10.24 and jerk 12.7 saturate at bounds; code defaults match YAML. Golden SCC payloads recomputed with a CRC port verified against the prior payload. Brake latch kept. No test/build/flash."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "button_reengage_after_fault",
+      "summary": "User decision: after any fault, a new physical LDA press or SET release re-engages. Host restores stock, passes Panda through profile 0 to clear a blocked session, reinstalls the I5R1 listener; a press clears inhibit/rearm-required, auto-arm request_arm(true) acknowledges FAULT, and ECU takeover is allowed while moving. Explicit set_armed=false and process restart disable it. Superseded limit records removed from docs/state per user. No test/build/flash."
     }
   ],
   "ecu_recovery": {
@@ -1770,7 +1802,7 @@
     "restoration": "Restore radar then camera; on retry first observe valid stock CAN traffic to tolerate a lost acknowledgement, otherwise re-enter the diagnostic session and restore communication. Retain pending flags until stock traffic returns. Verify Panda NO_OUTPUT/mode/param/controls state before reporting completion.",
     "current_restoration_update": "Both radar and camera communication restores precede stock confirmation. Camera disable also quieted SCC in 22:31 trace. Request order and checksum-valid/pending/backoff/rearm checks preserved; source built, integrated post-fix vehicle recovery still pending.",
     "stock_frame_validation": "Only correct-size, checksum-valid 0x12A/0x1A0 received frames confirm stock traffic; returned/rejected frames do not count.",
-    "output_and_rearm": "Hard faults and expired temporary-steering windows still stop all actuator output, inhibit automatic rearm, and use the existing pending stock-ECU restoration path. Pending restoration rejects rearm. Explicit acknowledgement/rearm and stationary physical activation conditions remain. A temporary EPS pause keeps the existing ECU ownership and may resume within its separate 3-second window.",
+    "output_and_rearm": "Hard faults and expired temporary-steering windows still stop all actuator output, inhibit automatic rearm, and use the existing pending stock-ECU restoration path. Pending restoration rejects rearm. After restoration a new physical LDA/SET press acknowledges the fault and may re-take ownership while moving. A temporary EPS pause keeps the existing ECU ownership and may resume within its separate 3-second window.",
     "diagnostics": [
       "ecu_recovery_pending",
       "ecu_recovery_attempts",
@@ -2590,7 +2622,7 @@
       "Never force Panda controls_allowed",
       "Initial takeover and hard-fault rearm remain stationary",
       "No inherited ON across process/USB/Panda restart",
-      "CANCEL and CAN/USB/harness/ignition faults or failed restoration do not auto-resume",
+      "CANCEL and CAN/USB/harness/ignition faults or failed restoration do not resume without a new physical LDA/SET press",
       "All required firmware RX messages must be newly seen, valid and fresh after mode change before actuator TX",
       "Brake/ACC latches longitudinal OFF until SET; firmware B8 only reduces permission",
       "Transitions discard old commands/dt and reject stale health snapshots via mode-change epoch"
@@ -3157,5 +3189,139 @@
     "authentication": "Requested-account existing credential read once into process memory; Git helpers disabled for writes, no credential-store or global configuration changes.",
     "verification": "Normal push succeeded and read-only git ls-remote matched the documentation source commit.",
     "receipt_scope": "State-only child records the verified source delivery; its own final SHA is confirmed at session close and not self-embedded."
+  },
+  "offline_panda_safety_workspace": {
+    "prepared_on": "2026-10-08",
+    "status": "ready_for_source_editing_and_additional_patch_export",
+    "user_scope": "All adjustable Panda-side safety source elements; no numeric target values supplied.",
+    "host": "Windows PowerShell5.1 and Git Bash; no vehicle available.",
+    "sources": {
+      "panda": {
+        "path": ".firmware-build/panda",
+        "commit": "dd8a5b3df77706337a11555377e7180c5adc8726",
+        "baseline_tree": "c8dffe3568225a765deda9d83561d3f05e60f5ad"
+      },
+      "opendbc": {
+        "path": ".firmware-build/opendbc",
+        "commit": "b72c1fd55ae7e84763e40912bbe06b8f533cb66b",
+        "baseline_tree": "ca4246fd67f4b4291d6e990880928bfdaab0df7a"
+      }
+    },
+    "existing_patches": [
+      "opendbc-hyundai-canfd-split-arm.patch",
+      "opendbc-command-session.patch",
+      "opendbc-command-session-startup.patch",
+      "panda-builder-env.patch",
+      "panda-ecan-only.patch"
+    ],
+    "prepare_command": "bash scripts/build_panda_debug_firmware.sh --prepare-only",
+    "export_command": "bash scripts/export_panda_safety_edits.sh",
+    "generated_patch_paths": [
+      "patches/opendbc-local-safety.patch",
+      "patches/panda-local-safety.patch"
+    ],
+    "baseline_method": "Exact upstream pins plus the existing five patches, computed using temporary Git indexes; no baseline commit or real-index staging. Internal refs/ioniq5-safety/baseline tree refs retain the baseline across Git garbage collection.",
+    "editor_scope": "Complete source trees, including envelopes, TX/RX contracts, command-session state machine, lateral/longitudinal algorithms, heartbeat and ECU-facing transport lifecycle. Computed permission/fault state is distinguished from tuning parameters in the guide.",
+    "guide": "docs/panda_safety_local.md",
+    "current_numeric_changes": true,
+    "verification": {
+      "status": "passed",
+      "checks": [
+        "Exact pinned checkout commits and all five patches applied.",
+        "Both Bash scripts parse and source-only preparation completes.",
+        "No extra edits export no tuning patch.",
+        "Temporary comment exports exactly two added lines in one header; existing project patches excluded.",
+        "Reverse apply check succeeds, source bytes restored and both source Git index hashes unchanged.",
+        "Relative cache path works for export.",
+        "Default torque/rates/driver/request/heartbeat/RX timing values match the prepared baseline.",
+        "Repeated source preparation preserves existing patches and baseline; relative cache path resolves correctly."
+      ],
+      "final_documentation_check": {
+        "status": "passed",
+        "checked_on": "2026-10-08",
+        "changed_files": 7,
+        "checked_local_links": 25,
+        "AGENTS_lines": 195,
+        "runtime_configuration_changes": false,
+        "numeric_source_changes": false,
+        "source_pins_and_baseline_refs_verified": true,
+        "ARM_build": false,
+        "hardware_actions": false
+      }
+    },
+    "hardware_actions": "None; no USB/CAN/UDS, mode change, ECU takeover or firmware flash.",
+    "build_scope": "Source preparation and patch export only. No Python/package installation or ARM/safety-library build; compiler presence does not establish a working complete Windows firmware toolchain.",
+    "publication": "Local working tree only; no commit/push requested or performed for this new workflow.",
+    "current_values_documentation": {
+      "documented_on": "2026-10-08",
+      "document": "docs/panda_safety_local.md",
+      "source": "Prepared pinned opendbc/Panda source with the existing five project patches; current active YAML for profile selection.",
+      "scope": "Current compiled-source constants and code checks, not live installed-device values or validated ranges for changing the constants.",
+      "coverage": [
+        "Steering/driver/request-bit constraints",
+        "Acceleration bounds",
+        "Combined ECAN TX allowlist and legacy bus2 item",
+        "RX length/frequency/counter/CRC contracts",
+        "I5R1 freshness versus common missing-message thresholds",
+        "Heartbeat/watchdog/modes/channel transitions and B7/B8 requests"
+      ],
+      "verification": {
+        "checked_on": "2026-10-08",
+        "status": "passed",
+        "tx_entries_checked": 7,
+        "rx_contract_rows": 7,
+        "command_blocks_unchanged": true,
+        "source_values_modified": false,
+        "verification_scope": "Read-only source/document comparison, no builds or hardware actions."
+      },
+      "hardware_actions": false,
+      "source_value_changes": false
+    }
+  },
+  "command_passthrough": {
+    "decided_on": "2026-10-08",
+    "source": "Direct user messages: the upstream (Alpamayo-based) controller supplies safe values; pass every value without filtering for aggressive tests, never cut delivery (saturate out-of-range values), keep the brake longitudinal latch, avoid EPS-fault-induced blocking, re-engage on physical LDA/SET after any fault, and keep no records of superseded limits.",
+    "panda_patch": {
+      "file": "patches/opendbc-local-safety.patch",
+      "edited_source": ".firmware-build/opendbc/opendbc/safety/modes/hyundai_canfd.h",
+      "steering": {
+        "max_torque": 1023,
+        "max_rt_delta": 1023,
+        "max_rate_up": 1023,
+        "max_rate_down": 1023,
+        "driver_torque_allowance": 0,
+        "driver_torque_multiplier": 0
+      },
+      "longitudinal": "HYUNDAI_CANFD_LONG_LIMITS -1023..1024 (0.01 m/s^2), the full 11-bit encoding, used by hyundai_canfd only.",
+      "kept": "Steer-request tolerance 89/2/810000 us (host pattern matches), controls_allowed gating, zero torque without permission, inactive 0x1A0 when longitudinal is not armed.",
+      "tests": "test_hyundai_canfd.py constants match; steering safety/driver/RT tests and the accel actuation test are overridden for the encodable range. Not executed."
+    },
+    "host": {
+      "torque_output_scale": "270 (code default and YAML) maps controller output 1.0 to counts so Carrot gain applies; max_torque is only the clamp.",
+      "validation": "max_torque 0..1021, torque_output_scale 1..1021, rates 1..2042, accel bounds within -10.23..10.24",
+      "saturation": "Adapter clamps torque and acceleration to configured bounds; codec clamps torque +/-1021, accel -10.23..10.24, jerk 0..12.7 and set speed 0..255. Out-of-range values never throw or disarm.",
+      "torque_cap_reason": "Raw 2046/2047 (+1022/+1023) are DBC Reserved/Invalid and are never sent to avoid EPS faults.",
+      "jerk_fields": "jerk_limit_mps3 12.7 is written to JerkUpperLimit and JerkLowerLimit while enabled (3.0/1.0 when disabled).",
+      "configuration": {
+        "max_torque": 1021,
+        "torque_rate_up": 2042,
+        "torque_rate_down": 2042,
+        "driver_torque_multiplier": 0.0,
+        "accel_min_mps2": -10.23,
+        "accel_max_mps2": 10.24,
+        "jerk_limit_mps3": 12.7,
+        "code_defaults": "same as YAML"
+      }
+    },
+    "button_reengage": {
+      "behavior": "After any fault, restoration passes Panda through NO_OUTPUT profile 0 to clear a blocked session and reinstalls the I5R1 listener. A new LDA press or SET release (host parser edge count increase) clears auto_arm_inhibited/recovery_rearm_required and permits moving takeover; auto-arm request_arm(true) acknowledges the latched FAULT, channels follow the Panda-recorded press.",
+      "exceptions": "Explicit set_armed=false and process shutdown/restart disable button rearm. A press during restoration (before the listener) is not recorded by Panda and needs another press. A failed takeover needs a new press. EPS fault present, missing USB/Panda, harness, ignition or failed stock restoration still prevent takeover. RES/MAIN are not rearm inputs.",
+      "files": "src/node.cpp, src/safety_supervisor.cpp, include/ioniq5_ecan/node.hpp, include/ioniq5_ecan/recovery_retry.hpp, test/test_safety_supervisor.cpp"
+    },
+    "kept": "Brake latches longitudinal off until SET; 85-degree STEER_REQ cut pattern for EPS-fault avoidance.",
+    "remaining_cut_paths": "Non-finite command, 250 ms command gap (stock restore), Panda health/vehicle-state timeouts, EPS fault not cleared within 3 s, firmware session RX freshness/CRC/heartbeat/relay/CANCEL aborts; faults recover through button re-engagement.",
+    "separate_tool": "scripts/steering_sweep.py keeps its own MAX_STEER_TORQUE constant.",
+    "unverified": "Tests, ARM build, flash, MDPS acceptance of large steps, actual output torque, MDPS-side driver override, SCC/ESC acceptance of the full accel range, effect of jerk metadata, moving re-takeover after faults.",
+    "hardware_actions": false
   }
 }

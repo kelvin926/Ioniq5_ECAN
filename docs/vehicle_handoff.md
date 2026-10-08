@@ -22,8 +22,10 @@
 | 관찰용 설정 | `config/ioniq5_ecan_passive.yaml`, 네 기능 모두 false |
 
 기본 `unfiltered_input=true`, `use_enable_field=false`입니다. 입력 scale/offset, rate→angle→torque
-변환, torque 제한/변화율, CAN 양자화, 채널 허가와 watchdog은 유지됩니다.
-270 count는 명령 상한이며 MDPS 최대 구동력이 확인된 값은 아닙니다.
+변환, torque ±1021 제한, CAN 양자화, 채널 허가와 watchdog은 유지됩니다.
+토크 상한은 1021 count, 가속도는 -10.23~10.24 m/s²이고 범위 밖 값은 끝값으로 맞춥니다.
+Panda/host는 토크 변화율과 운전자 토크 제한을 적용하지 않습니다.
+이 범위는 MDPS/SCC 수용이 확인된 값이 아니며 빌드/flash 전입니다.
 host CANCEL/gas override는 연구장 기본 YAML에서 false입니다. I5R1 firmware CANCEL은
 host 설정과 독립적으로 세션을 취소합니다. 자세한 단위와 상태 필드는
 [입력 계약](input_contract.md), 활성화 조건은 [상태와 제한](safety.md)에 있습니다.
@@ -52,15 +54,16 @@ host 설정과 독립적으로 세션을 취소합니다. 자세한 단위와 �
   기존 arm/소유권/heartbeat/tester-present 유지, 정상 허가된 종방향은 현재 명령 지속
 - deadline 전에 EPS clear + 최신 유효 command/CAN + Panda 허가: 현재 명령으로 ACTIVE 복귀,
   steering 적분/목표각 초기화, brake/ACC 종방향 래치 보존, raw LFA 우회 차단
-- 3초 만료 또는 CAN/Panda/command hard fault: 전체 disarm, auto rearm 억제, stock ECU 복구
+- 3초 만료 또는 CAN/Panda/command hard fault: 전체 disarm, stock ECU 복구, 버튼 listener 재설치
 - I5R1 정상 ACTIVE 입력 단절: 출력 중단/순정 통신 복구, 물리 ON 보존. 복구 완료와
   새 유효 command/CAN 확인 후 같은 세션에서는 주행 중에도 현재 입력으로 재인계
 - 최초 takeover는 정차. 물리 OFF/CANCEL, CAN/USB/harness/ignition 고장 및 프로세스/장치
-  재시작은 이전 ON 또는 주행 중 재인계 자격을 자동 계승하지 않음
+  재시작은 이전 ON을 자동 계승하지 않음
 - ROS stock 복구: radar→camera 통신 요청을 먼저 완료한 뒤 두 valid stock 재개와 Panda NO_OUTPUT 확인, 실패 시 실행 중
   1/2/4/8/16/30초 capped retry, USB 자동 재연결, pending 동안 actuator 출력/rearm 차단
-- hard fault 복구 완료 후: 정상 상태와 정차 조건을 확인하고 `set_armed=false` → `true`,
-  물리 LDA/SET으로 재활성화. 장애 전 명령이나 채널을 자동 재개하지 않음
+- hard fault 복구 완료 후: 새 물리 LDA 또는 SET 조작이 fault를 확인하고 주행 중에도
+  재인계. 장애 전 명령이나 채널을 버튼 없이 재개하지 않음. `set_armed=false` 명시 OFF 후에는
+  버튼 재인계 없음
 
 이 구현은 ECU 자체 reset/수리를 보장하지 않습니다. UDS는 control thread에서 동기 실행하며
 hard real-time 보장도 없습니다. [구조](architecture.md)와 [지연](latency.md)을 참고하십시오.

@@ -253,7 +253,7 @@ LFA/SCC 송신 소유권을 확인하는 작업이 남아 있습니다.** stock 
 | 필수 값 | `lateral`, `acceleration`; 기본 `use_enable_field=false` |
 | 합의된 lateral | `steering_rate_deg_s`, 핸들 deg/s를 목표각으로 적분한 뒤 토크로 변환 |
 | 상위가 토크를 보내는 경우 | `input.lateral_mode=direct_torque`; 단위는 Panda count, Nm가 아님 |
-| acceleration | m/s², 0.01 m/s² CAN 양자화, 허용 범위 -3.5~2.0 |
+| acceleration | m/s², 0.01 m/s² CAN 양자화, 표현 범위 -10.23~10.24, 범위 밖은 끝값 |
 | 입력 shaping | 기본 `unfiltered_input=true`; host smoothing/clamp 생략, 토크/전송/채널 경계는 유지 |
 | command watchdog / CAN freshness | 250 / 250 ms |
 | 차량 출력 | LFA 토크 100 Hz, SCC 가속도 50 Hz; native angle 입력은 미구현 |
@@ -290,7 +290,8 @@ rosservice call /ioniq5_ecan/set_armed "data: false"
 활성 일시 EPS 오류는 고정 3초 `SOFT_DISABLING` 창 안에서 최신 command/CAN/Panda 허가로
 복귀하며 기존 brake/ACC 종방향 래치를 보존합니다. hard fault/창 만료는 disarm과 순정 ECU
 복구로 전환합니다. stock 복구는 radar→camera, 실패 시 1/2/4/8/16/30초 retry와 USB 재연결을
-사용합니다. 복구 완료 후에도 명시적 재arm과 물리 활성화가 필요합니다.
+사용합니다. 복구 완료 후 새 LDA 또는 SET 조작으로 주행 중에도 다시 인계합니다.
+`set_armed=false`로 명시 OFF한 뒤에는 버튼 재인계가 없고 `true` 요청이 필요합니다.
 `/diagnostics`의 `soft_disable_remaining_ms`, `ecu_recovery_pending`,
 `ecu_recovery_attempts`, `recovery_rearm_required`를 기록합니다. 최신 ROS 경로의 실제 차량
 제어, 채널 동작과 복구 성공은 아직 기록되지 않았습니다.

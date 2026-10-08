@@ -79,7 +79,8 @@ bool HyundaiCanFdCodec::checksum_valid(const CanFrame& frame) {
 
 CanFrame HyundaiCanFdCodec::make_lfa(int torque, bool enabled, bool torque_request, uint8_t bus) {
   std::array<uint8_t, 16> data{};
-  torque = std::clamp(torque, -270, 270);
+  // Raw 2046/2047 (+1022/+1023) are DBC Reserved/Invalid codes.
+  torque = std::clamp(torque, -1021, 1021);
   set_signal(data, 16, 8, lfa_counter_++, ByteOrder::LittleEndian);
   set_signal(data, 24, 3, 2, ByteOrder::LittleEndian);  // LKA_OptUsmSta
   set_signal(data, 27, 3, 0, ByteOrder::LittleEndian);  // LKA_RcgSta
@@ -106,13 +107,11 @@ CanFrame HyundaiCanFdCodec::make_scc_control(double accel_raw_mps2, double accel
       !std::isfinite(set_speed_kph) || !std::isfinite(jerk_mps3)) {
     throw std::invalid_argument("SCC_CONTROL contains a non-finite value");
   }
-  if (accel_raw_mps2 < -3.5 || accel_raw_mps2 > 2.0 || accel_value_mps2 < -3.5 ||
-      accel_value_mps2 > 2.0) {
-    throw std::out_of_range("SCC_CONTROL acceleration exceeds Panda range [-3.5,2.0]");
-  }
-  if (jerk_mps3 < 0.0 || jerk_mps3 > 12.7 || set_speed_kph < 0.0 || set_speed_kph > 255.0) {
-    throw std::out_of_range("SCC_CONTROL metadata is outside its CAN representation");
-  }
+  // Out-of-range values saturate at the CAN representation instead of stopping SCC output.
+  accel_raw_mps2 = std::clamp(accel_raw_mps2, -10.23, 10.24);
+  accel_value_mps2 = std::clamp(accel_value_mps2, -10.23, 10.24);
+  jerk_mps3 = std::clamp(jerk_mps3, 0.0, 12.7);
+  set_speed_kph = std::clamp(set_speed_kph, 0.0, 255.0);
 
   // HDA1 radar SCC_CONTROL contains vehicle-specific fields that are not owned by this bridge.
   // Begin with the last stock frame and overwrite only the fields this node intentionally owns.
@@ -133,7 +132,9 @@ CanFrame HyundaiCanFdCodec::make_scc_control(double accel_raw_mps2, double accel
              ByteOrder::LittleEndian);
   set_signal(data, 140, 11, physical_to_raw(accel_raw_mps2, 0.01, -10.23, 11),
              ByteOrder::LittleEndian);
-  set_signal(data, 158, 7, 30, ByteOrder::BigEndian);  // 3.0 m/s^3
+  // JerkUpperLimit/JerkLowerLimit: the configured jerk while enabled, 3.0/1.0 m/s^3 otherwise.
+  set_signal(data, 158, 7, physical_to_raw(enabled ? jerk_mps3 : 3.0, 0.1, 0.0, 7),
+             ByteOrder::BigEndian);
   set_signal(data, 166, 7, physical_to_raw(enabled ? jerk_mps3 : 1.0, 0.1, 0.0, 7),
              ByteOrder::BigEndian);
   set_signal(data, 176, 3, 2, ByteOrder::LittleEndian);

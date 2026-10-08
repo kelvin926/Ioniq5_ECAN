@@ -26,6 +26,9 @@
 - Receive-only logging uses the standalone can_logger launch/helper, not the actuation node.
 - The logger uses USB IN only in SILENT; never add hidden mode/bitrate/reset/heartbeat/UDS writes.
 - Logger timestamps are host USB completion times, not hardware CAN arrival times.
+- Offline firmware editing uses `build_panda_debug_firmware.sh --prepare-only`.
+- Export additional source edits against the patched baseline with `export_panda_safety_edits.sh`;
+  preparation/export do not establish an ARM build, device installation or ECU acceptance.
 - For confirmation-only requests, inspect and report; do not implement changes.
 - Preserve existing uncommitted work. Do not discard it or overwrite unrelated files.
 
@@ -86,10 +89,10 @@
   verification remain pending; recommend non-latched publication at 20 Hz.
 - Supported modes: `steering_rate_deg_s`, `steering_rate_rad_s`,
   `curvature_1pm`, and `direct_torque`.
-- `unfiltered_input: true` skips host target/acceleration clamps and input smoothing.
+- `unfiltered_input: true` skips host target clamps and input smoothing.
 - Acceleration has no host jerk slew; `jerk_limit_mps3` is SCC metadata.
-- Unfiltered input is not unrestricted value pass-through: lateral conversion,
-  torque limits/slew, CAN quantization, engagement, and watchdogs still apply.
+- Lateral conversion, the representable-range saturation, CAN quantization, engagement,
+  and watchdogs still apply to unfiltered input.
 - The user wants the upstream controller to own command shaping; avoid redundant
   downstream smoothing or discretionary reshaping and disclose remaining command constraints.
 - Default `use_enable_field: false` makes the enable field optional.
@@ -103,8 +106,11 @@
 - Healthy publisher loss restores stock communication/NO_OUTPUT while retaining button intent.
   Fresh input may retake ownership while moving only after prior verified ACTIVE control in the
   same uninterrupted session and completed stock restoration. OFF revokes this eligibility.
-- CAN/USB/harness/ignition faults, restoration failures, CANCEL and expired EPS recovery do not
-  auto-resume. Process/USB/Panda restart clears selection. Never replay old targets.
+- User decision (2026-10-08): after any fault (CAN/USB, CANCEL, expired EPS window, etc.),
+  restore stock, reinstall the I5R1 listener, and let a new physical LDA press or SET release
+  acknowledge the fault and re-engage, including ECU takeover while moving. Nothing resumes
+  without a new press; explicit `set_armed=false` and process restart disable button rearm.
+  Never replay old targets.
 - The user authorized scoped firmware modification/flash and moving command-gap re-takeover.
   The earlier USB-only confirmation applied to that flash, not later sessions. Recheck physical
   connection before any firmware bench/flash; the user has since reported reconnecting Panda.
@@ -115,8 +121,14 @@
 
 ## Steering and longitudinal protocol
 - Current steering output is torque: `0x12A LFA / StrTqReqVal`, at 100 Hz.
-- The host and pinned firmware torque cap of 270 counts is a command-path limit,
-  not a verified maximum MDPS motor/output torque; encoding range does not prove ECU acceptance.
+- User decision (2026-10-08): upstream owns all shaping; never cut upstream delivery for
+  out-of-range values. Saturate at the representable bounds: torque 1021 counts (avoids DBC
+  Reserved/Invalid +1022/+1023; Panda accepts 1023) and acceleration -10.23..10.24 m/s^2.
+  The local opendbc patch applies no Panda torque rate/RT/driver restriction and accepts the full
+  CAN-FD accel encoding; host code/YAML apply no slew or driver-torque limit and set SCC jerk
+  metadata to 12.7. `torque_output_scale` (270) keeps controller gain separate from the cap.
+- Do not record or document superseded limit values (user request); state current behavior only.
+- These caps are command-path limits, not verified MDPS/SCC acceptance or output capability.
 - Default path: steering rate -> target angle -> angle feedback -> torque output.
 - The ROS node has no direct steering-angle input mode yet.
 - `scripts/steering_sweep.py` already tracks target angles using torque feedback.
@@ -145,9 +157,8 @@
   with fresh valid commands/CAN and Panda permission. Healthy longitudinal may continue.
 - Temporary EPS return must not re-enable brake/ACC-latched longitudinal control,
   ignore operator cancellation, replay old steering targets, or allow raw LFA bypass.
-- After a hard fault or an expired temporary-fault window, inhibit automatic rearm;
-  require operator acknowledgement,
-  explicit rearm, and the existing stationary/physical LDA or SET activation conditions.
+- After a hard fault or an expired temporary-fault window, inhibit automatic rearm until a
+  new physical LDA/SET press (or `set_armed=true`) acknowledges it; see the button-rearm decision.
 - Preserve unknown SCC payload bits by starting from the last stock `0x1A0` template.
 - DTC reading transmits diagnostic requests; distinguish it from passive CAN reception.
 - Retain raw DTC/status bytes, restore prior Panda settings, and never treat a timeout as no faults.

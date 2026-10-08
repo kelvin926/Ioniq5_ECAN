@@ -28,6 +28,11 @@ bool SafetySupervisor::request_arm(bool arm) {
     transition(ControlState::Passive, "actuation disabled by YAML");
     return false;
   }
+  if (arm && state_ == ControlState::Fault) {
+    // A new arm request (operator service, or the node after a physical LDA/SET press)
+    // acknowledges the latched fault; channel selection still comes from new button intent.
+    transition(ControlState::Passive, "fault acknowledged by rearm");
+  }
   if (arm && !arm_requested_) {
     lateral_enabled_ = false;
     longitudinal_enabled_ = false;
