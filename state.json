@@ -470,13 +470,13 @@
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
     "branch": "codex/panda-local-safety",
-    "head": "76faada035e928268530f3cf114269ebc8e60ff6",
-    "head_subject": "Pass upstream commands through and re-engage on LDA/SET after faults",
+    "head": "60a34d1a40e3a0e7c190f9fe264431c3da33bfd6",
+    "head_subject": "Let the steering integral use the full torque range at all speeds",
     "remote_snapshot": {
       "observed_on": "2026-10-08",
       "origin_main": "77f9543569d93a370fcd48249f4c0d91f0ac3306",
-      "origin_feature": "76faada035e928268530f3cf114269ebc8e60ff6",
-      "update_result": "New branch codex/panda-local-safety pushed to origin; git ls-remote matched 76faada035e928268530f3cf114269ebc8e60ff6. origin/main was not changed; no force push.",
+      "origin_feature": "60a34d1a40e3a0e7c190f9fe264431c3da33bfd6",
+      "update_result": "New branch codex/panda-local-safety pushed to origin; git ls-remote matched 60a34d1a40e3a0e7c190f9fe264431c3da33bfd6. origin/main was not changed; no force push.",
       "scope": "Verified feature-branch source delivery. Merging to main was not requested. A state-only child receipt follows."
     },
     "working_tree": {
@@ -1792,7 +1792,7 @@
     {
       "date": "2026-10-08",
       "type": "integral_term_opened",
-      "summary": "User approved: integral_output_limit 3.78 (I term may reach about 1021 counts at scale 270) and integrator_freeze_speed_mps 0 (accumulates at standstill/low speed) in YAML and code defaults. Saturation anti-windup kept; torque_output_scale 270 kept as the Carrot calibration reference. Not pushed; no vehicle test."
+      "summary": "User approved: integral_output_limit 3.78 (I term may reach about 1021 counts at scale 270) and integrator_freeze_speed_mps 0 (accumulates at standstill/low speed) in YAML and code defaults. Saturation anti-windup kept; torque_output_scale 270 kept as the Carrot calibration reference. Pushed to codex/panda-local-safety as 60a34d1; no vehicle test."
     }
   ],
   "ecu_recovery": {
