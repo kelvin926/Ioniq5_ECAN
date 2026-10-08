@@ -244,15 +244,16 @@ LKA steering 플랫폼의 ADAS Driving 후보입니다. 실차 ECU 식별은 아
 LFA/SCC 송신 소유권을 확인하는 작업이 남아 있습니다.** stock quiet 확인과 positive UDS
 응답은 각각 기록합니다. 송신 성공만으로 ECU의 실제 제어 수용을 판단하지 않습니다.
 
-상위 제어기 팀은 목표 핸들 조향각속도(deg/s)와 목표 종방향 가속도(m/s²)를
-기존 ROS 메시지로 출력하도록 사용자와 합의했습니다. 현재 계약은 다음과 같습니다.
+2026-10-08 사용자 결정에 따라 상위 제어기(알파마요 기반)가 조향 토크(Panda count)와 목표
+종방향 가속도(m/s²)를 기존 ROS 메시지로 출력합니다. 현재 계약은 다음과 같습니다.
 
 | 항목 | 현재 값/동작 |
 | --- | --- |
 | 토픽 / 메시지 | `/ioniq5/actuation_command`, `ioniq5_ecan/ActuationCommand` |
 | 필수 값 | `lateral`, `acceleration`; 기본 `use_enable_field=false` |
-| 합의된 lateral | `steering_rate_deg_s`, 핸들 deg/s를 목표각으로 적분한 뒤 토크로 변환 |
-| 상위가 토크를 보내는 경우 | `input.lateral_mode=direct_torque`; 단위는 Panda count, Nm가 아님 |
+| lateral | `input.lateral_mode=direct_torque`; LFA 토크 Panda count, 반올림 후 ±1021 끝값, Nm가 아님 |
+| lateral=0 | 토크 0 요청, 각도 유지가 아님. 위치 유지는 상위 제어기의 폐루프 책임 |
+| 발행 주기 | 노드는 최신 값을 100 Hz로 송신, 토크 제어에는 50~100 Hz 발행 권장 |
 | acceleration | m/s², 0.01 m/s² CAN 양자화, 표현 범위 -10.23~10.24, 범위 밖은 끝값 |
 | 입력 shaping | 기본 `unfiltered_input=true`; host smoothing/clamp 생략, 토크/전송/채널 경계는 유지 |
 | command watchdog / CAN freshness | 250 / 250 ms |
@@ -307,5 +308,5 @@ rosservice call /ioniq5_ecan/set_armed "data: false"
 > camera endpoint의 정확한 ECU identity도 미확인이다. 10월 7일 CAN 분석은 오프라인 근거이며
 > 새 필드는 현재 ROS 피드백에 추가되지 않았다.
 > 차량 연결 후 read-only 및 passive 수신 확인부터 진행하고 결과를 state.json에 기록해라.
-> 합의된 핸들 조향각속도 deg/s와 가속도 m/s²를 사용하고 토크/목표각과 혼동하지 말아라.
+> lateral은 direct_torque의 토크 count, acceleration은 m/s²이다. 조향각속도/목표각과 혼동하지 말아라.
 > 차량 컴퓨터로 옮기는 요청 자체는 실제 actuator/ECU disable/flash 실행 요청이 아니다.

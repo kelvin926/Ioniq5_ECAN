@@ -97,11 +97,11 @@ UDS takeover/restore는 control thread에서 동기 실행하므로 제어 주�
 간격이 지연될 수 있습니다. USB, scheduler와 동적 할당도 남아 있어 hard real-time 보장은
 없습니다. 복구 재시도 후에는 최신 command/state/health를 다시 읽습니다.
 
-기본 입력은 steering rate를 목표각으로 적분한 뒤 Carrot Ioniq 5 토크 제어기로 변환합니다.
-`unfiltered_input=true`는 host 입력 clamp/평활화를 생략하지만 토크 변환과 Panda/CAN
-경계는 유지합니다. native angle 제어는 구현하지 않았습니다. 입력 변경은 메시지,
-callback, adapter 경계에서 수용합니다. 합의된 상위 계약은 핸들 조향각속도 deg/s와
-종방향 가속도 m/s²이며, 실제 부호/발행 주기와 차량 추종 검증은 남아 있습니다.
+기본 입력(`direct_torque`)은 상위 제어기가 계산한 LFA 토크 count를 반올림하고 ±1021에서
+끝값으로 맞춰 그대로 보냅니다. rate/curvature 모드를 고르면 목표각을 적분한 뒤 Carrot Ioniq 5
+토크 제어기로 변환합니다. native angle 제어는 구현하지 않았습니다. 입력 변경은 메시지,
+callback, adapter 경계에서 수용합니다. 현재 상위 계약은 조향 토크 count와 종방향 가속도
+m/s²이며, 실제 토크 부호/발행 주기와 차량 추종 검증은 남아 있습니다.
 
 상세 동작은 [입력 계약](input_contract.md), [상태 및 제한](safety.md),
 [raw CAN](raw_can.md), [주기와 측정](latency.md)을 참고하십시오.

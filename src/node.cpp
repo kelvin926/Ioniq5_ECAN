@@ -172,7 +172,7 @@ void Ioniq5EcanNode::load_configuration() {
   publish_raw_can_bus_topics_ = parameter<bool>("raw_can/publish_bus_topics", true);
   allow_raw_can_tx_ = parameter<bool>("raw_can/allow_tx", false);
   adapter_config_.lateral_mode =
-    lateral_mode_from_string(parameter<std::string>("input/lateral_mode", "steering_rate_deg_s"));
+    lateral_mode_from_string(parameter<std::string>("input/lateral_mode", "direct_torque"));
   adapter_config_.unfiltered_input = parameter<bool>("input/unfiltered_input", true);
   adapter_config_.lateral_scale = parameter<double>("input/lateral_scale", 1.0);
   adapter_config_.lateral_offset = parameter<double>("input/lateral_offset", 0.0);

@@ -82,11 +82,13 @@
 - Existing feedback: `/ioniq5/vehicle_state` at 20 Hz; `stamp` is publication time.
 - Its `valid` checks steering/MDPS/wheel/TCS freshness, not every optional signal.
 - Required input values: `lateral` and `acceleration`.
-- Agreed upstream contract: `lateral` is steering-wheel angle rate in deg/s (not yaw rate
-  or target angle), and `acceleration` is longitudinal acceleration in m/s^2.
-- Keep the existing ActuationCommand message and `steering_rate_deg_s` active profile.
+- Upstream contract (user decision 2026-10-08): the Alpamayo-based upstream controller computes
+  steering torque. `lateral` is the LFA `StrTqReqVal` request in Panda counts (`direct_torque`,
+  rounded, saturated at +/-1021; 0 means zero torque, not angle hold), and `acceleration` is m/s^2.
+- Keep the existing ActuationCommand message and the `direct_torque` active profile. The host
+  torque controller applies only to rate/curvature profiles.
 - Upstream owns command generation/shaping. Vehicle sign validation and publisher cadence
-  verification remain pending; recommend non-latched publication at 20 Hz.
+  verification remain pending; recommend non-latched publication at 50-100 Hz for torque.
 - Supported modes: `steering_rate_deg_s`, `steering_rate_rad_s`,
   `curvature_1pm`, and `direct_torque`.
 - `unfiltered_input: true` skips host target clamps and input smoothing.
@@ -129,7 +131,7 @@
   metadata to 12.7. `torque_output_scale` (270) keeps controller gain separate from the cap.
 - Do not record or document superseded limit values (user request); state current behavior only.
 - These caps are command-path limits, not verified MDPS/SCC acceptance or output capability.
-- Default path: steering rate -> target angle -> angle feedback -> torque output.
+- Default path: upstream torque count -> rounding/saturation -> LFA torque output.
 - The ROS node has no direct steering-angle input mode yet.
 - `scripts/steering_sweep.py` already tracks target angles using torque feedback.
 - Software angle tracking and native MDPS angle-command control are different interfaces.
@@ -190,6 +192,8 @@
 - `src/node.cpp`: ROS, USB, engagement, and ECU lifecycle.
 - `src/safety_supervisor.cpp`: existing channel engagement behavior.
 - `scripts/steering_sweep.py`: earlier vehicle control examples.
+- `scripts/torque_slider.py`, `scripts/torque_test.py`, `docs/torque_test.md`: limit-free
+  direct_torque slider (tkinter or terminal) and profile test publishers.
 - `scripts/can_logger.py` and `docs/can_logger.md`: standalone USB-IN-only ROS RAW recorder.
 - `docs/ecan_analysis_20261007.md`: current field/bit tables and dated research snapshots.
 - `patches/opendbc-hyundai-canfd-split-arm.patch`: custom channel semantics.

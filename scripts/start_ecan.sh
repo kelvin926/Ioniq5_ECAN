@@ -43,7 +43,7 @@ source "$ECAN_WORKSPACE/devel/setup.bash"
 set -u
 
 if [[ "${1:-}" == --check ]]; then
-  echo "ECAN host paths OK; topic /ioniq5/actuation_command, lateral deg/s, acceleration m/s^2."
+  echo "ECAN host paths OK; topic /ioniq5/actuation_command, lateral torque count, acceleration m/s^2."
   echo "ROS_HOME=$ROS_HOME"
   exit 0
 fi

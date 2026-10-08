@@ -127,7 +127,7 @@ install(PROGRAMS
   scripts/start_can_logger.sh
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-catkin_install_python(PROGRAMS scripts/can_logger.py
+catkin_install_python(PROGRAMS scripts/can_logger.py scripts/torque_test.py scripts/torque_slider.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

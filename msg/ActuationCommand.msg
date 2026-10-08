@@ -6,13 +6,12 @@ uint32 sequence
 # Optional deadman, used only when input.use_enable_field=true.
 bool enable
 
-# Agreed upstream input: steering-wheel angle rate in deg/s (not yaw rate or target angle).
-# The active profile uses steering_rate_deg_s. Other profiles can select:
-# steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, or direct_torque.
-# With input.unfiltered_input=true, steering-rate/curvature targets are not host-clamped or smoothed.
+# Active profile direct_torque: LFA StrTqReqVal torque request in Panda counts computed by the
+# upstream controller (not deg/s, angle or Nm). Rounded to an integer and saturated at +/-1021.
+# 0 requests zero torque. Other profiles: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm.
 float64 lateral
 
 # Interpreted as m/s^2 after configured scale/offset; this field is the pre-scale value.
-# CAN/Panda range is -3.5 .. 2.0 m/s^2, with 0.01 m/s^2 encoding resolution.
-# With input.unfiltered_input=true, the node does not jerk-limit or silently clamp this value.
+# CAN/Panda range is -10.23 .. 10.24 m/s^2, with 0.01 m/s^2 encoding resolution.
+# The node does not jerk-limit it; values outside the range saturate at the bound.
 float64 acceleration

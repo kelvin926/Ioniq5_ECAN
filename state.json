@@ -639,7 +639,7 @@
       "lateral",
       "acceleration"
     ],
-    "default_lateral_mode": "steering_rate_deg_s",
+    "default_lateral_mode": "direct_torque",
     "acceleration_unit": "m/s^2",
     "supported_lateral_modes": [
       "steering_rate_deg_s",
@@ -649,7 +649,7 @@
     ],
     "unfiltered_input": true,
     "use_enable_field": false,
-    "final_upstream_contract": "Agreed on 2026-10-06: existing ActuationCommand.lateral is steering-wheel angle rate in deg/s, acceleration is longitudinal acceleration in m/s^2. Only these two fields are required under use_enable_field=false. Non-latched 20 Hz publication recommended; physical steering sign and actual cadence/jitter still require integration validation.",
+    "final_upstream_contract": "User decision 2026-10-08: the Alpamayo-based upstream controller computes steering torque. ActuationCommand.lateral is the LFA StrTqReqVal request in Panda counts (direct_torque: rounded, saturated at +/-1021, 0 = zero torque), acceleration is m/s^2. Only these two fields are required under use_enable_field=false. Node resends the latest value at 100 Hz; 50-100 Hz non-latched publication recommended. Torque sign versus steering-angle direction, MDPS output per count and actual cadence/jitter require integration validation.",
     "source": [
       "config/ioniq5_ecan.yaml",
       "msg/ActuationCommand.msg",
@@ -1792,7 +1792,22 @@
     {
       "date": "2026-10-08",
       "type": "integral_term_opened",
-      "summary": "User approved: integral_output_limit 3.78 (I term may reach about 1021 counts at scale 270) and integrator_freeze_speed_mps 0 (accumulates at standstill/low speed) in YAML and code defaults. Saturation anti-windup kept; torque_output_scale 270 kept as the Carrot calibration reference. Pushed to codex/panda-local-safety as 60a34d1; no vehicle test."
+      "summary": "User approved (applies to rate/curvature profiles): integral_output_limit 3.78 (I term may reach about 1021 counts at scale 270) and integrator_freeze_speed_mps 0 (accumulates at standstill/low speed) in YAML and code defaults. Saturation anti-windup kept; torque_output_scale 270 kept as the Carrot calibration reference. Pushed to codex/panda-local-safety as 60a34d1; no vehicle test."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "direct_torque_contract",
+      "summary": "User decision: the upstream controller computes steering torque. Active YAML lateral_mode direct_torque; lateral is the LFA torque count (rounded, +/-1021 saturation, 0 = zero torque), host torque controller bypassed, 85-degree STEER_REQ cut pattern kept. Node parameter default is also direct_torque; the CommandAdapterConfig struct default used by unit tests and the steering_rate profiles remain available. README, input contract, message comments, handoff docs, start script and AGENTS updated."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "torque_test_publisher_added",
+      "summary": "Added scripts/torque_test.py (installed via catkin_install_python) and docs/torque_test.md: publishes hold/square/ramp/sine direct_torque profiles at 100 Hz through the ECAN node, waits for lateral_control_active, adds no amplitude/rate/speed limits, sends zero torque on exit and logs vehicle_state to CSV. Windows py_compile and profile-function check only; no ROS run or vehicle test."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "torque_slider_added",
+      "summary": "Added scripts/torque_slider.py per user request: interactive slider (tkinter window, automatic curses terminal gauge without DISPLAY/tkinter) publishing direct_torque at 100 Hz, default span +/-1021, no rate/speed limits, live vehicle_state status, zero-torque tail on exit and CSV log. No package installation. Verified py_compile and sender thread/CSV/clamp with a fake ROS object only; no ROS, GUI or vehicle run."
     }
   ],
   "ecu_recovery": {

@@ -1,9 +1,9 @@
 # ROS 입력 계약
 
-2026-10-06 사용자와 합의한 입력은 **목표 핸들 조향각속도(deg/s)**와
-**목표 종방향 가속도(m/s²)**입니다. 동료가 별도 상위 제어기를 만들어 이 형태로 출력합니다.
-모델 action, 목표 조향각, 앞바퀴 각속도, 차량 yaw rate 또는 페달 비율을 직접 보내지 않습니다.
-기본 연구장 YAML의 `input.lateral_mode=steering_rate_deg_s`, scale=1, offset=0을 유지합니다.
+2026-10-08 사용자 결정에 따라 입력은 **LFA 조향 토크 요청(Panda count)**과
+**목표 종방향 가속도(m/s²)**입니다. 상위 제어기(알파마요 기반)가 조향 토크를 직접 계산합니다.
+모델 action, 목표 조향각, 조향각속도, 차량 yaw rate 또는 페달 비율을 보내지 않습니다.
+기본 연구장 YAML은 `input.lateral_mode=direct_torque`, scale=1, offset=0입니다.
 
 명령 토픽은 `/ioniq5/actuation_command`이며 메시지는
 [`ActuationCommand.msg`](../msg/ActuationCommand.msg)입니다.
@@ -13,20 +13,37 @@
 | `stamp` | source timestamp, 지연 분석용. watchdog에는 사용하지 않음 |
 | `sequence` | 선택적 순서 검사. 0은 검사 생략, wraparound 및 timeout 후 publisher 재시작 허용 |
 | `enable` | `input.use_enable_field=true`일 때 매 메시지 deadman |
-| `lateral` | 합의된 활성 프로파일에서 목표 핸들 조향각속도, deg/s |
+| `lateral` | 활성 프로파일에서 LFA `StrTqReqVal` 토크 요청, Panda count |
 | `acceleration` | 목표 종방향 가속도, m/s², 양수 가속 / 음수 감속 |
 
 기본 `use_enable_field=false`에서는 `lateral`과 `acceleration` 두 값만 필요합니다.
 유한한 최신 값을 계속 보내야 하며, 기본 command watchdog은 호스트 수신 시각 기준
 250 ms입니다. source timestamp와 호스트 steady clock은 별도 clock domain입니다.
 
-송신 권장은 20 Hz, non-latched publisher입니다. 같은 메시지에 두 값을 함께 넣습니다.
+송신 권장은 non-latched publisher입니다. 같은 메시지에 두 값을 함께 넣습니다. 노드는 100 Hz마다
+가장 최근 값을 보내므로(그 사이에는 같은 값 유지), 토크 제어에는 50~100 Hz 발행을 권장합니다.
 `stamp`는 현재 수신 유효성 검사에 쓰이지 않으므로 상위 출력 노드가 오래된 모델 계획이나
 명령을 새 값처럼 반복 발행하지 않아야 합니다. `sequence=0`도 허용하지만 순서 번호를
 증가시켜 보내는 것을 권장합니다. 조향 부호는 차량의 실제 `steering_angle_deg` 증가 방향과
 대조하여 검증해야 합니다. 가속도는 CAN 표현 범위 -10.23~10.24 m/s²로 전달합니다.
 2026-10-07 bag 대조에서는 조향각 피드백의 좌회전 양수 해석을 지지했습니다.
-상위 `lateral` 명령과 LFA 토크 요청의 실제 좌우 방향은 별도 실차 통합 확인이 필요합니다.
+DBC 주석은 음수 토크를 핸들 시계방향(우회전) 가속 토크로 설명하지만, 이 차량에서 토크 부호와
+조향각 증가 방향의 관계는 실차 통합 확인이 필요합니다.
+
+## direct_torque 입력
+
+- `lateral`은 정수로 반올림해 `StrTqReqVal`에 그대로 넣습니다. ±1021 밖의 값은 끝값으로 맞춥니다.
+  1021은 DBC Reserved/Invalid 원시값(+1022/+1023)을 피하는 대칭 최대값입니다.
+- 1 count는 DBC 주석상 1/128 Nm(최대 약 ±8 Nm) 추가 토크 요청입니다. 이 차량 MDPS의 실제
+  출력과 수용 범위는 확인되지 않았습니다.
+- `lateral=0`은 토크 0 요청이며 현재 각도 유지가 아닙니다. 위치 유지는 상위 제어기가
+  `/ioniq5/vehicle_state`의 `steering_angle_deg`, `steering_rate_deg_s`, `driver_torque` 등으로
+  폐루프를 구성해야 합니다.
+- 호스트 토크 제어기(목표각 적분, PID, 피드포워드, 마찰, 저속 보정)는 거치지 않습니다.
+  호스트 slew와 운전자 토크 제한도 없습니다.
+- 85도 이상에서는 EPS 오류 예방을 위해 89프레임마다 2프레임 동안 토크 값은 유지하고
+  요청 비트(`ActToiSta`)만 내립니다.
+- 채널 OFF, EPS 일시 오류, 고장 중에는 상위 값과 관계없이 토크 0을 보냅니다.
 
 ## 상시 구독과 차량 버튼
 
@@ -41,8 +58,8 @@
 | LDA 한 번 누름 | 조향 전용 ON, 다시 누르면 OFF |
 | SET 누르고 놓음 | 조향+종방향 ON, 다시 누르고 놓으면 OFF |
 
-버튼 OFF 중에도 구독은 유지하고 조향 목표각을 실측각으로 초기화합니다.
-OFF 중 수신된 조향각속도를 미리 적분하거나 다음 ON에 과거 목표를 이어 붙이지 않습니다.
+버튼 OFF 중에도 구독은 유지하며 토크는 0을 보냅니다. rate/curvature 모드에서는 조향 목표각을
+실측각으로 초기화하고, OFF 중 값을 미리 적분하거나 다음 ON에 과거 목표를 이어 붙이지 않습니다.
 최신 값이 계속 있으면 OFF 중에도 ECU 소유권 및 비활성 CAN 프레임은 유지되며,
 순정 ADAS 통신 복귀와는 구분됩니다. 기본 I5R1 프로파일에서 값이 250 ms 끊기면
 소유권을 해제하고 순정 ECU 통신 복구 후 대기로 돌아가되 버튼 ON/OFF 선택을 유지합니다.
@@ -53,17 +70,17 @@ OFF 중 수신된 조향각속도를 미리 적분하거나 다음 ON에 과거 
 복구 실패 시 구독은 계속하지만 제어는 금지합니다. 정차 시험에서 ECU 통신 복구는 관측했으나
 ACTIVE 추종/주행 중 재인계와 차량 보조 기능 정상 복구는 확인되지 않았습니다. [검증 기록](validation.md)을 참고하십시오.
 
-`lateral=0`은 누적 목표 조향각 유지이며 중앙 복귀가 아닙니다.
+`direct_torque`에서 `lateral=0`은 토크 0 요청입니다. rate 모드라면 누적 목표 조향각 유지입니다.
 두 필드가 모두 0이어도 유효한 명령입니다. 값이 없다는 뜻은 토픽의 최신 수신이 없다는 뜻입니다.
 
 ## 횡방향 모드
 
 | `input.lateral_mode` | 입력 단위 | 차량 출력까지의 변환 |
 | --- | --- | --- |
-| `steering_rate_deg_s` (기본) | deg/s | rate 적분 → 목표 조향각 → 실측각 피드백 → 토크 |
+| `direct_torque` (기본) | Panda torque count | 반올림, ±1021 끝값 처리 후 그대로 LFA 토크 |
+| `steering_rate_deg_s` | deg/s | rate 적분 → 목표 조향각 → 실측각 피드백 → 토크 |
 | `steering_rate_rad_s` | rad/s | deg/s로 변환한 뒤 동일 경로 |
 | `curvature_1pm` | 1/m | wheelbase/steering ratio로 목표각 변환 → 동일 토크 제어기 |
-| `direct_torque` | Panda torque count | torque count 제한 및 변화율 적용 |
 
 ROS 노드에는 직접 조향각 입력 모드가 없습니다. 목표각을 토크로 추종하는 방식과
 MDPS에 native angle 명령을 보내는 방식은 다릅니다. 이 HDA1 차량의 native angle 수용 여부는
@@ -84,13 +101,15 @@ scale/offset 적용 후 YAML 범위(`-10.23 .. 10.24 m/s²`, CAN 11-bit 표현 �
 `unfiltered_input=false`에서는 설정한 rate/목표각 범위로도 clamp합니다.
 `longitudinal.jerk_limit_mps3`(12.7, CAN 최대값)는 활성 SCC의 `JerkUpperLimit`/`JerkLowerLimit`
 metadata이며 host 가속도 slew 기능이 아닙니다. 차량이 이 값을 jerk 제한으로 쓰는지는
-확인되지 않았습니다. 두 모드 모두 토크 변환, ±1021 count 상한, CAN 양자화, 채널 허가와
-watchdog은 남습니다. active YAML은 host torque slew(`torque_rate_up/down: 2042`)와
-driver torque 제한(`driver_torque_multiplier: 0`)을 끕니다. 토크 제어기 출력 1.0은
-`torque_output_scale` 270 count에 대응하고, `max_torque` 1021은 clamp로만 쓰입니다.
-적분항은 정규화 3.78(약 1021 count)까지 쓸 수 있고 정차와 저속에서도 누적합니다.
-출력이 상한에 닿으면 적분 누적을 멈추며, 버튼 OFF와 재인계 때 적분과 목표각을 초기화합니다.
+확인되지 않았습니다. 모든 모드에서 ±1021 count 상한, CAN 양자화, 채널 허가와 watchdog은
+남습니다. active YAML은 host torque slew(`torque_rate_up/down: 2042`)와
+driver torque 제한(`driver_torque_multiplier: 0`)을 끕니다.
 1021은 DBC Reserved/Invalid 원시값(+1022/+1023)을 피하는 대칭 최대값입니다.
+
+아래 호스트 토크 제어기 설정은 rate/curvature 모드에서만 쓰이며 `direct_torque`에는 영향이 없습니다.
+토크 제어기 출력 1.0은 `torque_output_scale` 270 count에 대응하고, `max_torque` 1021은 clamp로만
+쓰입니다. 적분항은 정규화 3.78(약 1021 count)까지 쓸 수 있고 정차와 저속에서도 누적합니다.
+출력이 상한에 닿으면 적분 누적을 멈추며, 버튼 OFF와 재인계 때 적분과 목표각을 초기화합니다.
 NaN/Inf 입력은 맞출 범위가 없어 기존처럼 무효 명령으로 처리합니다.
 
 ## 상태와 피드백

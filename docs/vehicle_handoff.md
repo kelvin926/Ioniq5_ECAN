@@ -14,15 +14,16 @@
 | 제어 CAN | physical CAN1 / Panda logical bus 0 / ECAN 500/2000 kbps |
 | 비-ECAN | transceiver 및 forwarding 비활성화, camera bus 2 미사용 |
 | Panda | Red Panda, 일련번호는 로컬 설정 |
-| 명령 | `/ioniq5/actuation_command`, 기본 `lateral` deg/s + `acceleration` m/s² |
+| 명령 | `/ioniq5/actuation_command`, 기본 `lateral` 토크 count(`direct_torque`) + `acceleration` m/s² |
 | 피드백 | `/ioniq5/vehicle_state` 20 Hz, [현재 필드/단위](vehicle_state.md) |
 | 차량 조향 출력 | LFA `0x12A` 토크 100 Hz, native angle 제어 미구현/차량 지원 미확인 |
 | 종방향 출력 | SCC `0x1A0` 및 FCA `0x160` 50 Hz |
 | launch 기본값 | actuation/longitudinal/auto arm/raw TX가 켜진 연구장 YAML |
 | 관찰용 설정 | `config/ioniq5_ecan_passive.yaml`, 네 기능 모두 false |
 
-기본 `unfiltered_input=true`, `use_enable_field=false`입니다. 입력 scale/offset, rate→angle→torque
-변환, torque ±1021 제한, CAN 양자화, 채널 허가와 watchdog은 유지됩니다.
+기본 `lateral_mode=direct_torque`, `unfiltered_input=true`, `use_enable_field=false`입니다.
+상위 토크 count를 반올림해 그대로 보내며, 입력 scale/offset, torque ±1021 제한, CAN 양자화,
+채널 허가와 watchdog은 유지됩니다. 호스트 토크 제어기는 거치지 않습니다.
 토크 상한은 1021 count, 가속도는 -10.23~10.24 m/s²이고 범위 밖 값은 끝값으로 맞춥니다.
 Panda/host는 토크 변화율과 운전자 토크 제한을 적용하지 않습니다.
 이 범위는 MDPS/SCC 수용이 확인된 값이 아니며 빌드/flash 전입니다.

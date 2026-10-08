@@ -1,7 +1,7 @@
 # Ioniq5_ECAN
 
 2022 Ioniq 5 HDA1 연구차용 ROS 1 Noetic ECAN 제어기입니다.
-상위 제어기의 핸들 조향각속도와 종방향 가속도를 받아 Red Panda로 차량 CAN 명령을 보냅니다.
+상위 제어기가 계산한 조향 토크와 종방향 가속도를 받아 Red Panda로 차량 CAN 명령을 보냅니다.
 대상 환경은 Ubuntu 20.04, Hyundai K 하네스, Red Panda, ECAN logical bus 0입니다.
 
 ## ROS 입력
@@ -12,7 +12,7 @@
 
 | 필수 필드 | 의미 | 단위 |
 | --- | --- | --- |
-| `lateral` | 목표 핸들 조향각속도. 목표 조향각이나 차량 요레이트가 아님 | deg/s |
+| `lateral` | LFA 조향 토크 요청(`StrTqReqVal`). 정수로 반올림, ±1021에서 끝값 | Panda count |
 | `acceleration` | 목표 종방향 가속도. 양수 가속, 음수 감속 | m/s² |
 
 전체 메시지 구조는 다음과 같습니다.
@@ -25,11 +25,12 @@ float64 lateral
 float64 acceleration
 ```
 
-두 필수 값을 같은 메시지에 넣어 non-latched 20 Hz로 발행하는 것을 권장합니다.
-수신 시각 기준 250 ms 동안 새 명령이 없으면 입력 단절로 처리합니다.
+두 필수 값을 같은 메시지에 넣어 non-latched로 발행합니다. 노드는 최신 값을 100 Hz로 다시 보내므로
+토크 제어에는 50~100 Hz 발행을 권장합니다. 수신 시각 기준 250 ms 동안 새 명령이 없으면 입력 단절로 처리합니다.
 가속도는 CAN 표현 범위 -10.23~10.24 m/s²로 전달하고 범위 밖 값은 끝값으로 맞춥니다.
-차량의 가속도 수용 범위와 조향 좌우 부호는 실차 통합 검증이 필요합니다.
-`lateral=0`은 누적 목표각 유지이지 핸들 중앙 복귀가 아닙니다. 두 값이 0이어도 유효한 입력입니다.
+`lateral=0`은 토크 0 요청이며 각도 유지가 아닙니다. 두 값이 0이어도 유효한 입력입니다.
+1 count는 DBC 주석상 1/128 Nm 요청이지만 이 차량의 실제 출력, 토크 좌우 부호와 가속도 수용
+범위는 실차 통합 검증이 필요합니다.
 
 발행 형식 예시입니다. 실제 차량에서는 아래 0 입력도 제어 명령이라는 점에 주의하십시오.
 
@@ -53,7 +54,7 @@ IMU, 페달, 기어와 SCC의 개별 유효 시각은 제공하지 않습니다.
 
 ```text
 상위 ROS 제어기 → /ioniq5/actuation_command → ECAN 제어기 → Red Panda → 차량 ECU
-  lateral      → 목표 조향각 적분 → 실측각 피드백 → LFA 0x12A 토크, 100 Hz
+  lateral      → 토크 count 반올림/끝값 처리 → LFA 0x12A 토크, 100 Hz
   acceleration → SCC 0x1A0 / FCA 0x160 가속도 명령, 50 Hz
 ```
 
@@ -63,7 +64,7 @@ IMU, 페달, 기어와 SCC의 개별 유효 시각은 제공하지 않습니다.
 - 브레이크는 종방향만 해제하며 SET 재조작 전까지 재개하지 않습니다.
 - CANCEL, CAN/USB 고장, EPS 복귀 창 만료 등 고장 뒤에는 순정 통신을 복구하고 버튼 대기로 돌아갑니다. 운전자가 LDA를 누르거나 SET을 눌렀다 놓으면 주행 중에도 다시 제어를 인계합니다. 서비스로 명시 OFF한 경우와 프로세스 재시작은 예외입니다.
 
-기본 입력 평활화는 생략하지만 조향 rate→torque 변환, 토크 표현 범위, Panda 허가와 CAN 양자화는 유지합니다.
+호스트는 토크를 다시 계산하거나 평활화하지 않습니다. 토크 표현 범위, 85도 이상 요청 비트 패턴, Panda 허가와 CAN 양자화는 유지합니다.
 I5R1 확장 펌웨어가 필요하며, 실제 출력은 채널 허가와 ECU 소유권 확인 후에만 수행합니다.
 버튼 OFF의 ECAN 비활성화와 입력 단절 때의 순정 ECU 통신 복구는 다른 동작입니다.
 
@@ -113,6 +114,7 @@ USB 초기 수신과 Panda 첫 RX 경쟁 조건의 수정, 관련 호스트 18�
 - [설치와 차량 컴퓨터 시작 절차](docs/vehicle_computer_handoff.md)
 - [현재 ROS 피드백 필드](docs/vehicle_state.md), [상위 입력 계약](docs/input_contract.md)
 - [상태와 제어 제한](docs/safety.md), [구조](docs/architecture.md), [raw CAN](docs/raw_can.md)
+- [조향 토크 시험 발행기](docs/torque_test.md): 상위 제어기 대신 슬라이더나 파형으로 토크 발행, CSV 기록
 - [Panda 펌웨어 빌드/flash](docs/panda_firmware.md), [upstream 근거](docs/upstream.md)
 - [차량 없이 Panda safety 로컬 편집](docs/panda_safety_local.md): 전체 소스 준비와 추가 변경 패치 추출
 - [실차 이력](docs/vehicle_handoff.md), [날짜별 관측](docs/evidence/2026-10-06/README.md)

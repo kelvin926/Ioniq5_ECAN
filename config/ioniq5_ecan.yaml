@@ -32,9 +32,11 @@ raw_can:
   allow_tx: true
 
 input:
-  # Agreed ROS contract: lateral = steering-wheel angle rate (deg/s), acceleration = m/s^2.
+  # ROS contract (user decision 2026-10-08): lateral = LFA StrTqReqVal torque request in
+  # Panda counts (rounded, saturated at +/-1021), computed by the upstream controller;
+  # acceleration = m/s^2. The host torque controller below is bypassed in direct_torque.
   # Options: steering_rate_deg_s, steering_rate_rad_s, curvature_1pm, direct_torque.
-  lateral_mode: "steering_rate_deg_s"
+  lateral_mode: "direct_torque"
   # Do not clamp/slew the ROS steering-rate input. Values beyond the CAN representation
   # (torque and acceleration ranges below) saturate instead of stopping output.
   # Torque conversion, CAN quantization, engagement and watchdogs remain.
