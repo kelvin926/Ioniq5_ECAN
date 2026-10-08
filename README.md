@@ -115,13 +115,14 @@ USB 초기 수신과 Panda 첫 RX 경쟁 조건의 수정, 관련 호스트 18�
 순정 AEB 유지도 보장하지 않습니다. [검증 기록](docs/validation.md)에 범위를 구분했습니다.
 
 10월 7일 오프라인 ECAN 분석은 138개 ID와 1,914,473프레임을 조사했습니다.
-현재 한국어 표에는 97개 ID, 605개 필드 배치/대안, 3,892개 해석 비트를 표시합니다.
-동시 기록 GPS/레이더는 CAN 해석의 참조이며, 새 추론 필드는 현재 ROS 피드백에 추가되지 않았습니다.
+10월 7일 한국어 표에는 97개 ID, 605개 필드 배치/대안, 3,892개 해석 비트를 표시합니다.
+10월 8일 검증으로 틀린 필드를 고치고 확인된 필드를 더해 `/ioniq5/ecan_signals`는 131개 ID,
+726개 필드를 발행합니다. 동시 기록 GPS/레이더는 CAN 해석의 참조이며 `vehicle_state`는 그대로입니다.
 
 - [설치와 차량 컴퓨터 시작 절차](docs/vehicle_computer_handoff.md)
 - [현재 ROS 피드백 필드](docs/vehicle_state.md), [상위 입력 계약](docs/input_contract.md)
 - [상태와 제어 제한](docs/safety.md), [구조](docs/architecture.md), [raw CAN](docs/raw_can.md)
-- [ECAN 전체 해석 필드 토픽](docs/ecan_signals.md): 분석한 97개 ID, 604개 필드를 `/ioniq5/ecan_signals`로 발행
+- [ECAN 전체 해석 필드 토픽](docs/ecan_signals.md): 검증한 131개 ID, 726개 필드를 `/ioniq5/ecan_signals`로 발행
 - [조향 토크 시험 발행기](docs/torque_test.md): 상위 제어기 대신 슬라이더나 파형으로 토크 발행, CSV 기록
 - [Panda 펌웨어 빌드/flash](docs/panda_firmware.md), [upstream 근거](docs/upstream.md)
 - [차량 없이 Panda safety 로컬 편집](docs/panda_safety_local.md): 전체 소스 준비와 추가 변경 패치 추출

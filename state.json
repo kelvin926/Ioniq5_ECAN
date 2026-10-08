@@ -1852,6 +1852,16 @@
       "date": "2026-10-08",
       "type": "receive_only_capture_10s",
       "summary": "User request: 10 s receive-only capture with scripts/start_can_logger.sh duration_s:=10 publish:=false on the vehicle computer (ignition on, harness_status 1, Panda SILENT). 28,877 frames, 133 IDs, about 2,889 frames/s, all bus 0, no returned/rejected; LFA 0x12A 100 Hz, SCC 0x1A0 50 Hz, 0x125/0xEA/0xA0/0x35/0x4A about 100 Hz, 0x175/0x1CF/0x160 50 Hz. Meta: duration_complete, usb_control_writes 0, CAN TX calls 0, serial not recorded. First Noetic launch capture of the standalone logger on the vehicle; roslaunch needed an external stop after the node finished. Copied to the laptop log/can_logger (git-ignored), SHA-256 721ff6d7aa8101a9ea515ab46e45f947e087cc04f9e7d0e63e4eef04a620b81e matched."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "destination_capture_analysis",
+      "summary": "Analyzed the 10 s standstill capture taken with a navigation destination set (log/can_logger/can_20261008T130743_772533Z.csv) against the 2026-10-07 arrays. Same 133-ID set minus ADASIS-like 0x4B8/0x4B9/0x4BA/0x4BE/0x4BF, which on 10-07 were sent only while moving (0x4B9/0x4BE/0x4B8/0x4BF never at wheel speed <0.5), so their absence is not evidence about route data. 0x4B4 all zero (10-07 had position offsets), 0x4DF changed to ff030c3f00000000 (never seen on 10-07; destination-related candidate, meaning unknown). New verified interpretation: 0x4EB is a KST clock (byte0 weekday bitmask Mon=0x40..Sun=0x01, hour=byte1>>3, minute=byte2, second=byte3), matching 3246/3246 frames on 10-07 and 50/50 on 10-08. No explicit turn-by-turn maneuver message identified on ECAN; a moving capture with a destination is needed to check 0x4B9 CALCULATED_ROUTE and route profiles."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "ecan_validation_and_interpretation",
+      "summary": "Validated 604 interpreted fields (205 confirmed, 124 consistent, 257 unverifiable, 18 contradicted with proposed fixes), structured all 41 uninterpreted IDs (32 with verified CRC8/CRC16 plus change counters, 29 constant), and explained 548 of 1,197 varying unassigned bits at confirmed/strong level. Key results re-checked from raw data. See ecan_validation_20261008. Definitions and published tables not yet updated. Applied to definitions on user approval (131 IDs / 726 fields); docs aligned."
     }
   ],
   "ecu_recovery": {
@@ -3486,5 +3496,43 @@
     },
     "eps_fault_pattern": "At sustained commands of about 490 counts and above the MDPS LKA fault flag rose about 70 ms after output resumed; the node paused lateral (SOFT_DISABLING) about 130 ms until the flag cleared, then resumed, repeating about every 220 ms. Every pause recovered within the 3 s window.",
     "interpretation_limit": "Single standstill session; whether the MDPS limit depends on torque level, rate, angle, speed or duration is unverified."
+  },
+  "ecan_validation_20261008": {
+    "observed_on": "2026-10-08",
+    "source": "Offline re-analysis on the laptop of the 2026-10-07 recording (1,914,473 frames, 7 captures, GNSS/radar references) and the 2026-10-08 10 s standstill capture; outputs in git-ignored build/validation-20261008/ (validation_results.json, unknown_ids_results.json, unassigned_bits_results.json and summaries).",
+    "existing_fields": {
+      "verdicts": {
+        "confirmed": 205,
+        "consistent": 124,
+        "unverifiable": 257,
+        "contradicted": 18
+      },
+      "key_corrections": [
+        "0x125.STEERING_ANGLE#004 (+0.1, left positive) is correct; #002 and 0x0EA.STEERING_ANGLE_2 have the wrong sign (r +0.96..+0.996 vs GNSS curvature in main captures, re-checked).",
+        "0x1A0.ObjValid is inverted: 1 on all 29,921 no-object placeholder frames (ObjDist 204.6 m), 0 on 2,920 real-object frames (re-checked).",
+        "0x1A0.ACC_ObjRelSpd#030 preferred over #003 (#003 overlaps ObjValid bit).",
+        "0x060.BRAKE_PRESSED behaves as an auto-hold/standstill indication, not the driver pedal.",
+        "0x0A0.MOVING_FORWARD fields stay 0 while driving forward; do not use for direction.",
+        "0x1AA.CRUISE_BUTTONS/LFA_BTN do not follow presses; use 0x1CF.",
+        "0x04A.IMU_VerAccelVal is the low byte of a 16-bit vertical acceleration (208:16).",
+        "0x1BA.BCW_RtSndWrngSta width should be 2 bits.",
+        "Seven COUNTER_ALT/ALIVE fields are message-change counters, not per-frame counters."
+      ],
+      "undecidable_alternatives": "BRAKE_PRESSURE #003/#008 identical in data; DISTANCE_SETTING and StopReq alternatives constant because SCC never engaged."
+    },
+    "unknown_41_ids": {
+      "structure": "24 IDs carry CRC8 poly 0x1D init 0xFF xorout 0xEA over [ID low, ID high, byte1..7] with a change counter in bits 12..15 (57/57 distinct payloads re-checked); 8 IDs carry the Hyundai CAN-FD CRC16 in bytes 0..1 plus a change sequence in byte2 (18/18 re-checked, rare 0xFFFF markers); 9 have no checksum.",
+      "candidates": "0x4F2 bits 54..63 follow 0x41C.LIGHT_LEVEL (r 0.75 re-checked, 0.81 agent lag fit); tunnel-related state bits in 0x4DF/0x382/0x384 and a darkness bit in 0x41A from a single tunnel pass (strong candidates only); 0x4DF bits 0..9 0 on 10-07 and 1023 on 10-08 with a destination set (weak).",
+      "uninterpretable": "29 IDs have constant payloads apart from CRC/counter on both days; public DBCs (pinned opendbc b72c1fd, tylerharvey Ioniq5_CAN 2c08cf3, egmpdbc, others) give no layout that fits."
+    },
+    "unassigned_bits": {
+      "varying_uncovered_before": 1197,
+      "explained_confirmed_or_strong": 548,
+      "still_unexplained_after_all": 335,
+      "examples": "Front-axle connection state (0x035 52:2, 0x0F5 92, 0x2E0 ramp), front/rear regen and total brake demand (0x065, 0x0F5), speed-dependent motor torque limits (0x0F5/0x10A/0x120), brake/AVH/BSD/dark copies, 0x225 72:9 0.1 km trip counter (matches wheel-integrated 4.9 km), 0x4EB clock with weekday."
+    },
+    "navigation": "No explicit turn-by-turn messages on ECAN. Public sources place Hyundai/Kia TBT on the multimedia bus (head unit to cluster); ADASIS SEGMENT 'Part of Calculated Route' 2-bit flag (0 not, 1 part of route, 2 unknown, 3 N/A per ADASIS v2.0.3) is the route-related field to test in a moving capture with a destination set.",
+    "applied_to_definitions": true,
+    "applied": "User approved: docs/evidence/2026-10-08/ecan-validation-overlay-20261008.json (7 removals, 12 corrections, 129 additions incl. 0x4EB weekday) applied by scripts/generate_ecan_signals.py; config/ecan_signals.json now 131 IDs / 726 fields. Weak candidates, SHARED/UNKNOWN/filler copies and constant-only meanings stay out. Summaries copied to docs/evidence/2026-10-08/; the overlay JSON is the tracked source (builder script and raw agent outputs stay in git-ignored build/validation-20261008/)."
   }
 }
