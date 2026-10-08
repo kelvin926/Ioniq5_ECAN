@@ -482,23 +482,20 @@
   },
   "repository": {
     "remote": "https://github.com/kelvin926/Ioniq5_ECAN",
-    "branch": "codex/panda-local-safety",
-    "head": "43a10e1223f4e56bd427e4d6c44b409355a6c121",
-    "head_subject": "Write ECAN signal definitions with LF and record publication",
+    "branch": "main (also codex/panda-local-safety)",
+    "head": "c9aa75264baa285c3248ee03308abdebe899f6b9",
+    "head_subject": "Merge vehicle sensor-suite ECAN work and record the standstill steering test",
     "remote_snapshot": {
       "observed_on": "2026-10-08",
-      "origin_main": "43a10e1223f4e56bd427e4d6c44b409355a6c121",
-      "origin_feature": "43a10e1223f4e56bd427e4d6c44b409355a6c121",
-      "update_result": "User requested main: origin/main fast-forwarded from 77f9543569d93a370fcd48249f4c0d91f0ac3306 to 43a10e1223f4e56bd427e4d6c44b409355a6c121 (8 commits from codex/panda-local-safety); git ls-remote matched for main and the feature branch. No force push.",
-      "scope": "Verified main and feature-branch source delivery. A state-only child receipt follows on both."
+      "origin_main": "c9aa75264baa285c3248ee03308abdebe899f6b9",
+      "origin_feature": "c9aa75264baa285c3248ee03308abdebe899f6b9",
+      "update_result": "Fast-forward push of main and codex/panda-local-safety from 3cbdd0376167d8b87b30449625aa985266c2a79d to c9aa75264baa285c3248ee03308abdebe899f6b9; git ls-remote matched both. No force push.",
+      "scope": "Verified source delivery including the merged vehicle sensor-suite work. A state-only child receipt follows."
     },
     "working_tree": {
-      "observed_on": "2026-10-07",
-      "preexisting_changes": "Old main was already diverged and in an unfinished merge with staged logger files and unresolved paths. Full .git/worktree/ignored files preserved without resolving or discarding them.",
-      "changes_in_this_request": "Earlier Git synchronization/state receipts preserved. Current approved sensor integration adds launch-name option, pure dashboard decoder/unit tests, test registration, docs/guidance/state and the seven-file external sensor-hook deployment patch. Existing build/devel/control/config/Cabana/global files retained.",
-      "existing_work_preserved": true,
-      "commit_or_push_performed": false,
-      "push_status": "not_requested_local_sync_and_sensor_integration_only"
+      "observed_on": "2026-10-08",
+      "vehicle_computer": "Checkout at ~/catkin_ws_ioniq5/src/ioniq5_ecan backed up to backups/ioniq5_ecan_wip_before_sync_20261008.tar.gz (conflicted AGENTS/README/state plus sensor files), verified sensor files identical to origin/main, then reset to origin/main c9aa752; stash before-user-pull-20261008 retained.",
+      "laptop": "Clean after push."
     },
     "head_scope": "Current local base commit; offline-editing workflow/docs/state changes remain uncommitted on the codex branch.",
     "delivery_snapshot": {
