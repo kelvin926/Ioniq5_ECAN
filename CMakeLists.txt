@@ -65,6 +65,7 @@ pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 add_message_files(
   FILES
   ActuationCommand.msg
+  EcanSignals.msg
   RawCanFrame.msg
   VehicleState.msg
 )
@@ -128,6 +129,7 @@ install(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 catkin_install_python(PROGRAMS scripts/can_logger.py scripts/torque_test.py scripts/torque_slider.py
+  scripts/ecan_signal_decoder.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

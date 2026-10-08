@@ -11,7 +11,7 @@
 | cluster | control loop 다섯 주기마다, 목표 20 Hz |
 | CAN RX | 별도 libusb thread, USB read timeout 20 ms |
 | raw TX | ROS callback에서 gate 확인 후 직접 USB write, subscriber queue 256 |
-| vehicle state / diagnostics | ROS timer, 20 Hz |
+| vehicle state / diagnostics | ROS timer, 100 Hz / 20 Hz |
 | Panda health | 10 Hz |
 | heartbeat | 2 Hz, `ACTIVE` 진입과 일시 오류 복귀 시 즉시 전송 |
 | disabled ECU tester-present | 정상 제어/복귀 대기에서 각 ECU 0.8초 이내 목표 |

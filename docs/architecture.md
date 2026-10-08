@@ -29,7 +29,7 @@ Red Panda CAN RX, separate thread
             └─ Panda whitelist/content checks → USB write
 ```
 
-상태는 `/ioniq5/vehicle_state`로 20 Hz 발행합니다. `stamp`는 ROS 발행 시각이며 `valid`는
+상태는 `/ioniq5/vehicle_state`로 100 Hz 발행합니다. `stamp`는 ROS 발행 시각이며 `valid`는
 steering/MDPS/wheel/TCS의 수신 갱신만 검사합니다. IMU/페달/기어/SCC/버튼의 개별 유효
 시각은 제공하지 않습니다. [현재 피드백 필드](vehicle_state.md)에 parser 근거를 정리했습니다.
 

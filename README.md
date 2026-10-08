@@ -43,7 +43,7 @@ rostopic pub -r 20 /ioniq5/actuation_command ioniq5_ecan/ActuationCommand \
 
 ## ROS 피드백
 
-`/ioniq5/vehicle_state`는 `ioniq5_ecan/VehicleState`를 20 Hz로 발행합니다.
+`/ioniq5/vehicle_state`는 `ioniq5_ecan/VehicleState`를 100 Hz로 발행합니다(조향각/MDPS/휠 속도 CAN 주기와 같음).
 차속과 4륜 속도(m/s), 조향각(deg), 조향각속도와 요레이트(deg/s), 가속도(m/s²),
 페달/브레이크/기어, 채널 선택과 출력 허가 상태를 제공합니다.
 `stamp`는 발행 시각이며 `valid`는 조향 센서/MDPS/휠 속도/TCS의 갱신 조건만 확인합니다.
@@ -114,6 +114,7 @@ USB 초기 수신과 Panda 첫 RX 경쟁 조건의 수정, 관련 호스트 18�
 - [설치와 차량 컴퓨터 시작 절차](docs/vehicle_computer_handoff.md)
 - [현재 ROS 피드백 필드](docs/vehicle_state.md), [상위 입력 계약](docs/input_contract.md)
 - [상태와 제어 제한](docs/safety.md), [구조](docs/architecture.md), [raw CAN](docs/raw_can.md)
+- [ECAN 전체 해석 필드 토픽](docs/ecan_signals.md): 분석한 97개 ID, 604개 필드를 `/ioniq5/ecan_signals`로 발행
 - [조향 토크 시험 발행기](docs/torque_test.md): 상위 제어기 대신 슬라이더나 파형으로 토크 발행, CSV 기록
 - [Panda 펌웨어 빌드/flash](docs/panda_firmware.md), [upstream 근거](docs/upstream.md)
 - [차량 없이 Panda safety 로컬 편집](docs/panda_safety_local.md): 전체 소스 준비와 추가 변경 패치 추출

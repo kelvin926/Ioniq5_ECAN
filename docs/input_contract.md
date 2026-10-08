@@ -114,7 +114,7 @@ NaN/Inf 입력은 맞출 범위가 없어 기존처럼 무효 명령으로 처�
 
 ## 상태와 피드백
 
-`/ioniq5/vehicle_state`는 20 Hz로 발행하며 `stamp`는 ROS 발행 시각입니다.
+`/ioniq5/vehicle_state`는 100 Hz로 발행하며 `stamp`는 ROS 발행 시각입니다.
 현재 필드별 의미/단위와 parser 동작은 [피드백 필드 표](vehicle_state.md)를 참고합니다.
 [`VehicleState.msg`](../msg/VehicleState.msg)의 `valid`는 필수 steering/MDPS/wheel/TCS
 CAN의 크기, CRC와 freshness를 뜻합니다. `eps_fault`는 별도 MDPS LKA 보조 상태입니다.

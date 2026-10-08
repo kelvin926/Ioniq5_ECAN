@@ -15,7 +15,7 @@
 | 비-ECAN | transceiver 및 forwarding 비활성화, camera bus 2 미사용 |
 | Panda | Red Panda, 일련번호는 로컬 설정 |
 | 명령 | `/ioniq5/actuation_command`, 기본 `lateral` 토크 count(`direct_torque`) + `acceleration` m/s² |
-| 피드백 | `/ioniq5/vehicle_state` 20 Hz, [현재 필드/단위](vehicle_state.md) |
+| 피드백 | `/ioniq5/vehicle_state` 100 Hz, [현재 필드/단위](vehicle_state.md) |
 | 차량 조향 출력 | LFA `0x12A` 토크 100 Hz, native angle 제어 미구현/차량 지원 미확인 |
 | 종방향 출력 | SCC `0x1A0` 및 FCA `0x160` 50 Hz |
 | launch 기본값 | actuation/longitudinal/auto arm/raw TX가 켜진 연구장 YAML |

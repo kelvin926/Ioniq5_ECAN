@@ -34,6 +34,10 @@ constexpr auto kEcuRestoreObservation = std::chrono::milliseconds(500);
 constexpr auto kTesterPresentPeriod = std::chrono::milliseconds(800);
 constexpr auto kStockSccTimeout = std::chrono::milliseconds(500);
 constexpr double kDisableMaximumSpeedMps = 0.5 / 3.6;
+// vehicle_state follows the fastest source CAN (0x125/0x0EA/0x0A0/0x035/0x04A at 100 Hz);
+// /diagnostics stays at 20 Hz.
+constexpr double kStatePeriodS = 0.01;
+constexpr uint32_t kDiagnosticsDivider = 5U;
 
 struct SafetyTransition {
   explicit SafetyTransition(std::atomic<uint64_t>& value) : epoch(value) { epoch.fetch_add(1U); }
@@ -116,7 +120,7 @@ Ioniq5EcanNode::Ioniq5EcanNode(ros::NodeHandle node_handle, ros::NodeHandle priv
   arm_service_ =
     node_handle_.advertiseService("/ioniq5_ecan/set_armed", &Ioniq5EcanNode::arm_callback, this);
   status_timer_ =
-    node_handle_.createTimer(ros::Duration(0.05), &Ioniq5EcanNode::publish_status, this);
+    node_handle_.createTimer(ros::Duration(kStatePeriodS), &Ioniq5EcanNode::publish_status, this);
 
   receive_thread_ = std::thread(&Ioniq5EcanNode::receive_loop, this);
   control_thread_ = std::thread(&Ioniq5EcanNode::control_loop, this);
@@ -1219,7 +1223,7 @@ void Ioniq5EcanNode::publish_status(const ros::TimerEvent&) {
   message.can_checksum_failures = parser_->checksum_failures();
   message.can_malformed_frames = parser_->malformed_frames();
   state_publisher_.publish(message);
-  publish_diagnostics(vehicle, panda, decision);
+  if (status_tick_++ % kDiagnosticsDivider == 0U) publish_diagnostics(vehicle, panda, decision);
 }
 
 void Ioniq5EcanNode::publish_raw_can(const CanFrame& frame) {

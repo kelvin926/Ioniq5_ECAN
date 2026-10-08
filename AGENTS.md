@@ -79,7 +79,7 @@
 
 ## Input and engagement behavior
 - Command topic: `/ioniq5/actuation_command`.
-- Existing feedback: `/ioniq5/vehicle_state` at 20 Hz; `stamp` is publication time.
+- Existing feedback: `/ioniq5/vehicle_state` at 100 Hz (fastest source CAN rate); `stamp` is publication time.
 - Its `valid` checks steering/MDPS/wheel/TCS freshness, not every optional signal.
 - Required input values: `lateral` and `acceleration`.
 - Upstream contract (user decision 2026-10-08): the Alpamayo-based upstream controller computes
@@ -132,17 +132,12 @@
 - Do not record or document superseded limit values (user request); state current behavior only.
 - These caps are command-path limits, not verified MDPS/SCC acceptance or output capability.
 - Default path: upstream torque count -> rounding/saturation -> LFA torque output.
-- The ROS node has no direct steering-angle input mode yet.
-- `scripts/steering_sweep.py` already tracks target angles using torque feedback.
-- Software angle tracking and native MDPS angle-command control are different interfaces.
-- Native angle signals exist in the pinned DBC, but support on this vehicle is unresolved.
-- Changing the input to angle alone does not increase available steering force.
-- Longitudinal output uses `0x1A0 SCC_CONTROL` and `0x160`, at 50 Hz.
+- No direct steering-angle input mode exists. Software angle tracking and native MDPS angle
+  commands differ; native angle support here is unresolved and angle input adds no force.
+- Longitudinal output uses `0x1A0 SCC_CONTROL` and `0x160` at 50 Hz; radar UDS `0x7D0/0x7D8` owns stock `0x1A0`.
 - The implementation uses `0x730/0x738` for camera ownership; ECU identity is unverified.
 - Pinned upstream Ioniq 5 records use camera `0x7C4`; `0x730` is an ADAS Driving candidate.
-- Radar UDS `0x7D0/0x7D8` owns stock `0x1A0`.
-- The local ROS node includes dual-ECU communication control, tester-present,
-  and radar-then-camera restoration.
+- The ROS node does dual-ECU communication control, tester-present and radar-then-camera restore.
 - Failed ECU restoration remains pending and retries with 1-30 second capped backoff;
   USB reconnection is automatic, but no actuator output resumes during restoration.
 - Confirm valid stock traffic and Panda NO_OUTPUT before finishing restoration.
@@ -187,21 +182,19 @@
 ## Key files and references
 - `config/ioniq5_ecan.yaml`: current input, tuning, and engagement configuration.
 - `msg/ActuationCommand.msg`: temporary ROS command contract.
-- `src/command_adapter.cpp`: lateral conversion and torque controller.
-- `src/hyundai_canfd_codec.cpp`: LFA and SCC frame construction.
-- `src/node.cpp`: ROS, USB, engagement, and ECU lifecycle.
-- `src/safety_supervisor.cpp`: existing channel engagement behavior.
-- `scripts/steering_sweep.py`: earlier vehicle control examples.
+- `src/command_adapter.cpp` (lateral conversion), `src/hyundai_canfd_codec.cpp` (LFA/SCC frames).
+- `src/node.cpp` (ROS, USB, ECU lifecycle), `src/safety_supervisor.cpp` (channel engagement).
+- `scripts/steering_sweep.py`: earlier standalone vehicle control examples.
 - `scripts/torque_slider.py`, `scripts/torque_test.py`, `docs/torque_test.md`: limit-free
   direct_torque slider (tkinter or terminal) and profile test publishers.
 - `scripts/can_logger.py` and `docs/can_logger.md`: standalone USB-IN-only ROS RAW recorder.
-- `docs/ecan_analysis_20261007.md`: current field/bit tables and dated research snapshots.
+- `docs/ecan_analysis_20261007.md`: current field/bit tables and dated research snapshots;
+  `docs/ecan_signals.md` publishes those fields (candidates, not a DBC) as `/ioniq5/ecan_signals`.
 - `patches/opendbc-hyundai-canfd-split-arm.patch`: custom channel semantics.
 - `patches/panda-ecan-only.patch`: ECAN-only firmware behavior.
 - `docs/vehicle_handoff.md`: current handoff and dated historical evidence; consult verification scope.
 - `docs/vehicle_computer_handoff.md`: Ubuntu 20.04/Noetic transfer and startup procedure.
 - `docs/evidence/2026-10-06/`: preserved observations; distinguish pre/post-fuse records.
 - `docs/validation.md`: completed verification versus remaining ROS, bench, and vehicle checks.
-- Pinned Panda: `dd8a5b3df77706337a11555377e7180c5adc8726`.
-- Pinned opendbc: `b72c1fd55ae7e84763e40912bbe06b8f533cb66b`.
-- Pinned Carrotpilot: `7fae709b39ec060a0bdd8cc141877eefecb72163`.
+- Pins: Panda `dd8a5b3df77706337a11555377e7180c5adc8726`, opendbc
+  `b72c1fd55ae7e84763e40912bbe06b8f533cb66b`, Carrotpilot `7fae709b39ec060a0bdd8cc141877eefecb72163`.

@@ -48,7 +48,7 @@ rosrun ioniq5_ecan torque_test.py --profile sine --amplitude 100 --period-s 2 --
 
 매 발행 주기마다 CSV 한 줄을 남깁니다. 명령 토크와 가장 최근 `vehicle_state`의 조향각,
 조향각속도, 운전자 토크, EPS 토크/오류, 브레이크, 정차, 제어 상태와 Panda 허가/거부 횟수를
-함께 기록합니다. `vehicle_state`는 20 Hz이므로 같은 상태 값이 여러 줄에 반복됩니다.
+함께 기록합니다. `vehicle_state`는 100 Hz이고 50 Hz 신호(브레이크, 버튼)는 두 줄씩 같은 값입니다.
 
 ## 슬라이더
 

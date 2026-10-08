@@ -1,7 +1,7 @@
 # ROS 차량 상태와 피드백 필드
 
 2026-10-07 현재 소스 기준입니다. 토픽은 `/ioniq5/vehicle_state`, 메시지는
-[`ioniq5_ecan/VehicleState`](../msg/VehicleState.msg)이며 ROS timer로 20 Hz 발행합니다.
+[`ioniq5_ecan/VehicleState`](../msg/VehicleState.msg)이며 ROS timer로 100 Hz 발행합니다. 조향각(`0x125`), MDPS(`0x0EA`), 휠 속도(`0x0A0`), 페달/기어(`0x035`), IMU(`0x04A`)는 CAN에서 약 100 Hz, 브레이크(`0x175`), SCC(`0x1A0`), 버튼(`0x1CF`)은 약 50 Hz로 들어옵니다(2026-10-07 캡처 기준).
 CAN 수신을 해석한 최신 상태와 호스트/Panda 제어 상태를 함께 담습니다.
 코드 근거는 [parser](../src/vehicle_state_parser.cpp)와 [발행 노드](../src/node.cpp)입니다.
 

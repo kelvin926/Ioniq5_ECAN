@@ -1,8 +1,17 @@
 <launch>
   <!-- Default is the active research profile. Pass ioniq5_ecan_passive.yaml for RX observation. -->
   <arg name="config" default="$(find ioniq5_ecan)/config/ioniq5_ecan.yaml" />
+  <!-- Separate process that decodes every interpreted ECAN field to /ioniq5/ecan_signals. -->
+  <arg name="decode_signals" default="true" />
+  <arg name="signals_rate_hz" default="20.0" />
 
   <node pkg="ioniq5_ecan" type="ioniq5_ecan_node" name="ioniq5_ecan_node" output="screen">
     <rosparam command="load" file="$(arg config)" />
+  </node>
+
+  <node if="$(arg decode_signals)" pkg="ioniq5_ecan" type="ecan_signal_decoder.py"
+        name="ecan_signal_decoder" output="screen">
+    <param name="input_topic" value="/ioniq5/can0/rx" />
+    <param name="rate_hz" value="$(arg signals_rate_hz)" />
   </node>
 </launch>

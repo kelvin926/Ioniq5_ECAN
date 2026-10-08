@@ -221,7 +221,7 @@ rostopic echo -n 5 /ioniq5/can0/rx
 rostopic echo -n 1 /diagnostics
 ```
 
-`vehicle_state`는 20 Hz 상태 게시이며 LFA/SCC 각각의 CAN 주기와 다릅니다. `valid=true`,
+`vehicle_state`는 100 Hz 상태 게시이며 LFA/SCC 각각의 CAN 주기와 다릅니다. `valid=true`,
 EPS/ACC 상태, 물리 입력에 맞는 조향/속도/페달/브레이크/기어 값을 확인합니다.
 `valid`는 필수 4종 갱신만 검사하며 IMU/페달/기어/SCC/버튼의 개별 freshness를 보장하지 않습니다.
 필드별 단위와 현재 미구현 추론 값은 [피드백 필드 표](vehicle_state.md)를 확인합니다.

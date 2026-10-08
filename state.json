@@ -1808,6 +1808,11 @@
       "date": "2026-10-08",
       "type": "torque_slider_added",
       "summary": "Added scripts/torque_slider.py per user request: interactive slider (tkinter window, automatic curses terminal gauge without DISPLAY/tkinter) publishing direct_torque at 100 Hz, default span +/-1021, no rate/speed limits, live vehicle_state status, zero-torque tail on exit and CSV log. No package installation. Verified py_compile and sender thread/CSV/clamp with a fake ROS object only; no ROS, GUI or vehicle run."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "ecan_signals_and_100hz_state",
+      "summary": "User request: publish every interpreted ECAN field and raise vehicle_state to the CAN rate. Added scripts/generate_ecan_signals.py, config/ecan_signals.json (604 fields, 97 IDs from the 2026-10-07 interpreted dictionary, 1 redacted identity field excluded, all bit layouts matched physical_bits), msg/EcanSignals.msg and a separate decoder process scripts/ecan_signal_decoder.py publishing /ioniq5/ecan_signals at 20 Hz (launch args decode_signals, signals_rate_hz). Decoding of the host-codec SCC golden frame matched encoded values for little/big-endian fields; 3000 0x1A0 frames decode in about 35 ms. vehicle_state timer raised to 100 Hz (source IDs 0x125/0x0EA/0x0A0/0x035/0x04A observed at 100 Hz, 0x175/0x1A0/0x1CF at 50 Hz in the 2026-10-07 capture); /diagnostics kept at 20 Hz. AGENTS compacted to stay within 200 lines. No ROS build or vehicle run."
     }
   ],
   "ecu_recovery": {

@@ -164,6 +164,7 @@ class Ioniq5EcanNode {
   ros::Publisher diagnostics_publisher_;
   ros::ServiceServer arm_service_;
   ros::Timer status_timer_;
+  uint64_t status_tick_{0};  // ros::spin() thread only.
 };
 
 }  // namespace ioniq5_ecan
