@@ -6,8 +6,9 @@
   <arg name="topic" default="/ioniq5/can_logger/rx" />
   <arg name="duration_s" default="0" />
   <arg name="fsync" default="false" />
+  <arg name="logger_name" default="ecan_can_logger" />
   <!-- This launch does not start the actuation node, a command publisher or Panda writer. -->
-  <node pkg="ioniq5_ecan" type="can_logger.py" name="ecan_can_logger" output="screen">
+  <node pkg="ioniq5_ecan" type="can_logger.py" name="$(arg logger_name)" output="screen">
     <env name="ROS_HOME" value="$(find ioniq5_ecan)/log/ros" />
     <env name="ROS_LOG_DIR" value="$(find ioniq5_ecan)/log/ros/log" />
     <env name="PYTHONDONTWRITEBYTECODE" value="1" />

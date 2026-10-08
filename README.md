@@ -79,7 +79,14 @@ CSV와 timestamp를 저장하고 선택적으로 `/ioniq5/can_logger/rx`에 발�
 
 [수신 전용 기록기](docs/can_logger.md)의 시작 조건과 시각 의미를 참고하십시오.
 
-2026-10-06 차량 컴퓨터에 설치한 작업공간 실행 명령입니다. `source`하지 말고 실행합니다.
+이 차량 컴퓨터의 기존 센서 단축어에도 수신 전용 CAN을 연결했습니다.
+`sensors_all`은 CAN 기록기도 시작하고, `sensors_check`는 수신 상태와 차속/조향각/가속도 등을
+표시합니다. `sensors_bag`은 RAW CAN을 다른 센서와 같은 bag에 저장합니다.
+CAN이 없어도 기존 센서는 계속 동작하며 `.bashrc`와 전역 ROS 설정은 바꾸지 않았습니다.
+제어기/Cabana와 동시 USB 사용은 피하십시오. ECAN 제어기를 함께 쓸 때는 `sensors_all start_ecan:=false`로
+실행합니다. [센서 통합과 저장 위치](docs/sensor_suite.md)를 참고합니다.
+
+이 차량 컴퓨터에 설치된 한 줄 명령입니다. `source`하지 말고 실행합니다.
 
 ```bash
 /home/ave/catkin_ws_ioniq5/ecan

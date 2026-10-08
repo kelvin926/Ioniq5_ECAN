@@ -8,27 +8,28 @@
 - Distinguish sensor-reference evidence from fields actually decoded from CAN payloads.
 - Keep uninterpretable fields out of display tables while preserving raw audit evidence.
 - Check header/bag clock differences and split shared-topic publishers before correlations.
-- Infer intent and complete tasks with the smallest root-cause fix.
-- Preserve existing behavior and scope; avoid unrelated changes.
+- Infer intent and complete tasks with the smallest root-cause fix; avoid unrelated changes.
 - Do not modify this computer's unrelated files, directory structure, installed packages,
   OS/ROS configuration, or personal settings. The allowed project boundary is in state.json.
 - Inside that boundary, change only files directly required by the current request.
 - Account for applications' incidental outside-boundary writes. If an outside change is
   required, stop and request explicit new authorization; never infer it from a build/run request.
-- For research, prioritize peer-reviewed papers and primary sources.
-- Verify key research decisions and distinguish evidence from inference.
+- For research, prioritize peer-reviewed papers and primary sources; verify key decisions and
+  distinguish evidence from inference.
 - Pin upstream comparisons to a commit; keep research snapshots separate from runtime pins.
 - Distinguish model targets, controller outputs, transmitted CAN values, and ECU feedback.
 - Distinguish transport reconnection, ECU communication restoration, and control re-engagement.
 - Keep implementation QA minimal; avoid slow, broad, or repeated tests/builds
   unless failures or significant risk justify them.
 - Existing implementation limits are recorded facts, not additional work to perform.
-- Receive-only logging uses the standalone can_logger launch/helper, not the actuation node.
-- The logger uses USB IN only in SILENT; never add hidden mode/bitrate/reset/heartbeat/UDS writes.
-- Logger timestamps are host USB completion times, not hardware CAN arrival times.
+- Receive-only logging uses the standalone can_logger (USB IN only in SILENT; never add hidden mode/
+  bitrate/reset/heartbeat/UDS writes); its timestamps are host USB completion, not CAN arrival times.
 - Offline firmware editing uses `build_panda_debug_firmware.sh --prepare-only`.
 - Export additional source edits against the patched baseline with `export_panda_safety_edits.sh`;
   preparation/export do not establish an ARM build, device installation or ECU acceptance.
+- Sensor suite (user-authorized ECAN hooks in multi_camera_recorder): CAN is optional; keep bashrc,
+  global ROS and other sensors unchanged; monitor only required drivers (Bash 5.0 `wait -n`); stop only
+  the suite-owned logger; dashboard decodes RAW ROS only; preserve the out-of-tree Ouster hook backup.
 - For confirmation-only requests, inspect and report; do not implement changes.
 - Preserve existing uncommitted work. Do not discard it or overwrite unrelated files.
 
@@ -39,16 +40,14 @@
 - Create these repo-root files if absent.
 - Update them only on material changes to goals, constraints, decisions, blockers,
   active work, environment, or verified results; do not update them for routine status or cosmetic work.
-- Update `state.json` in the same session as a material change.
-- Update `AGENTS.md` when such a change affects durable guidance.
+- Update `state.json` in the same session as a material change; update `AGENTS.md` when it affects durable guidance.
 - Keep `AGENTS.md` at 200 lines or fewer; replace obsolete guidance instead of appending it.
-- Keep `state.json` valid JSON, use ISO dates, and record the observation date and source.
-- Separate implemented behavior, proposals, historical results, and unknowns.
-- Record firmware build and flash as separate events.
-- A firmware version marker does not establish the exact installed binary hash.
+- Keep `state.json` valid JSON with ISO dates, observation date and source; separate implemented
+  behavior, proposals, historical results, and unknowns.
+- Record firmware build and flash as separate events; a version marker does not establish the binary hash.
 - Treat hardware observations as dated snapshots; do not present them as live readings.
-- Keep a concise recent event log; retain important older decisions in structured fields.
-- Do not copy complete transcripts or repetitive tool output into either file.
+- Keep a concise recent event log without transcripts or repetitive tool output; retain important
+  older decisions in structured fields.
 - Open issues describe unfinished work; they do not authorize work outside the current request.
 - Keep README, topic contracts, configuration comments, and handoff aligned with material changes.
 - Documentation must label current source behavior, dated observations, and unverified paths separately.
@@ -190,6 +189,7 @@
 - `scripts/can_logger.py` and `docs/can_logger.md`: standalone USB-IN-only ROS RAW recorder.
 - `docs/ecan_analysis_20261007.md`: current field/bit tables and dated research snapshots;
   `docs/ecan_signals.md` publishes those fields (candidates, not a DBC) as `/ioniq5/ecan_signals`.
+- `scripts/can_dashboard_data.py` and `docs/sensor_suite.md`: optional sensor-suite RX display.
 - `patches/opendbc-hyundai-canfd-split-arm.patch`: custom channel semantics.
 - `patches/panda-ecan-only.patch`: ECAN-only firmware behavior.
 - `docs/vehicle_handoff.md`: current handoff and dated historical evidence; consult verification scope.

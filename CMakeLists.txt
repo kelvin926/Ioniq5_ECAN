@@ -49,6 +49,13 @@ if(IONIQ5_ECAN_CORE_ONLY)
     set_tests_properties(can_logger_unit PROPERTIES
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
+    add_test(
+      NAME can_dashboard_data_unit
+      COMMAND ${Python3_EXECUTABLE} -m unittest discover -s test -p test_can_dashboard_data.py
+    )
+    set_tests_properties(can_dashboard_data_unit PROPERTIES
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
   endif()
   return()
 endif()
@@ -154,6 +161,7 @@ if(CATKIN_ENABLE_TESTING)
 
   catkin_add_nosetests(test/test_panda_preflight.py)
   catkin_add_nosetests(test/test_can_logger.py)
+  catkin_add_nosetests(test/test_can_dashboard_data.py)
   catkin_add_gtest(test_panda_usb test/gtest_main.cpp test/test_panda_usb.cpp)
   if(TARGET test_panda_usb)
     target_link_libraries(test_panda_usb ioniq5_ecan_panda)

@@ -54,6 +54,10 @@ Panda가 없거나 읽기 전용 시작 조건을 충족하지 못하면 vendor 
 | `topic` | `/ioniq5/can_logger/rx` | `ioniq5_ecan/RawCanFrame` 토픽 |
 | `duration_s` | 0 | 0은 계속 기록, 양수는 시작 후 지정 초 동안 기록 |
 | `fsync` | false | true면 주기적 flush에 disk sync 추가 |
+| `logger_name` | `ecan_can_logger` | 노드 이름. 센서 실행기는 `sensor_suite_ecan_logger`로 소유권 구분 |
+
+기존 `sensors_all`, `sensors_bag`, `sensors_check` 연결은 [센서 통합](sensor_suite.md)을 참고합니다.
+대시보드는 RAW ROS 토픽만 구독하며 제어 노드나 별도 Panda 연결을 만들지 않습니다.
 
 실제 장치 일련번호와 개인 경로는 Git에 넣지 않습니다. 기본 출력 폴더는 Git에서 제외됩니다.
 원본 CAN payload에 차량 식별정보 등이 있을 수 있으므로 저장 파일을 공개하기 전에는 따로

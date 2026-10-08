@@ -423,14 +423,14 @@
     "actions": "Read-only process/interface/device inspection and vendor control reads. No processes started/stopped, no CAN/bulk reads or writes, no device configuration changes, no files changed outside this project. Only state.json records this dated result."
   },
   "workspace_boundary": {
-    "recorded_on": "2026-10-06",
-    "source": "Direct user instruction: 이 컴퓨터의 다른 파일들이나 구조는 절대 건들면 안돼.",
+    "recorded_on": "2026-10-07",
+    "source": "Earlier prohibition on unrelated computer changes retained; latest user explicitly approved the proposed limited receive-only sensor integration.",
     "project_workspace": "/home/ave/catkin_ws_ioniq5",
-    "rule": "Only make necessary, user-requested changes to this project's files inside the workspace. This boundary is not blanket authorization to modify every file inside it.",
-    "protected": "All unrelated files and directory structures, other workspaces including catkin_ws_ouster, OS/ROS installation, global packages, shell settings, personal configuration, Desktop and application-menu entries outside this workspace.",
+    "rule": "Only make necessary, user-requested project changes. The scoped external sensor-hook exception below is not blanket authorization for the Ouster workspace or other projects.",
+    "protected": "All unrelated files/directory structures, other workspace content outside the seven approved sensor hooks, OS/ROS installation, global packages, shell/bashrc settings, personal configuration, Desktop/application-menu entries.",
     "incidental_writes": "Consider tools/applications that automatically write outside the workspace; do not silently bypass the constraint by launching them. Stop and seek explicit new authorization if such writes are necessary.",
     "existing_external_changes": "Previously user-authorized Cabana settings and shortcuts remain historical changes. This instruction does not authorize changing or undoing them.",
-    "actions_for_this_request": "Scoped source/patch changes, affected tests/builds, no-actuator ECU diagnostics, fresh USB-only app flash/verification and explicitly approved one 0x730-only DTC clear/recurrence check. Own processes stopped; source/build/cache/log/evidence/state within workspace. No unrelated/global changes, other ECU clear, ECU reset, vehicle ignition cycle or Git commit/push.",
+    "actions_for_this_request": "Seven scoped external hooks plus ECAN launch/decoder/test/docs/guidance/state/deployment patch. External originals, offline Qt screenshot/cache and test outputs stay under this workspace. No build, real sensors/ROS master, existing process stop, USB/CAN/UDS/firmware/ignition actions, unrelated/global changes or Git commit/push.",
     "local_firmware_editing": {
       "authorized_on": "2026-10-08",
       "source": "Direct user request to adjust on this computer, followed by scope selection: all adjustable elements.",
@@ -438,6 +438,19 @@
       "allowed_scope": "Current repository checkout, its ignored .firmware-build source/metadata cache and necessary workflow/documentation/state files.",
       "protected": "Unrelated files, installations, global packages/credentials, OS/shell/ROS/personal settings and other workspaces remain outside scope.",
       "historical_boundary_notice": "The parent Ubuntu workspace path and earlier vehicle-action scope remain dated records, not a current remote-machine action request."
+    },
+    "authorized_external_scope": {
+      "package": "/home/ave/catkin_ws_ouster/src/multi_camera_recorder",
+      "files": [
+        "scripts/start_sensor_suite.sh",
+        "scripts/start_sensor_check.sh",
+        "scripts/record_sensor_suite.sh",
+        "scripts/stop_sensor_suite.py",
+        "scripts/sensor_dashboard.py",
+        "scripts/check_sensor_bag.py",
+        "launch/sensor_suite.launch"
+      ],
+      "authorization": "Explicit latest user approval to connect receive-only ECAN to the described existing startup/record/dashboard workflow. No live startup/stop or vehicle actions requested."
     }
   },
   "maintenance": {
@@ -480,13 +493,12 @@
       "scope": "Verified main and feature-branch source delivery. A state-only child receipt follows on both."
     },
     "working_tree": {
-      "observed_on": "2026-10-06",
-      "preexisting_modified_tracked_files": 4,
-      "preexisting_changes": "README, validation, vehicle-computer handoff and state retained uncommitted workspace-migration records. Cabana's three existing modified files are preserved separately.",
-      "changes_in_this_request": "23 scoped package files committed/pushed: startup/RX readiness/listener/dual-ECU restore fixes and tests, reproducible firmware patch source, aligned docs/AGENTS/state and three dated JSON observations. This state-only delivery receipt follows. Auth helper/profile and binaries not committed; Cabana/unrelated projects preserved.",
+      "observed_on": "2026-10-07",
+      "preexisting_changes": "Old main was already diverged and in an unfinished merge with staged logger files and unresolved paths. Full .git/worktree/ignored files preserved without resolving or discarding them.",
+      "changes_in_this_request": "Earlier Git synchronization/state receipts preserved. Current approved sensor integration adds launch-name option, pure dashboard decoder/unit tests, test registration, docs/guidance/state and the seven-file external sensor-hook deployment patch. Existing build/devel/control/config/Cabana/global files retained.",
       "existing_work_preserved": true,
-      "commit_or_push_performed": true,
-      "push_status": "current_recovery_fixes_docs_and_evidence_delivered_to_main"
+      "commit_or_push_performed": false,
+      "push_status": "not_requested_local_sync_and_sensor_integration_only"
     },
     "head_scope": "Current local base commit; offline-editing workflow/docs/state changes remain uncommitted on the codex branch.",
     "delivery_snapshot": {
@@ -1535,8 +1547,13 @@
     },
     {
       "id": "command_passthrough_validation",
-      "status": "built_tested_flashed_vehicle_pending",
+      "status": "flashed_standstill_steering_observed_moving_pending",
       "detail": "Torque (host 1021, Panda 1023, no rate/RT/driver limits), accel (-10.23..10.24, jerk metadata 12.7) and physical-button re-engagement after faults are unverified: host gtest, opendbc safety tests, ARM build, flash, MDPS acceptance of large steps, SCC/ESC acceptance of the full accel range, jerk-field effect, MDPS-side driver override and moving re-takeover are all unconfirmed."
+    },
+    {
+      "id": "mdps_fault_above_400_counts",
+      "status": "observed_unresolved",
+      "detail": "2026-10-08 standstill test: commands of about 400 counts and above made the MDPS LKA fault flag cycle (torque output about 37% of the time above 500 counts). Determine the acceptance condition (level/rate/duration/speed) before relying on large torque."
     }
   ],
   "next_action": "Pass-through and button re-engagement are in source/config/docs only. Run host gtest and opendbc safety tests on the Ubuntu/target toolchain, then ARM build and a separately confirmed USB-only flash before any vehicle use.",
@@ -1823,6 +1840,16 @@
       "date": "2026-10-08",
       "type": "firmware_flash_pass_through",
       "summary": "User confirmed USB-only state and approved; pre-flash read-only preflight showed app mode, harness_status 0, ignition 0, about 5.8 V USB power, no Panda clients, only accumulated rx_buffer_overflow failure. flash_panda.py flashed and verified signed app 2a0ac3235a0eb2463e6650f02eb565f7494252103fdadf3b546425793f64948f (bootstub unchanged; transient USB pipe errors during reboot). Post-flash preflight --ecan-only --require-command-session PASS: marker IONIQ5ECAN-dd8a5b3d-DEBUG, command session supported, faults 0, overflow 0, controls 0. No vehicle connection or actuation yet."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "sensor_suite_work_merged",
+      "summary": "User asked to push including the vehicle computer's uncommitted 2026-10-07 sensor-suite ECAN work (stash before-user-pull-20261008 plus untracked docs/sensor_suite.md, patches/sensor-suite-ecan.patch, scripts/can_dashboard_data.py, test). Merged onto main: CMake/can_logger changes applied cleanly; AGENTS/README conflicts resolved keeping both (AGENTS kept within 200 lines); state.json merged structurally (their added sections and boundary scope, current fields kept). Their tests ran in the 150-test vehicle run."
+    },
+    {
+      "date": "2026-10-08",
+      "type": "vehicle_steering_test",
+      "summary": "User ran the torque slider at standstill after the flash: steering responded over -30.9..+54.3 deg with commands up to +/-1021 counts, Panda blocked 0 frames, no hard fault. MDPS LKA fault flag cycled at about 400+ counts (see vehicle_steering_test_20261008)."
     }
   ],
   "ecu_recovery": {
@@ -3360,5 +3387,102 @@
     "separate_tool": "scripts/steering_sweep.py keeps its own MAX_STEER_TORQUE constant.",
     "unverified": "Tests, ARM build, flash, MDPS acceptance of large steps, actual output torque, MDPS-side driver override, SCC/ESC acceptance of the full accel range, effect of jerk metadata, moving re-takeover after faults.",
     "hardware_actions": false
+  },
+  "sensor_suite_integration": {
+    "implemented_on": "2026-10-07",
+    "status": "local_implementation_and_offline_verification_complete",
+    "authorization": "User explicitly accepted the described optional receive-only sensors_all/startup, sensors_bag/record and sensors_check/dashboard integration.",
+    "external_package": "/home/ave/catkin_ws_ouster/src/multi_camera_recorder",
+    "external_file_count": 7,
+    "original_backup": "/home/ave/catkin_ws_ioniq5/backups/sensor-ecan-integration-20261007.q5NuXr",
+    "deployment_patch": "patches/sensor-suite-ecan.patch (external hooks are not otherwise tracked in this Git checkout)",
+    "documentation": "docs/sensor_suite.md; README and can_logger docs updated",
+    "master": "Existing http://192.168.2.102:11311 and ROS_IP=192.168.2.102 retained; logger inherits them in its own child environment.",
+    "startup": "sensors_all starts existing receive-only logger with logger_name:=sensor_suite_ecan_logger; start_ecan:=false leaves USB available. Missing launcher/Panda/CAN or logger exit never ends required sensors. No actuation node, command publisher, safety setting, firmware or USB OUT added.",
+    "supervisor_fix": "Mock startup exposed Bash 5.0 wait -n returning the failed optional logger status despite supplied required job IDs. Replace with 0.5 s liveness checks and wait only for an exited required suite/radar PID; required failure still propagates.",
+    "cleanup": "Parent cleanup terminates/waits its own logger child. stop_sensor_suite matches exact logger script and __name:=sensor_suite_ecan_logger or exact roslaunch pair and logger_name argument; standalone logger/control/Cabana are not new targets.",
+    "bag_recording": "13 original topics plus /ioniq5/can_logger/rx; original required-topic checks retained, CAN appended afterwards without blocking absence. Later-appearing CAN is subscribed. sensors_all still does not start sensor rosbag; sensors_bag does.",
+    "bag_check": "Inspect RawCanFrame count/type/first-last payload metadata only when present; absent CAN is reported optional, so older/non-CAN bags retain existing pass/fail criteria.",
+    "display": {
+      "input": "/ioniq5/can_logger/rx, ioniq5_ecan/RawCanFrame; 12 existing subscriptions retained plus 1 CAN subscription",
+      "decoder": "scripts/can_dashboard_data.py, pure Python with no ROS/USB/publisher/control APIs; follows existing C++ parser and codec",
+      "fields": "RX rate/freshness/counts/IDs/latest bytes, wheel-mean speed km/h, steering angle deg, yaw deg/s, longitudinal/lateral acceleration m/s2, brake, raw gear/pedal, EPS torque and EPS/ACC faults",
+      "validation": "Bus 0, not returned/rejected; known ID exact length/Hyundai CRC except checksum-free ESC0xE5; IMU/ESC quality clear. Unknown RAW preserved, extended-ID aliases not decoded. Invalid known frames do not refresh fields.",
+      "freshness": "Per-field valid callback age <1 s, otherwise --; all RX WAITING/RECEIVING/STALE, fresh input returns immediately. Zero/false are valid. Local monotonic receipt semantics also apply to bag replay; not vehicle readiness.",
+      "bounds": "Rate history 20000 samples/3 s and unique ID display capped at 4096; subscriber queue 2048/buffer 2 MiB, not a loss-free guarantee",
+      "environment": "Only child dashboard PYTHONPATH adds existing ECAN generated messages/source helper alongside original Ouster/Duro/radar paths. Missing ECAN imports disable only CAN panel; no global/caller overlay change."
+    },
+    "storage": "Existing sensor_bags/<session>/sensor_suite.bag default; CAN logger CSV/metadata in package log/can_logger. Originals and offline QA image/cache are under the Ioniq5 workspace.",
+    "timestamp_limit": "CAN stamp is host USB read completion ROS time; common ROS master/bag does not prove hardware acquisition synchronization, calibration or loss-free capture.",
+    "verification": {
+      "decoder_unit_tests": "6 passed, including existing C++ golden CRC, signed steering/wheel/torque/brake/gear units, IMU quality/ESC fallback, bad CRC/size/extended stale prevention, unknown 64-byte frames/rate/stale return and metadata/bus exclusion",
+      "mock_startup": "4 passed: failed optional CAN launcher, absent launcher, start_ecan:=false, and required-driver failure propagation; all sensor/ROS/stop/setup/network actions replaced with in-memory mocks",
+      "mock_bag_recorder": "CAN topic unavailable: no CAN readiness wait; 13 original topics and RAW appear in fake recorder argv; no real recorder/output directory",
+      "mock_bag_checker": "3 passed with in-memory bag/index/payload fixtures: older/no-CAN bag retains PASS, present RAW is inspected, incorrect CAN message type produces FAIL; no real bag/ROS/USB access",
+      "cleanup_matcher": "Owned launch/node included; standalone logger, actuation executable and Cabana excluded; no processes signaled",
+      "qt_dashboard": "Offscreen actual Qt/ECAN/radar/Piksi imports with mocked rospy: 12 existing +1 CAN subscriptions, WAITING/LIVE/STALE/valid numeric and zero/false rendering; missing-module fallback retains 12. Both value rows visually checked after event-driven relayout.",
+      "static": "Bash syntax, Python 3.8 grammar, launch XML, state JSON, guidance line limit, scoped patch and whitespace checks",
+      "live": "Not performed: no real ROS master/subscription, sensors, Panda USB/status/CAN, firmware, vehicle or existing process start/stop",
+      "remaining": "Live multi-sensor throughput/co-recording and actual vehicle values remain unverified; no loss-free/synchronization/control-readiness claim"
+    },
+    "preservation": "Original .bashrc and Noetic/Duro/Ouster/Ioniq5 setup files unchanged; existing sensor behavior, original overlays and active/passive control files retained. External hook originals recoverable from backup. No credentials, commits or push."
+  },
+  "sensor_suite_integration_assessment": {
+    "assessed_on": "2026-10-07",
+    "status": "historical_proposal_then_implemented_after_explicit_approval",
+    "inspection": "Read existing bashrc function definitions, multi_camera_recorder launch/start/record/stop/check/dashboard files, CAN logger publisher and existing vehicle-state parser. No programs or sensor/USB checks launched.",
+    "existing_workflow": {
+      "sensors_all": "Starts sensor_suite.launch, radar drivers and Jetson camera watchdog; no automatic rosbag recording in the inspected script.",
+      "sensors_bag": "record_sensor_suite.sh records an explicit camera/lidar/radar/GPS topic list into sensor_suite.bag; CAN is not listed.",
+      "sensors_check": "Starts sensor_dashboard.py through sensor_check.launch; subscriptions cover cameras/lidar/radars/GPS, not ECAN.",
+      "shared_master": "http://192.168.2.102:11311 with ROS_IP=192.168.2.102"
+    },
+    "can_source": "/ioniq5/can_logger/rx, ioniq5_ecan/RawCanFrame; standalone SILENT USB-IN-only logger writes CSV and optionally publishes RAW, not decoded VehicleState.",
+    "proposal": "Start one receive-only logger on suite master, append RAW topic to bag recording/checking, and show receive rate/freshness/IDs in existing dashboard. Vehicle speed/steering/yaw/acceleration display requires a separate RAW-subscriber-only decoder reusing known parser semantics, never the USB-writing actuation node.",
+    "environment": "Extend only child process package/message paths while preserving independent Ouster/Duro/radar overlays. Do not source a replacement overlay into caller or modify global ROS/bashrc.",
+    "lifecycle": "Plan owned logger cleanup with sensors_stop/restart; missing CAN must not take down existing sensors. Cabana/ECAN control cannot concurrently own the Panda USB interface.",
+    "time_limit": "CAN stamps are host USB completion times; sharing a ROS graph/bag does not establish hardware timestamp synchronization or loss-free transport.",
+    "authorization_boundary": "At assessment time inspection only. Later explicit user approval authorized the seven relevant sensor hooks, not bashrc/unrelated files. See sensor_suite_integration for the implementation.",
+    "changes_performed": "Assessment phase changed only project state; subsequent scoped implementation is recorded separately below."
+  },
+  "vehicle_computer_git_sync": {
+    "performed_on": "2026-10-07",
+    "authorization": "User requested git pull, then explicitly approved full prior-checkout backup and fresh main installation at the same path after the existing merge conflict/privacy rewrite was explained.",
+    "method": "Clone public sanitized main with --single-branch --no-tags first; verify it, then move the entire old checkout into workspace backups and move the clone to the original path. No git reset/merge-abort, history import, commit or push.",
+    "status": "installed_and_verified",
+    "package_path": "/home/ave/catkin_ws_ioniq5/src/ioniq5_ecan",
+    "backup_repository": "/home/ave/catkin_ws_ioniq5/backups/ioniq5-before-sync-20261007.L8viED/repository",
+    "backup_scope": "Entire old repository, .git/index/MERGE_HEAD, conflicts, staged/untracked/ignored files and pre-redaction history. Private local recovery copy only; never merge/push it into sanitized main.",
+    "backup_integrity": "Pre/post-move SHA-256 of the conflicted state.json, .git/index and both active/passive config files matched exactly. No original files deleted.",
+    "main_commit": "215059fb73bf1174c15c5051c6a0cd26ca0ff531",
+    "configuration_preserved": "config/ioniq5_ecan.yaml and config/ioniq5_ecan_passive.yaml exactly match prior hashes; no serial/parameter overrides required.",
+    "host_check": "Workspace ecan --check passed; original executable entry point and build/devel/ROS paths retained. This check does not start ROS master/node or access Panda.",
+    "verification_scope": "Git HEAD/origin/live main, initial clean clone, JSON parsing, AGENTS 187 lines and host paths only. Logger/control build/runtime and live capture not tested.",
+    "local_tracked_edit": "state.json synchronization receipt only, not committed or pushed.",
+    "protected_scope": "Other projects, Cabana, existing workspace build/devel and launcher, global OS/ROS/shell/credentials, Panda/vehicle all unchanged."
+  },
+  "vehicle_steering_test_20261008": {
+    "observed_on": "2026-10-08",
+    "source": "Vehicle computer log/torque_test/torque_slider_20261008_215728.csv (user-run torque_slider.py, direct_torque) summarized over SSH; user reported steering works.",
+    "conditions": "Standstill (max wheel speed 0.015 m/s), brake held in most rows, LDA lateral-only, freshly flashed pass-through firmware.",
+    "duration_s": 185.8,
+    "commanded_range_counts": [
+      -1021,
+      1021
+    ],
+    "steering_angle_range_deg": [
+      -30.9,
+      54.3
+    ],
+    "panda_safety_tx_blocked": 0,
+    "hard_fault_rows": 0,
+    "sign_observation": "Positive counts generally raised steering_angle_deg and negative counts lowered it; not a controlled sign calibration.",
+    "eps_fault_by_command": {
+      "0-399_counts": "eps_fault under 10% of engaged rows, torque output over 90%",
+      "400-499_counts": "eps_fault 43%, torque output 57%",
+      "500-1021_counts": "eps_fault about 63%, torque output about 37%"
+    },
+    "eps_fault_pattern": "At sustained commands of about 490 counts and above the MDPS LKA fault flag rose about 70 ms after output resumed; the node paused lateral (SOFT_DISABLING) about 130 ms until the flag cleared, then resumed, repeating about every 220 ms. Every pause recovered within the 3 s window.",
+    "interpretation_limit": "Single standstill session; whether the MDPS limit depends on torque level, rate, angle, speed or duration is unverified."
   }
 }

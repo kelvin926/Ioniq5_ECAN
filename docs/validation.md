@@ -8,6 +8,7 @@
 
 | 시점 | 확인한 범위 | 한계 |
 | --- | --- | --- |
+| 2026-10-08 direct_torque 정차 조향 | 차량 컴퓨터 Release 빌드와 host 150개, opendbc safety 1,000개(117 skip) 통과. 제한 해제 앱 USB-only flash 후 preflight PASS. 정차/브레이크 상태에서 슬라이더로 ±1021 count 명령, 조향각 −30.9~+54.3°, Panda 거부 0, hard fault 0 | 약 400 count 이상에서 MDPS LKA 오류 플래그가 반복되어 출력이 약 37% 시간만 유지됨. 주행 중 재인계와 실제 추종은 미확인 |
 | 2026-10-07 오프라인 CAN 분석 | 138개 ID/1,914,473프레임 조사, 현재 표시 97개 ID/605개 배치와 대안/3,892개 비트. 동시 기록 GPS/레이더로 속도/요레이트/조향 피드백/기준 가속도 대조, 내비 순환번호 배치 수정 | 추론 후보와 단위 대안 포함. GPS 절대 좌표/원시 레이더 객체 목록 CAN 매핑 미확인. 원본 마지막 bag은 검증된 앞부분만 사용. ROS parser 추가나 actuator 검증 아님. [현재 결과](ecan_analysis_20261007.md) |
 | 2026-10-06 퓨즈 교체 직후 | 사용자 해결 보고 후 passive 3초 관측에서 ignition=1, 순정 LFA100/SCC50 Hz, 선택 CRC 오류 및 TX 증가 0 | 퓨즈 자체/정확한 ECU identity/고장 해소의 독립 검증 아님. 그 시점에는 DTC 재조회 없음. 이후 정차 시험 및 수정 후 DTC 재발은 별도 기록. [관측](evidence/2026-10-06/panda-post-fuse-20261006.json) |
 | 2026-10-06 수정 후 재연결/진단 | 오류 없이 startup/CAN valid/session ready/NO_OUTPUT 대기, stock LFA100/SCC50 Hz 및 TX0 관측. 0x730/7D0 DTC 조회 성공, 승인된 0x730 한 번 삭제 54 수락 | 즉시 기록 없음 이후 2초 내 동일 세 status89 기록 재발, ACCEnable3 지속. 추가 삭제/진단/제어 중단. ECU identity/고장 원인과 실제 추종 미확인. [기록](evidence/2026-10-06/post-fix-ecu-dtcs-20261006.json) |

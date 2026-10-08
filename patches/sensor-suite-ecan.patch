@@ -1,0 +1,315 @@
+--- a/scripts/start_sensor_suite.sh
++++ b/scripts/start_sensor_suite.sh
+@@ -37,6 +37,7 @@
+ }
+ radar_pids=()
+ camera_watchdog_pid=""
++ecan_logger_pid=""
+ 
+ # roslaunch starts the local ROS master if needed. Start it first so the
+ # Jetson publisher always has a reachable remote master.
+@@ -45,6 +46,11 @@
+ 
+ cleanup() {
+   trap - EXIT INT TERM
++  if [[ -n "$ecan_logger_pid" ]]; then
++    # Only this suite's roslaunch child; never stop a standalone CAN client.
++    kill -TERM "$ecan_logger_pid" 2>/dev/null || true
++    wait "$ecan_logger_pid" 2>/dev/null || true
++  fi
+   if [[ -n "$camera_watchdog_pid" ]]; then
+     # Stop the watchdog and its in-flight health check together.
+     kill -TERM -- "-$camera_watchdog_pid" 2>/dev/null || true
+@@ -71,6 +77,19 @@
+   exit 1
+ }
+ 
++# Optional USB-IN-only logger on the same master. Its child launcher sources
++# its own workspace without replacing the lidar/GPS/radar environment here.
++ecan_launcher=/home/ave/catkin_ws_ioniq5/src/ioniq5_ecan/scripts/start_can_logger.sh
++if [[ " $* " != *" start_ecan:=false "* ]]; then
++  if [[ -x "$ecan_launcher" ]]; then
++    "$ecan_launcher" logger_name:=sensor_suite_ecan_logger &
++    ecan_logger_pid=$!
++    echo 'ECAN receive-only logger started; missing Panda/CAN does not block other sensors.'
++  else
++    echo 'Warning: ECAN launcher unavailable; continuing without CAN.' >&2
++  fi
++fi
++
+ # Start fresh radar drivers; a ROS ping alone does not prove scans are flowing.
+ for side in left right; do
+   "$script_dir/start_mfi920_radar.sh" "$side" &
+@@ -105,8 +124,20 @@
+ done
+ kill -0 "$sensor_suite_pid" 2>/dev/null || exit 1
+ echo "All enabled sensors are sending data; clean startup complete."
++if [[ -n "$ecan_logger_pid" ]] && ! kill -0 "$ecan_logger_pid" 2>/dev/null; then
++  echo 'Warning: optional ECAN logger exited; other sensors remain running.' >&2
++fi
+ flock -u 8
+ exec 8>&-
+ 
+-# A radar launch is required too: report failure and clean up if one exits.
+-wait -n "$sensor_suite_pid" "${radar_pids[@]}"
++# Bash 5.0 wait -n does not restrict itself to the supplied job IDs. Monitor
++# only required drivers so an optional logger exit never shuts down the suite.
++while true; do
++  for required_pid in "$sensor_suite_pid" "${radar_pids[@]}"; do
++    if ! kill -0 "$required_pid" 2>/dev/null; then
++      wait "$required_pid"
++      exit 0
++    fi
++  done
++  sleep 0.5
++done
+--- a/scripts/start_sensor_check.sh
++++ b/scripts/start_sensor_check.sh
+@@ -17,6 +17,10 @@
+ export PATH="${PATH:-}:$duro_executable_path"
+ # Only add the radar message module; preserve the lidar/GPS package overlay.
+ export PYTHONPATH="${PYTHONPATH:-}:/home/ave/catkin_ws_left_rdr/devel/lib/python3/dist-packages"
++# Subscriber-only ECAN helper and existing generated messages. Do not source
++# a replacement catkin overlay or change any global/caller ROS settings.
++export PYTHONPATH="${PYTHONPATH:-}:/home/ave/catkin_ws_ioniq5/devel/lib/python3/dist-packages:/home/ave/catkin_ws_ioniq5/src/ioniq5_ecan/scripts"
++export PYTHONDONTWRITEBYTECODE=1
+ 
+ export ROS_MASTER_URI=http://192.168.2.102:11311
+ export ROS_IP=192.168.2.102
+--- a/scripts/record_sensor_suite.sh
++++ b/scripts/record_sensor_suite.sh
+@@ -110,6 +110,10 @@
+ for topic in "${sensor_topics[@]}"; do
+   wait_for_topic "$topic"
+ done
++# Optional: rosbag also subscribes if this topic appears after recording starts.
++# Do not require CAN for the existing camera/lidar/radar/GPS checks to pass.
++sensor_topics+=(/ioniq5/can_logger/rx)
++echo 'RAW ECAN is included when available; missing CAN does not block recording.'
+ 
+ while ((SECONDS < start_at)); do
+   remaining=$((start_at - SECONDS))
+@@ -124,7 +128,7 @@
+ session_dir="${recording_root%/}/${session_name}"
+ mkdir -p "$session_dir"
+ 
+-echo "Recording all seven cameras, lidar, both radars, radar tracks, and GPS to $session_dir/sensor_suite.bag"
++echo "Recording all seven cameras, lidar, both radars, radar tracks, GPS and available RAW ECAN to $session_dir/sensor_suite.bag"
+ ROS_MASTER_URI="$master_uri" ROS_IP="$local_ip" \
+   rosbag record --buffsize=1024 --chunksize=768 \
+   -O "$session_dir/sensor_suite.bag" "${sensor_topics[@]}" &
+--- a/scripts/stop_sensor_suite.py
++++ b/scripts/stop_sensor_suite.py
+@@ -36,6 +36,10 @@
+         if argv[0] in (root + 'mfi920_interface_node', root + 'mfi920_vehicleinfo_sender_node'):
+             return True
+     names = {arg for arg in argv if arg.startswith('__name:=')}
++    if '__name:=sensor_suite_ecan_logger' in names and any(
++            arg.endswith('/ioniq5_ecan/scripts/can_logger.py') or
++            arg.endswith('/lib/ioniq5_ecan/can_logger.py') for arg in argv):
++        return True
+     if argv[0] == '/opt/ros/noetic/lib/nodelet/nodelet' and names.intersection(
+             {'__name:=os_nodelet_mgr', '__name:=os_node', '__name:=os_cloud_node', '__name:=img_node'}):
+         return True
+@@ -57,6 +61,9 @@
+     for index, arg in enumerate(argv):
+         if os.path.basename(arg) == 'roslaunch':
+             pair = argv[index + 1:index + 3]
++            if pair == ['ioniq5_ecan', 'can_logger.launch'] and \
++                    'logger_name:=sensor_suite_ecan_logger' in argv:
++                return True
+             if pair in (['multi_camera_recorder', 'sensor_suite.launch'],
+                         ['multi_camera_recorder', 'sensor_check.launch'],
+                         ['mfi920_interface', 'mfi920_interface.launch']):
+--- a/scripts/sensor_dashboard.py
++++ b/scripts/sensor_dashboard.py
+@@ -22,6 +22,14 @@
+     CompressedImage, NavSatFix, NavSatStatus, PointCloud2, PointField,
+ )
+ 
++try:
++    from ioniq5_ecan.msg import RawCanFrame
++    from can_dashboard_data import CanDashboardData
++    CAN_IMPORT_ERROR = ""
++except ImportError as exc:
++    RawCanFrame = CanDashboardData = None
++    CAN_IMPORT_ERROR = str(exc)
++
+ 
+ CAMERAS = OrderedDict([
+     ("front_left", ("FRONT LEFT", "/front_left/image_raw/compressed")),
+@@ -35,6 +43,7 @@
+ LIDAR_TOPIC = "/ouster2/points"
+ GPS_TOPIC = "/rover/piksi/position_receiver_0/ros/navsatfix"
+ RTK_TOPIC = "/rover/piksi/position_receiver_0/ros/receiver_state"
++CAN_TOPIC = "/ioniq5/can_logger/rx"
+ 
+ 
+ def fit_image(frame, width, height):
+@@ -105,6 +114,7 @@
+         self.system_error = 255
+         self.io_error = 255
+         self.swift_nap_error = 255
++        self.can_data = CanDashboardData() if CanDashboardData is not None else None
+ 
+     @staticmethod
+     def rate(samples, now, window=3.0):
+@@ -251,7 +261,7 @@
+         self.lidar_pixmap_version = -1
+         self.subscribers = []
+ 
+-        self.setWindowTitle("ROS Sensor Dashboard - Cameras / Lidar / RTK GPS")
++        self.setWindowTitle("ROS Sensor Dashboard - Cameras / Lidar / RTK GPS / ECAN")
+         self.resize(1500, 930)
+         # Keep the dashboard usable on smaller displays while allowing the
+         # window manager's edges/corners to resize every panel responsively.
+@@ -289,6 +299,26 @@
+         self.radar_status.setObjectName("summary")
+         outer.addWidget(self.radar_status)
+ 
++        can_panel = QFrame()
++        can_panel.setObjectName("sensorPanel")
++        can_layout = QVBoxLayout(can_panel)
++        can_layout.setContentsMargins(8, 5, 8, 5)
++        can_layout.setSpacing(3)
++        self.can_status = QLabel("ECAN RX: WAITING (receive-only)")
++        self.can_values = QLabel("Speed -- | Steering -- | Long accel -- | Yaw --")
++        self.can_raw = QLabel(CAN_TOPIC)
++        for label in (self.can_status, self.can_values, self.can_raw):
++            label.setWordWrap(True)
++            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
++            can_layout.addWidget(label)
++        self.can_raw.setObjectName("summary")
++        can_panel.setToolTip(
++            "ROS subscriber only: no Panda/vehicle writes. Speed is wheel mean; "
++            "gear/pedal are raw. '--' means no valid sample within 1 second. "
++            "RX status is callback freshness, also during bag replay, not control readiness. "
++            "CAN stamp is host USB completion time, not hardware synchronization.")
++        outer.addWidget(can_panel)
++
+         camera_grid = QGridLayout()
+         camera_grid.setSpacing(7)
+         self.camera_headers = {}
+@@ -355,6 +385,10 @@
+         return frame, header, image
+ 
+     def _subscribe(self):
++        if RawCanFrame is not None:
++            self.subscribers.append(rospy.Subscriber(
++                CAN_TOPIC, RawCanFrame, self._can_callback, queue_size=2048,
++                buff_size=2 * 1024 * 1024, tcp_nodelay=True))
+         for side in ("left", "right"):
+             self.subscribers.append(rospy.Subscriber(
+                 "/mfi920_scans_" + side, MFI920ScanArray, self._radar_callback,
+@@ -374,6 +408,10 @@
+             RTK_TOPIC, ReceiverState_V2_6_5, self._rtk_callback, queue_size=5,
+             tcp_nodelay=True))
+ 
++    def _can_callback(self, message):
++        with self.state.lock:
++            self.state.can_data.feed(message, time.monotonic())
++
+     def _radar_callback(self, message, side):
+         now = time.monotonic()
+         with self.state.lock:
+@@ -552,6 +590,9 @@
+                     self.state.rate(self.state.radar_times[s], now))
+                 for s in ("left", "right")
+             }
++            can = self.state.can_data.snapshot(now) if self.state.can_data is not None else None
++
++        self._refresh_can(can)
+ 
+         radar_labels = []
+         live_radars = 0
+@@ -626,6 +667,42 @@
+             "CAM {}/{}   LIDAR {:.1f} Hz   GPS {:.1f} Hz".format(
+                 color, text, live_cameras, camera_count, lidar_rate, gps_rate))
+ 
++    def _refresh_can(self, snapshot):
++        if snapshot is None:
++            self.can_status.setText("ECAN RX: UNAVAILABLE (other sensors unaffected)")
++            self.can_raw.setText("Missing ECAN Python module: " + CAN_IMPORT_ERROR)
++            return
++        color = "#57d68d" if snapshot["status"] == "RECEIVING" else "#ffb454"
++        self.can_status.setText(
++            "ECAN bus 0 RX: <span style='color:{}; font-weight:700'>{}</span>  |  "
++            "{:.0f} frames/s  |  {:,} frames / {} IDs  |  "
++            "bad CRC {} / size {} / quality {} (known IDs)".format(
++                color, snapshot["status"], snapshot["fps"], snapshot["total"],
++                snapshot["id_count"], snapshot["crc_errors"], snapshot["size_errors"],
++                snapshot["quality_errors"]))
++        values = snapshot["values"]
++
++        def number(name, unit, digits=1):
++            return ("{:.{}f} {}".format(values[name], digits, unit)
++                    if name in values else "--")
++
++        def flag(name):
++            return ("ON" if values[name] else "OFF") if name in values else "--"
++
++        self.can_values.setText(
++            "Speed {}  |  Steering {}  |  Long accel {}  |  Lat accel {}  |  Yaw {}\n"
++            "Brake {}  |  Gear(raw) {}  |  Pedal(raw) {}  |  EPS torque {}  |  EPS fault {} / ACC fault {}".format(
++                number("speed_kph", "km/h"), number("steering_angle_deg", "deg"),
++                number("longitudinal_accel_mps2", "m/s2", 2),
++                number("lateral_accel_mps2", "m/s2", 2), number("yaw_rate_deg_s", "deg/s", 2),
++                flag("brake_pressed"), values.get("gear_raw", "--"),
++                values.get("accelerator_raw", "--"), number("eps_torque_nm", "Nm"),
++                flag("eps_fault"), flag("acc_fault")))
++        if snapshot["last_frame"] is not None:
++            address, size, payload = snapshot["last_frame"]
++            self.can_raw.setText("Last RX: ID 0x{:03X} [{} bytes] {}{}  |  {}".format(
++                address, size, payload, " ..." if size > 16 else "", CAN_TOPIC))
++
+     def closeEvent(self, event):
+         for subscriber in self.subscribers:
+             subscriber.unregister()
+--- a/scripts/check_sensor_bag.py
++++ b/scripts/check_sensor_bag.py
+@@ -17,6 +17,7 @@
+     '/rover/piksi/position_receiver_0/ros/navsatfix': 'sensor_msgs/NavSatFix',
+     '/rover/piksi/position_receiver_0/ros/receiver_state': None,
+ })
++CAN_TOPIC = '/ioniq5/can_logger/rx'
+ 
+ 
+ def select_bag(value):
+@@ -34,6 +35,11 @@
+ 
+ 
+ def sample_details(topic, msg):
++    if topic == CAN_TOPIC:
++        if len(msg.data) > 64 or not 0 <= msg.address <= 0x1FFFFFFF or not 0 <= msg.bus <= 7:
++            raise ValueError('invalid RAW CAN payload/ID/bus')
++        return 'bus {} ID 0x{:X} {} bytes (host USB stamp)'.format(
++            msg.bus, msg.address, len(msg.data))
+     if topic.endswith('/compressed'):
+         if not msg.data:
+             raise ValueError('empty image payload')
+@@ -67,8 +73,13 @@
+         print('Duration: {:.2f}s | mode: {}'.format(end - start,
+               'full file scan + sampled payload checks' if full else 'index + first/last payload samples'), flush=True)
+         info = bag.get_type_and_topic_info().topics
++        expected = dict(EXPECTED)
++        if CAN_TOPIC in info and info[CAN_TOPIC].message_count:
++            expected[CAN_TOPIC] = 'ioniq5_ecan/RawCanFrame'
++        else:
++            print('RAW ECAN: NOT RECORDED (optional; existing sensor checks unchanged).', flush=True)
+         print('{:<34} {:>9} {:>8} {:>10}  {}'.format('Sensor/topic', 'Messages', 'Avg Hz', 'Max gap', 'Result'), flush=True)
+-        for topic, expected_type in EXPECTED.items():
++        for topic, expected_type in expected.items():
+             short = topic.replace('/rover/piksi/position_receiver_0/ros/', '/gps/')
+             if topic not in info or not info[topic].message_count:
+                 errors.append(topic + ': MISSING')
+--- a/launch/sensor_suite.launch
++++ b/launch/sensor_suite.launch
+@@ -8,6 +8,8 @@
+ <launch>
+   <arg name="start_lidar" default="true"/>
+   <arg name="start_gps" default="true"/>
++  <!-- start_sensor_suite.sh manages the optional logger, not the driver launch. -->
++  <arg name="start_ecan" default="true"/>
+   <arg name="visualize" default="true"/>
+   <arg name="view_cameras" default="$(arg visualize)"/>
+   <arg name="lidar_viz" default="$(arg visualize)"/>
